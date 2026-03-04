@@ -1,0 +1,475 @@
+openapi: 3.0.3
+info:
+  title: Merchant Nation Command API
+  description: |
+    Backend services for the Merchant Nation Command app (gamified field sales: zones, leads, merchants, missions).
+    **Implementation note:** The app currently uses **Next.js Server Actions** (same-origin POST with cookie auth).
+    This spec describes the logical operations and data contracts. When exposing a REST API, align endpoints with this spec.
+  version: 1.0.0
+  contact:
+    name: Merchant Nation
+
+servers:
+  - url: /
+    description: Same-origin (Server Actions)
+
+tags:
+  - name: Auth
+    description: Login and logout (cookie-based session)
+  - name: Users
+    description: User and profile operations (RBAC)
+  - name: Zones
+    description: Zone map and status updates
+  - name: Missions
+    description: Mission creation (admin)
+  - name: Leads
+    description: Leads for missions and scouting
+  - name: Merchants
+    description: Merchant induction (convert lead to merchant)
+
+paths:
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Sign in
+      description: Authenticates by email/password and sets HTTP-only cookie. Redirects by role (PLAYER → /, others → /admin/users).
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string; format: email; example: "player@example.com" }
+                password: { type: string; format: password }
+      responses:
+        "302":
+          description: Redirect on success
+        "200":
+          description: Error (invalid credentials or server error)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Sign out
+      description: Clears session cookie and redirects to /login.
+      operationId: logout
+      responses:
+        "302":
+          description: Redirect to /login
+
+  /users/me:
+    get:
+      tags: [Users]
+      summary: Current user
+      description: Returns the authenticated user (by session). Requires valid session.
+      operationId: getCurrentUser
+      security: [{ cookieAuth: [] }]
+      parameters:
+        - name: userId
+          in: query
+          required: false
+          schema: { type: string }
+      responses:
+        "200":
+          description: User or null
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CurrentUser" }
+
+  /users/profile/stats:
+    get:
+      tags: [Users]
+      summary: Profile stats
+      description: Zones scouted, merchants inducted, zones captured for a user.
+      operationId: getProfileStats
+      security: [{ cookieAuth: [] }]
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ProfileStats" }
+
+  /users/leaderboard:
+    get:
+      tags: [Users]
+      summary: Global leaderboard
+      operationId: getLeaderboard
+      security: [{ cookieAuth: [] }]
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer; default: 20 }
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/LeaderboardEntry" }
+
+  /users/admin:
+    get:
+      tags: [Users]
+      summary: List users (admin)
+      description: ADMIN sees all; BRANCH_MANAGER sees own branch/team users.
+      operationId: getUsersForAdmin
+      security: [{ cookieAuth: [] }]
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/UserAdminRow" }
+    post:
+      tags: [Users]
+      summary: Create user
+      description: ADMIN can create any role; BRANCH_MANAGER only PLAYER in own branch.
+      operationId: createUser
+      security: [{ cookieAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateUserInput" }
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+        "400":
+          description: Validation or permission error
+
+  /users/admin/role:
+    patch:
+      tags: [Users]
+      summary: Update user role
+      description: ADMIN only.
+      operationId: updateUserRole
+      security: [{ cookieAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, newRole]
+              properties:
+                userId: { type: string }
+                newRole: { $ref: "#/components/schemas/Role" }
+      responses:
+        "200": { description: Updated }
+        "403": { description: Forbidden }
+
+  /users/admin/teams:
+    get:
+      tags: [Users]
+      summary: List teams (admin)
+      operationId: getTeamsForAdmin
+      security: [{ cookieAuth: [] }]
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/TeamOption" }
+
+  /users/admin/branches:
+    get:
+      tags: [Users]
+      summary: List branches (from branches.json)
+      operationId: getBranchesForAdmin
+      security: [{ cookieAuth: [] }]
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/BranchOption" }
+
+  /zones:
+    get:
+      tags: [Zones]
+      summary: List zones with stats
+      operationId: getZones
+      security: [{ cookieAuth: [] }]
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ZoneWithStats" }
+
+  /zones/{zoneId}/status:
+    patch:
+      tags: [Zones]
+      summary: Update zone status
+      description: PLAYER has limited transitions; BRANCH_MANAGER/ADMIN can override within branch.
+      operationId: updateZoneStatus
+      security: [{ cookieAuth: [] }]
+      parameters:
+        - name: zoneId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [newStatus]
+              properties:
+                newStatus: { $ref: "#/components/schemas/ZoneStatus" }
+      responses:
+        "200": { description: Updated }
+        "400": { description: Invalid transition or zone not found }
+
+  /missions:
+    post:
+      tags: [Missions]
+      summary: Create mission
+      description: ADMIN only.
+      operationId: createMission
+      security: [{ cookieAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateMissionInput" }
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Mission" }
+        "403": { description: Forbidden }
+
+  /leads:
+    get:
+      tags: [Leads]
+      summary: Leads for missions
+      description: Pending leads with zone code (for mission briefing).
+      operationId: getLeadsForMissions
+      security: [{ cookieAuth: [] }]
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/LeadForMission" }
+
+  /leads/scout:
+    post:
+      tags: [Leads]
+      summary: Scout zone / create lead
+      description: Creates or updates zone and creates a PENDING lead. Awards XP.
+      operationId: scoutZone
+      security: [{ cookieAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ScoutZoneInput" }
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkError" }
+        "400":
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkError" }
+
+  /merchants/induct:
+    post:
+      tags: [Merchants]
+      summary: Induct merchant
+      description: Converts lead to merchant, updates lead status to CONVERTED. May capture zone and award XP.
+      operationId: inductMerchant
+      security: [{ cookieAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/InductMerchantInput" }
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkError" }
+        "400":
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkError" }
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: mn_token
+      description: JWT in HTTP-only cookie (set by POST /auth/login)
+
+  schemas:
+    Role:
+      type: string
+      enum: [PLAYER, BRANCH_MANAGER, ADMIN]
+
+    ZoneStatus:
+      type: string
+      enum: [UNSEEN, SCOUTED, CAPTURED, AT_RISK]
+
+    OkError:
+      type: object
+      properties:
+        ok: { type: boolean }
+        error: { type: string }
+
+    CurrentUser:
+      type: object
+      nullable: true
+      properties:
+        id: { type: string }
+        name: { type: string }
+        rank: { type: string }
+        xp: { type: integer }
+        role: { $ref: "#/components/schemas/Role" }
+        branchId: { type: string; nullable: true }
+        team: { type: object; properties: { name: { type: string } }; nullable: true }
+
+    ProfileStats:
+      type: object
+      properties:
+        zonesScouted: { type: integer }
+        merchantsInducted: { type: integer }
+        zonesCaptured: { type: integer }
+
+    LeaderboardEntry:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        rank: { type: string }
+        xp: { type: integer }
+        zones: { type: integer }
+
+    UserAdminRow:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        role: { type: string }
+        teamName: { type: string; nullable: true }
+        branchName: { type: string; nullable: true }
+
+    CreateUserInput:
+      type: object
+      required: [name, role]
+      properties:
+        name: { type: string }
+        role: { $ref: "#/components/schemas/Role" }
+        teamId: { type: string; nullable: true }
+        branchId: { type: string; nullable: true }
+        branchCode: { type: string; nullable: true; description: "For BRANCH_MANAGER; resolved from branches.json" }
+
+    User:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        role: { $ref: "#/components/schemas/Role" }
+        teamId: { type: string; nullable: true }
+        branchId: { type: string; nullable: true }
+
+    TeamOption:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        branchId: { type: string; nullable: true }
+        branchName: { type: string; nullable: true }
+
+    BranchOption:
+      type: object
+      properties:
+        id: { type: integer }
+        branchCode: { type: string }
+        companyName: { type: string }
+
+    ZoneWithStats:
+      type: object
+      properties:
+        id: { type: string }
+        code: { type: string }
+        coordinates: { type: object }
+        status: { $ref: "#/components/schemas/ZoneStatus" }
+        ownerId: { type: string; nullable: true }
+        leadCount: { type: integer }
+        ownerName: { type: string; nullable: true }
+
+    CreateMissionInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        status: { type: string; default: "DRAFT" }
+        branchId: { type: string; nullable: true }
+        branchCode: { type: string; nullable: true }
+
+    Mission:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        status: { type: string }
+        branchId: { type: string; nullable: true }
+        createdAt: { type: string; format: date-time }
+
+    LeadForMission:
+      type: object
+      properties:
+        id: { type: string }
+        businessName: { type: string }
+        category: { type: string }
+        zoneId: { type: string }
+        zone: { type: object; properties: { code: { type: string } } }
+
+    ScoutZoneInput:
+      type: object
+      required: [zoneCode, coordinates, businessName, category, locationLat, locationLng]
+      properties:
+        zoneCode: { type: string }
+        coordinates:
+          type: array
+          items: { type: object; properties: { lat: { type: number }; lng: { type: number } } }
+        zoneId: { type: string; nullable: true }
+        businessName: { type: string }
+        category: { type: string }
+        estimatedDailyVolume: { type: number; nullable: true }
+        locationLat: { type: number }
+        locationLng: { type: number }
+        photoUrl: { type: string; nullable: true }
+
+    InductMerchantInput:
+      type: object
+      required: [leadId, tinNumber, isQrActive, isPosActive]
+      properties:
+        leadId: { type: string }
+        tinNumber: { type: string }
+        tradeLicense: { type: string; nullable: true }
+        phoneNumber: { type: string; nullable: true }
+        isQrActive: { type: boolean }
+        isPosActive: { type: boolean }
+        hasAccount: { type: boolean; nullable: true }

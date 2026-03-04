@@ -1,0 +1,239 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRank {
+  CADET   // R1: 0-500 XP
+  OFFICER // R2: 500-2000 XP
+  CAPTAIN // R3: 2000+ XP
+}
+
+enum Role {
+  PLAYER
+  BRANCH_MANAGER
+  ADMIN
+}
+
+enum ZoneStatus {
+  UNSEEN   // Dark blue - no data
+  SCOUTED  // Light blue - agent visited, leads identified
+  CAPTURED // Green - >=10 active merchants
+  FORTIFIED // Orange - secured
+  AT_RISK  // Red - volume dropped
+  LOST     // Dark red/purple - lost to competition
+}
+
+model Branch {
+  id              String         @id @default(cuid())
+  name            String
+  location        String
+  branchCode      String?        @unique // from branches.json (e.g. ET0010001)
+  externalId      Int?           @unique // from branches.json id
+  territoryBounds Json?          // Array of { lat, lng } - polygon points
+  teams           Team[]
+  users           User[]
+  zones           Zone[]
+  missions        Mission[]
+  dailyReports    DailyReport[]
+  territoryCells  TerritoryCell[]
+}
+
+model TerritoryCell {
+  id          String     @id @default(cuid())
+  branchId    String
+  branch      Branch     @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  code        String     // e.g. TC_0_0, TC_1_2 (row_col in grid)
+  coordinates Json       // Array of { lat, lng } - 4 corners of rectangle
+  status      ZoneStatus @default(UNSEEN)
+  label       String?    // Optional custom label from manager
+  row         Int        // Grid row index
+  col         Int        // Grid col index
+
+  @@unique([branchId, code])
+}
+
+model Team {
+  id        String   @id @default(cuid())
+  name      String
+  branchId  String?
+  branch    Branch?  @relation(fields: [branchId], references: [id])
+  users     User[]
+}
+
+model User {
+  id                  String         @id @default(cuid())
+  name                String
+  email               String?        @unique
+  passwordHash        String?
+  mustChangePassword  Boolean        @default(false)
+  rank                UserRank       @default(CADET)
+  xp                  Int            @default(0)
+  role                Role           @default(PLAYER)
+  teamId              String?
+  branchId            String?
+  team                Team?          @relation(fields: [teamId], references: [id])
+  branch              Branch?        @relation(fields: [branchId], references: [id])
+  scoutedLeads        Lead[]
+  inductedMerchants   Merchant[]
+  ownedZones          Zone[]        @relation("ZoneOwner")
+  assignedTasks       MissionTask[] @relation("MissionTaskAssignee")
+  approvedTasks       MissionTask[] @relation("TaskApprover")
+  dailyReports        DailyReport[]
+}
+
+model Zone {
+  id          String     @id @default(cuid())
+  code        String     @unique
+  coordinates Json       // array of { lat, lng } polygon points
+  status      ZoneStatus @default(UNSEEN)
+  ownerId     String?
+  branchId    String?
+  owner       User?      @relation("ZoneOwner", fields: [ownerId], references: [id])
+  branch      Branch?    @relation(fields: [branchId], references: [id])
+  leads       Lead[]
+}
+
+model Lead {
+  id                    String       @id @default(cuid())
+  businessName          String
+  category              String       // e.g. Cafe, Retail, Pharmacy, Fuel, Other
+  estimatedVolume       String       // e.g. "LOW", "MEDIUM", "HIGH" or "ETB 50k/day"
+  locationLat           Float
+  locationLng           Float
+  photoUrl              String?
+  status                String       @default("NEW") // NEW, CONVERTED
+  zoneId                String       // required: every lead tied to a zone (or task zone)
+  zone                  Zone         @relation(fields: [zoneId], references: [id])
+  scoutedById           String
+  scoutedBy             User         @relation(fields: [scoutedById], references: [id])
+  merchant              Merchant?
+  missionTaskId         String?      // when set, lead was registered as part of this task's report
+  missionTask           MissionTask? @relation(fields: [missionTaskId], references: [id], onDelete: SetNull)
+  taskReportType        String?      // SCOUTED | CAPTURED | FORTIFIED when part of task report
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+}
+
+model Merchant {
+  id                    String    @id @default(cuid())
+  leadId                String?   @unique // optional: induction without prior lead in edge cases
+  lead                  Lead?     @relation(fields: [leadId], references: [id])
+  ownerName             String
+  nationalIdNumber      String
+  tradeLicenseNumber    String
+  tinNumber             String
+  phoneNumber           String
+  merchantAccountNumber String    // placeholder for actual bank account
+  oathSignatureUrl      String    // URL to captured digital signature image
+  citizenNumber         String    // unique identifier in Merchant Nation
+  onboardingDate        DateTime  @default(now())
+  inductedById          String
+  inductedBy            User      @relation(fields: [inductedById], references: [id])
+  deploymentAssets      MerchantDeploymentAsset[]
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+}
+
+model Mission {
+  id        String   @id @default(cuid())
+  name      String
+  status    String   @default("DRAFT")
+  branchId  String?
+  branch    Branch?  @relation(fields: [branchId], references: [id])
+  goals     MissionGoal[]
+  tasks     MissionTask[]
+  createdAt DateTime @default(now())
+}
+
+enum MissionTaskStatus {
+  PENDING
+  IN_PROGRESS
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+model MissionGoal {
+  id          String    @id @default(cuid())
+  missionId   String
+  mission     Mission   @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  title       String
+  targetValue Float?
+  unit        String?   // e.g. "zones", "merchants"
+  dueDate     DateTime?
+  createdAt   DateTime  @default(now())
+}
+
+model MissionTask {
+  id              String           @id @default(cuid())
+  missionId       String
+  mission         Mission          @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  assigneeId      String
+  assignee        User             @relation("MissionTaskAssignee", fields: [assigneeId], references: [id], onDelete: Cascade)
+  title           String
+  description     String?
+  status          MissionTaskStatus @default(PENDING)
+  completionNotes String?          @db.Text // staff-set when submitting
+  completedAt     DateTime?
+  approvedById    String?
+  approvedBy     User?            @relation("TaskApprover", fields: [approvedById], references: [id])
+  approvedAt      DateTime?
+  createdAt       DateTime         @default(now())
+  taskReportLeads Lead[]           // leads registered as part of this task's report
+}
+
+model DailyReport {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  branchId   String
+  branch     Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  reportDate DateTime @db.Date
+  content    String   @db.Text
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, reportDate])
+}
+
+model ActivityLog {
+  id         String   @id @default(cuid())
+  userId     String
+  actorName  String
+  branchId   String?
+  action     String
+  entityType String?
+  entityId   String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+}
+
+model DeploymentAsset {
+  id          String   @id @default(uuid())
+  name        String   @unique // e.g. "DIGITAL_RELAY", "TRANSACTION_GATEWAY"
+  displayName String   // User-friendly name: "Digital QR Code Relay"
+  description String  @db.Text // What is this asset?
+  briefSteps  String?  @db.Text // Optional: Quick steps for deployment
+  iconUrl     String?  // Optional: URL to an icon representing the asset
+  status      String   @default("ACTIVE") // "ACTIVE", "INACTIVE", "DEPRECATED"
+  link        String?  // Optional: Link to internal documentation for players
+  merchants   MerchantDeploymentAsset[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model MerchantDeploymentAsset {
+  merchantId        String
+  deploymentAssetId String
+  introducedAt      DateTime        @default(now())
+  merchant          Merchant        @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  deploymentAsset   DeploymentAsset @relation(fields: [deploymentAssetId], references: [id], onDelete: Cascade)
+  @@id([merchantId, deploymentAssetId])
+}
