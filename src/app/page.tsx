@@ -1,65 +1,114 @@
-import Image from "next/image";
+import { getServerAuthSession } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import { getCurrentUser, getLeaderboardForDashboard, getProfileStats } from "@/app/actions/users";
+import { getTerritoryDashboardStats } from "@/app/actions/mission";
+import { getBranchTerritoryForMember, getTerritoryCellsForMember, getAllBranchTerritoriesForAdmin } from "@/app/actions/branch-territory";
+import { xpProgress, xpToNextRank, nextRankLabel } from "@/lib/rank";
+import { TerritoryDashboard } from "@/components/territory/TerritoryDashboard";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+const RANK_LABELS: Record<string, string> = {
+  CADET: "R1 - CADET",
+  OFFICER: "R2 - OFFICER",
+  CAPTAIN: "R3 - CAPTAIN",
+};
+
+export default async function HomePage() {
+  const session = await getServerAuthSession();
+  if (!session) redirect("/login");
+
+  const user = await getCurrentUser(session.id);
+  if (!user) redirect("/login");
+
+  const branchIdForStatsAndMap =
+    session.role === "ADMIN"
+      ? null
+      : (session.branchId ?? user.branchId ?? user.team?.branchId ?? null);
+
+  const isAdmin = session.role === "ADMIN";
+  const isBranchManager = session.role === "BRANCH_MANAGER";
+
+  const [stats, leaderboardData, profileStats, xpProgressData, branchTerritory, territoryCells, adminTerritories] =
+    await Promise.all([
+      getTerritoryDashboardStats(branchIdForStatsAndMap),
+      getLeaderboardForDashboard(
+        5,
+        user.id,
+        session.role === "ADMIN" ? null : (user.branchId ?? user.team?.branchId ?? null)
+      ),
+      getProfileStats(user.id, {
+        branchId: session.role === "ADMIN" ? null : (user.branchId ?? user.team?.branchId ?? null),
+        role: session.role,
+      }),
+      Promise.resolve(xpProgress(user.xp)),
+      !isAdmin && branchIdForStatsAndMap
+        ? getBranchTerritoryForMember(branchIdForStatsAndMap).catch(() => null)
+        : Promise.resolve(null),
+      !isAdmin && branchIdForStatsAndMap
+        ? getTerritoryCellsForMember(branchIdForStatsAndMap).catch(() => [])
+        : Promise.resolve([]),
+      isAdmin ? getAllBranchTerritoriesForAdmin().catch(() => []) : Promise.resolve([]),
+    ]);
+
+  const useGoogleMaps = Boolean(process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY);
+
+  const leaderboardEntries = leaderboardData.entries.map((u) => ({
+    id: u.id,
+    name: u.name,
+    rank: u.rank,
+    xp: u.xp,
+    zones: u.zones,
+    rankLabel: RANK_LABELS[u.rank] ?? u.rank,
+  }));
+
+  const currentUserEntry = leaderboardData.currentUserEntry
+    ? {
+        id: leaderboardData.currentUserEntry.id,
+        name: leaderboardData.currentUserEntry.name,
+        rank: leaderboardData.currentUserEntry.rank,
+        xp: leaderboardData.currentUserEntry.xp,
+        zones: leaderboardData.currentUserEntry.zones,
+        rankLabel: RANK_LABELS[leaderboardData.currentUserEntry.rank] ?? leaderboardData.currentUserEntry.rank,
+      }
+    : null;
+
+  const districtName =
+    session.role === "ADMIN"
+      ? "All Branches"
+      : (user.branch?.name ?? "Branch");
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <TerritoryDashboard
+      userName={user.name}
+      rankLabel={session.role === "ADMIN" ? "Admin" : (RANK_LABELS[user.rank] ?? user.rank)}
+      zonesCaptured={stats.zonesCaptured}
+      zonesAtRisk={stats.zonesAtRisk}
+      activeMerchants={stats.activeMerchants}
+      activeMissions={stats.activeMissions}
+      totalZones={stats.totalZones}
+      useGoogleMaps={useGoogleMaps}
+      districtName={districtName}
+      leaderboardEntries={leaderboardEntries}
+      leaderboardPosition={leaderboardData.position}
+      leaderboardCurrentUserEntry={currentUserEntry}
+      xpToNextRank={xpToNextRank(user.xp)}
+      nextRankLabel={nextRankLabel(user.xp)}
+      profileStats={{
+        zonesCaptured: profileStats.zonesCaptured,
+        merchantsInducted: profileStats.merchantsInducted,
+        progressFraction: xpProgressData.progressFraction,
+        missionsComplete: profileStats.missionsCompleted,
+      }}
+      currentUserId={user.id}
+      currentUserXp={user.xp}
+      currentUserRank={user.rank}
+      showOfficerProfile={session.role !== "ADMIN"}
+      branchId={branchIdForStatsAndMap}
+      branchTerritory={branchTerritory ?? null}
+      territoryCells={territoryCells}
+      isBranchManager={isBranchManager}
+      adminTerritories={isAdmin ? adminTerritories : undefined}
+    />
   );
 }

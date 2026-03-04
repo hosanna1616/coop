@@ -1,0 +1,3907 @@
+[
+  {
+    "id": 11111111,
+    "branchCode": "ET0010788",
+    "companyName": "Jinka Branch"
+  },
+  {
+    "id": 529,
+    "branchCode": "ET0010529",
+    "companyName": "Mako Bili Branch"
+  },
+  {
+    "id": 612,
+    "branchCode": "ET0010612",
+    "companyName": "Heraro Branch"
+  },
+  {
+    "id": 622,
+    "branchCode": "ET0010622",
+    "companyName": "Prof. Gebissa"
+  },
+  {
+    "id": 602,
+    "branchCode": "ET0010602",
+    "companyName": "Lisana Branch"
+  },
+  {
+    "id": 623,
+    "branchCode": "ET0010623",
+    "companyName": "Soka Branch"
+  },
+  {
+    "id": 538,
+    "branchCode": "ET0010538",
+    "companyName": "Butta Branch"
+  },
+  {
+    "id": 530,
+    "branchCode": "ET0010530",
+    "companyName": "Hilal Branch"
+  },
+  {
+    "id": 592,
+    "branchCode": "ET0010592",
+    "companyName": "Torban Garba Branch"
+  },
+  {
+    "id": 11111112,
+    "branchCode": "ET0010784",
+    "companyName": "Lachi Branch"
+  },
+  {
+    "id": 11111113,
+    "branchCode": "ET0010787",
+    "companyName": "Yela Sewla Branch"
+  },
+  {
+    "id": 11111114,
+    "branchCode": "ET0010786",
+    "companyName": "Endaselasie Branch"
+  },
+  {
+    "id": 11111115,
+    "branchCode": "ET0010785",
+    "companyName": "Mehoni Branch"
+  },
+  {
+    "id": 11111116,
+    "branchCode": "ET0010782",
+    "companyName": "Enticho Branch"
+  },
+  {
+    "id": 11111117,
+    "branchCode": "ET0010783",
+    "companyName": "Edaga Hamus Branch"
+  },
+  {
+    "id": 41,
+    "branchCode": "ET0010041",
+    "companyName": "Adola Branch"
+  },
+  {
+    "id": 3,
+    "branchCode": "ET0010003",
+    "companyName": "Asela Branch"
+  },
+  {
+    "id": 5,
+    "branchCode": "ET0010005",
+    "companyName": "Hora Arsedi Branch"
+  },
+  {
+    "id": 6,
+    "branchCode": "ET0010006",
+    "companyName": "Shashemene Branch"
+  },
+  {
+    "id": 7,
+    "branchCode": "ET0010007",
+    "companyName": "Nekemte Branch"
+  },
+  {
+    "id": 8,
+    "branchCode": "ET0010008",
+    "companyName": "Merkato Branch"
+  },
+  {
+    "id": 9,
+    "branchCode": "ET0010009",
+    "companyName": "Ambo Branch"
+  },
+  {
+    "id": 10,
+    "branchCode": "ET0010010",
+    "companyName": "Hawas Branch"
+  },
+  {
+    "id": 11,
+    "branchCode": "ET0010011",
+    "companyName": "Burayu Branch"
+  },
+  {
+    "id": 12,
+    "branchCode": "ET0010012",
+    "companyName": "Sheger Branch"
+  },
+  {
+    "id": 14,
+    "branchCode": "ET0010014",
+    "companyName": "Seglen Ilu Branch"
+  },
+  {
+    "id": 15,
+    "branchCode": "ET0010015",
+    "companyName": "Bule Hora Branch"
+  },
+  {
+    "id": 16,
+    "branchCode": "ET0010016",
+    "companyName": "Dambi Dollo Branch"
+  },
+  {
+    "id": 17,
+    "branchCode": "ET0010017",
+    "companyName": "Robe Branch"
+  },
+  {
+    "id": 18,
+    "branchCode": "ET0010018",
+    "companyName": "Torban Obo Branch"
+  },
+  {
+    "id": 19,
+    "branchCode": "ET0010019",
+    "companyName": "Gulele Branch"
+  },
+  {
+    "id": 20,
+    "branchCode": "ET0010020",
+    "companyName": "Sebeta Ayo Branch"
+  },
+  {
+    "id": 21,
+    "branchCode": "ET0010021",
+    "companyName": "Weliso Branch"
+  },
+  {
+    "id": 23,
+    "branchCode": "ET0010023",
+    "companyName": "Sululta Branch"
+  },
+  {
+    "id": 24,
+    "branchCode": "ET0010024",
+    "companyName": "Mojo Branch"
+  },
+  {
+    "id": 25,
+    "branchCode": "ET0010025",
+    "companyName": "Arsi Negelle Branch"
+  },
+  {
+    "id": 26,
+    "branchCode": "ET0010026",
+    "companyName": "Kersa Arsi Branch"
+  },
+  {
+    "id": 27,
+    "branchCode": "ET0010027",
+    "companyName": "Bokoji Branch"
+  },
+  {
+    "id": 28,
+    "branchCode": "ET0010028",
+    "companyName": "Eteya Branch"
+  },
+  {
+    "id": 29,
+    "branchCode": "ET0010029",
+    "companyName": "Gimbi Branch"
+  },
+  {
+    "id": 30,
+    "branchCode": "ET0010030",
+    "companyName": "Hasasa Branch"
+  },
+  {
+    "id": 32,
+    "branchCode": "ET0010032",
+    "companyName": "Sendafa Bake Branch"
+  },
+  {
+    "id": 33,
+    "branchCode": "ET0010033",
+    "companyName": "Shenen Gibe Branch"
+  },
+  {
+    "id": 34,
+    "branchCode": "ET0010034",
+    "companyName": "Bedessa Branch"
+  },
+  {
+    "id": 35,
+    "branchCode": "ET0010035",
+    "companyName": "Gelan Branch"
+  },
+  {
+    "id": 36,
+    "branchCode": "ET0010036",
+    "companyName": "Kolfe Branch"
+  },
+  {
+    "id": 37,
+    "branchCode": "ET0010037",
+    "companyName": "Chiro Branch"
+  },
+  {
+    "id": 38,
+    "branchCode": "ET0010038",
+    "companyName": "Jigjiga Branch"
+  },
+  {
+    "id": 39,
+    "branchCode": "ET0010039",
+    "companyName": "Guliso Branch"
+  },
+  {
+    "id": 42,
+    "branchCode": "ET0010042",
+    "companyName": "Gefersa Branch"
+  },
+  {
+    "id": 43,
+    "branchCode": "ET0010043",
+    "companyName": "Meki Branch"
+  },
+  {
+    "id": 44,
+    "branchCode": "ET0010044",
+    "companyName": "Holeta Branch"
+  },
+  {
+    "id": 45,
+    "branchCode": "ET0010045",
+    "companyName": "Afren Kelo Branch"
+  },
+  {
+    "id": 658,
+    "branchCode": "ET0010658",
+    "companyName": "Lenjiso Diga Eco"
+  },
+  {
+    "id": 46,
+    "branchCode": "ET0010046",
+    "companyName": "Hundene Branch"
+  },
+  {
+    "id": 47,
+    "branchCode": "ET0010047",
+    "companyName": "Babile Branch"
+  },
+  {
+    "id": 48,
+    "branchCode": "ET0010048",
+    "companyName": "Oda Branch"
+  },
+  {
+    "id": 49,
+    "branchCode": "ET0010049",
+    "companyName": "Togo Wuchale Branch"
+  },
+  {
+    "id": 51,
+    "branchCode": "ET0010051",
+    "companyName": "Ginnir Branch"
+  },
+  {
+    "id": 52,
+    "branchCode": "ET0010052",
+    "companyName": "Odo Shakiso Branch"
+  },
+  {
+    "id": 53,
+    "branchCode": "ET0010053",
+    "companyName": "Chancho Branch"
+  },
+  {
+    "id": 54,
+    "branchCode": "ET0010054",
+    "companyName": "Guduru Branch"
+  },
+  {
+    "id": 55,
+    "branchCode": "ET0010055",
+    "companyName": "Tulu Bolo Branch"
+  },
+  {
+    "id": 56,
+    "branchCode": "ET0010056",
+    "companyName": "Bole Michael Branch"
+  },
+  {
+    "id": 57,
+    "branchCode": "ET0010057",
+    "companyName": "Gerji Branch"
+  },
+  {
+    "id": 58,
+    "branchCode": "ET0010058",
+    "companyName": "Gedo Branch"
+  },
+  {
+    "id": 60,
+    "branchCode": "ET0010060",
+    "companyName": "Gidami Branch"
+  },
+  {
+    "id": 61,
+    "branchCode": "ET0010061",
+    "companyName": "Gumbichu Branch"
+  },
+  {
+    "id": 62,
+    "branchCode": "ET0010062",
+    "companyName": "Abomsa Branch"
+  },
+  {
+    "id": 63,
+    "branchCode": "ET0010063",
+    "companyName": "Sabian Branch"
+  },
+  {
+    "id": 64,
+    "branchCode": "ET0010064",
+    "companyName": "Bombtera Branch"
+  },
+  {
+    "id": 65,
+    "branchCode": "ET0010065",
+    "companyName": "Shirka Branch"
+  },
+  {
+    "id": 66,
+    "branchCode": "ET0010066",
+    "companyName": "Lega Tafo Branch"
+  },
+  {
+    "id": 67,
+    "branchCode": "ET0010067",
+    "companyName": "Hawassa Branch"
+  },
+  {
+    "id": 69,
+    "branchCode": "ET0010069",
+    "companyName": "Uta Wayyu Branch"
+  },
+  {
+    "id": 70,
+    "branchCode": "ET0010070",
+    "companyName": "Karra Qallu Branch"
+  },
+  {
+    "id": 71,
+    "branchCode": "ET0010071",
+    "companyName": "Saris Branch"
+  },
+  {
+    "id": 72,
+    "branchCode": "ET0010072",
+    "companyName": "Kemise Branch"
+  },
+  {
+    "id": 73,
+    "branchCode": "ET0010073",
+    "companyName": "Bakannisa Branch"
+  },
+  {
+    "id": 74,
+    "branchCode": "ET0010074",
+    "companyName": "Haramaya Branch"
+  },
+  {
+    "id": 75,
+    "branchCode": "ET0010075",
+    "companyName": "Akaki Branch"
+  },
+  {
+    "id": 76,
+    "branchCode": "ET0010076",
+    "companyName": "Boku Shenen Branch"
+  },
+  {
+    "id": 77,
+    "branchCode": "ET0010077",
+    "companyName": "Humera Branch"
+  },
+  {
+    "id": 79,
+    "branchCode": "ET0010079",
+    "companyName": "Furi Branch"
+  },
+  {
+    "id": 80,
+    "branchCode": "ET0010080",
+    "companyName": "Fiche Branch"
+  },
+  {
+    "id": 81,
+    "branchCode": "ET0010081",
+    "companyName": "Kotobe Branch"
+  },
+  {
+    "id": 1,
+    "branchCode": "ET0010001",
+    "companyName": "Head Office"
+  },
+  {
+    "id": 84,
+    "branchCode": "ET0010084",
+    "companyName": "Hirna Branch"
+  },
+  {
+    "id": 85,
+    "branchCode": "ET0010085",
+    "companyName": "Deder Branch"
+  },
+  {
+    "id": 86,
+    "branchCode": "ET0010086",
+    "companyName": "Mekele Branch"
+  },
+  {
+    "id": 87,
+    "branchCode": "ET0010087",
+    "companyName": "Gonder Branch"
+  },
+  {
+    "id": 88,
+    "branchCode": "ET0010088",
+    "companyName": "Bethel Branch"
+  },
+  {
+    "id": 89,
+    "branchCode": "ET0010089",
+    "companyName": "Bahir Dar Branch"
+  },
+  {
+    "id": 90,
+    "branchCode": "ET0010090",
+    "companyName": "Dessie Branch"
+  },
+  {
+    "id": 91,
+    "branchCode": "ET0010091",
+    "companyName": "Guder Branch"
+  },
+  {
+    "id": 92,
+    "branchCode": "ET0010092",
+    "companyName": "Sheno Branch"
+  },
+  {
+    "id": 93,
+    "branchCode": "ET0010093",
+    "companyName": "Hosana Branch"
+  },
+  {
+    "id": 95,
+    "branchCode": "ET0010095",
+    "companyName": "Addisu Gebeya Branch"
+  },
+  {
+    "id": 96,
+    "branchCode": "ET0010096",
+    "companyName": "Gojam Berenda Branch"
+  },
+  {
+    "id": 97,
+    "branchCode": "ET0010097",
+    "companyName": "Ayer Tena Branch"
+  },
+  {
+    "id": 98,
+    "branchCode": "ET0010098",
+    "companyName": "Nedjo Branch"
+  },
+  {
+    "id": 99,
+    "branchCode": "ET0010099",
+    "companyName": "Dodola Branch"
+  },
+  {
+    "id": 100,
+    "branchCode": "ET0010100",
+    "companyName": "Hafatessa Branch"
+  },
+  {
+    "id": 101,
+    "branchCode": "ET0010101",
+    "companyName": "Kombolcha Branch"
+  },
+  {
+    "id": 102,
+    "branchCode": "ET0010102",
+    "companyName": "Erer Branch"
+  },
+  {
+    "id": 103,
+    "branchCode": "ET0010103",
+    "companyName": "Huruta Branch"
+  },
+  {
+    "id": 104,
+    "branchCode": "ET0010104",
+    "companyName": "Ijo Branch"
+  },
+  {
+    "id": 106,
+    "branchCode": "ET0010106",
+    "companyName": "Negele Borena Branch"
+  },
+  {
+    "id": 107,
+    "branchCode": "ET0010107",
+    "companyName": "22 Mazoria Branch"
+  },
+  {
+    "id": 108,
+    "branchCode": "ET0010108",
+    "companyName": "Leka Branch"
+  },
+  {
+    "id": 109,
+    "branchCode": "ET0010109",
+    "companyName": "Limu Genet Branch"
+  },
+  {
+    "id": 110,
+    "branchCode": "ET0010110",
+    "companyName": "Tirunesh Dibaba Branch"
+  },
+  {
+    "id": 111,
+    "branchCode": "ET0010111",
+    "companyName": "Aba Nefso Branch"
+  },
+  {
+    "id": 112,
+    "branchCode": "ET0010112",
+    "companyName": "Lafto Branch"
+  },
+  {
+    "id": 113,
+    "branchCode": "ET0010113",
+    "companyName": "Aba Mela Branch"
+  },
+  {
+    "id": 115,
+    "branchCode": "ET0010115",
+    "companyName": "Kofele Branch"
+  },
+  {
+    "id": 116,
+    "branchCode": "ET0010116",
+    "companyName": "Agaro Branch"
+  },
+  {
+    "id": 117,
+    "branchCode": "ET0010117",
+    "companyName": "Bole Medanealem Branch"
+  },
+  {
+    "id": 118,
+    "branchCode": "ET0010118",
+    "companyName": "Churchill Branch"
+  },
+  {
+    "id": 119,
+    "branchCode": "ET0010119",
+    "companyName": "Gofa Mazoria Branch"
+  },
+  {
+    "id": 120,
+    "branchCode": "ET0010120",
+    "companyName": "Shambu Branch"
+  },
+  {
+    "id": 121,
+    "branchCode": "ET0010121",
+    "companyName": "Meskel Flower Branch"
+  },
+  {
+    "id": 122,
+    "branchCode": "ET0010122",
+    "companyName": "Chole Branch"
+  },
+  {
+    "id": 124,
+    "branchCode": "ET0010124",
+    "companyName": "Arboye Branch"
+  },
+  {
+    "id": 125,
+    "branchCode": "ET0010125",
+    "companyName": "Mesalemia Branch"
+  },
+  {
+    "id": 126,
+    "branchCode": "ET0010126",
+    "companyName": "Gotera Branch"
+  },
+  {
+    "id": 127,
+    "branchCode": "ET0010127",
+    "companyName": "Sire Arsi Branch"
+  },
+  {
+    "id": 128,
+    "branchCode": "ET0010128",
+    "companyName": "Asko Branch"
+  },
+  {
+    "id": 129,
+    "branchCode": "ET0010129",
+    "companyName": "Moyale Branch"
+  },
+  {
+    "id": 130,
+    "branchCode": "ET0010130",
+    "companyName": "Addele Branch"
+  },
+  {
+    "id": 131,
+    "branchCode": "ET0010131",
+    "companyName": "Diksis Branch"
+  },
+  {
+    "id": 133,
+    "branchCode": "ET0010133",
+    "companyName": "Yai Gulele Branch"
+  },
+  {
+    "id": 134,
+    "branchCode": "ET0010134",
+    "companyName": "Sagure Branch"
+  },
+  {
+    "id": 135,
+    "branchCode": "ET0010135",
+    "companyName": "Habe Branch"
+  },
+  {
+    "id": 136,
+    "branchCode": "ET0010136",
+    "companyName": "Fura Branch"
+  },
+  {
+    "id": 137,
+    "branchCode": "ET0010137",
+    "companyName": "Ferensay Legasiyon Br"
+  },
+  {
+    "id": 138,
+    "branchCode": "ET0010138",
+    "companyName": "Asosa Branch"
+  },
+  {
+    "id": 139,
+    "branchCode": "ET0010139",
+    "companyName": "Yayyo Branch"
+  },
+  {
+    "id": 140,
+    "branchCode": "ET0010140",
+    "companyName": "Abebie Tufa Branch"
+  },
+  {
+    "id": 142,
+    "branchCode": "ET0010142",
+    "companyName": "Yabello Branch"
+  },
+  {
+    "id": 143,
+    "branchCode": "ET0010143",
+    "companyName": "Bake Branch"
+  },
+  {
+    "id": 144,
+    "branchCode": "ET0010144",
+    "companyName": "Dire Hinchini Branch"
+  },
+  {
+    "id": 145,
+    "branchCode": "ET0010145",
+    "companyName": "Goba Branch"
+  },
+  {
+    "id": 146,
+    "branchCode": "ET0010146",
+    "companyName": "Adaba Branch"
+  },
+  {
+    "id": 147,
+    "branchCode": "ET0010147",
+    "companyName": "Muka Turi Branch"
+  },
+  {
+    "id": 148,
+    "branchCode": "ET0010148",
+    "companyName": "Djibruk Branch"
+  },
+  {
+    "id": 149,
+    "branchCode": "ET0010149",
+    "companyName": "Gurd Shola Branch"
+  },
+  {
+    "id": 151,
+    "branchCode": "ET0010151",
+    "companyName": "CMC Branch"
+  },
+  {
+    "id": 152,
+    "branchCode": "ET0010152",
+    "companyName": "Bako Tibe Branch"
+  },
+  {
+    "id": 153,
+    "branchCode": "ET0010153",
+    "companyName": "Mizan Aman Branch"
+  },
+  {
+    "id": 154,
+    "branchCode": "ET0010154",
+    "companyName": "Oda Nabe Branch"
+  },
+  {
+    "id": 155,
+    "branchCode": "ET0010155",
+    "companyName": "Birbirsa Branch"
+  },
+  {
+    "id": 156,
+    "branchCode": "ET0010156",
+    "companyName": "Leman Branch"
+  },
+  {
+    "id": 157,
+    "branchCode": "ET0010157",
+    "companyName": "Derra Branch"
+  },
+  {
+    "id": 158,
+    "branchCode": "ET0010158",
+    "companyName": "Wayyu Branch"
+  },
+  {
+    "id": 160,
+    "branchCode": "ET0010160",
+    "companyName": "Chora Branch"
+  },
+  {
+    "id": 161,
+    "branchCode": "ET0010161",
+    "companyName": "Gida Ayana Branch"
+  },
+  {
+    "id": 162,
+    "branchCode": "ET0010162",
+    "companyName": "Wolkite Branch"
+  },
+  {
+    "id": 163,
+    "branchCode": "ET0010163",
+    "companyName": "Gasara Branch"
+  },
+  {
+    "id": 166,
+    "branchCode": "ET0010166",
+    "companyName": "Jamo Branch"
+  },
+  {
+    "id": 167,
+    "branchCode": "ET0010167",
+    "companyName": "Uraga Branch"
+  },
+  {
+    "id": 168,
+    "branchCode": "ET0010168",
+    "companyName": "Adea Branch"
+  },
+  {
+    "id": 169,
+    "branchCode": "ET0010169",
+    "companyName": "Lamberet Branch"
+  },
+  {
+    "id": 170,
+    "branchCode": "ET0010170",
+    "companyName": "Dhaka Adi Branch"
+  },
+  {
+    "id": 171,
+    "branchCode": "ET0010171",
+    "companyName": "Kilole Branch"
+  },
+  {
+    "id": 172,
+    "branchCode": "ET0010172",
+    "companyName": "Siltana Branch"
+  },
+  {
+    "id": 174,
+    "branchCode": "ET0010174",
+    "companyName": "Gofa Gabriel Branch"
+  },
+  {
+    "id": 175,
+    "branchCode": "ET0010175",
+    "companyName": "Dale Dembel Branch"
+  },
+  {
+    "id": 176,
+    "branchCode": "ET0010176",
+    "companyName": "Arba Minch Branch"
+  },
+  {
+    "id": 177,
+    "branchCode": "ET0010177",
+    "companyName": "Wasarbi Branch"
+  },
+  {
+    "id": 178,
+    "branchCode": "ET0010178",
+    "companyName": "Karayu Branch"
+  },
+  {
+    "id": 179,
+    "branchCode": "ET0010179",
+    "companyName": "Shenen Jida Branch"
+  },
+  {
+    "id": 180,
+    "branchCode": "ET0010180",
+    "companyName": "Haile Gebre Branch"
+  },
+  {
+    "id": 181,
+    "branchCode": "ET0010181",
+    "companyName": "Guje Branch"
+  },
+  {
+    "id": 182,
+    "branchCode": "ET0010182",
+    "companyName": "Melka Ballo Branch"
+  },
+  {
+    "id": 183,
+    "branchCode": "ET0010183",
+    "companyName": "Nonno Branch"
+  },
+  {
+    "id": 185,
+    "branchCode": "ET0010185",
+    "companyName": "Dolo Bidena Branch"
+  },
+  {
+    "id": 186,
+    "branchCode": "ET0010186",
+    "companyName": "Jimma Arjo Branch"
+  },
+  {
+    "id": 187,
+    "branchCode": "ET0010187",
+    "companyName": "Ejere Branch"
+  },
+  {
+    "id": 188,
+    "branchCode": "ET0010188",
+    "companyName": "Awash Melkasa Branch"
+  },
+  {
+    "id": 189,
+    "branchCode": "ET0010189",
+    "companyName": "Bosat Branch"
+  },
+  {
+    "id": 190,
+    "branchCode": "ET0010190",
+    "companyName": "Dodota Branch"
+  },
+  {
+    "id": 191,
+    "branchCode": "ET0010191",
+    "companyName": "Bote Branch"
+  },
+  {
+    "id": 192,
+    "branchCode": "ET0010192",
+    "companyName": "Awasho Branch"
+  },
+  {
+    "id": 194,
+    "branchCode": "ET0010194",
+    "companyName": "Jahan Ameya Branch"
+  },
+  {
+    "id": 195,
+    "branchCode": "ET0010195",
+    "companyName": "Midakegni Branch"
+  },
+  {
+    "id": 196,
+    "branchCode": "ET0010196",
+    "companyName": "Bole Bulbula Branch"
+  },
+  {
+    "id": 197,
+    "branchCode": "ET0010197",
+    "companyName": "Agarfa Branch"
+  },
+  {
+    "id": 198,
+    "branchCode": "ET0010198",
+    "companyName": "Darimu Branch"
+  },
+  {
+    "id": 199,
+    "branchCode": "ET0010199",
+    "companyName": "Asandabo Branch"
+  },
+  {
+    "id": 200,
+    "branchCode": "ET0010200",
+    "companyName": "Ukke Branch"
+  },
+  {
+    "id": 201,
+    "branchCode": "ET0010201",
+    "companyName": "Chanqa Birbir Branch"
+  },
+  {
+    "id": 203,
+    "branchCode": "ET0010203",
+    "companyName": "Warqa Branch"
+  },
+  {
+    "id": 204,
+    "branchCode": "ET0010204",
+    "companyName": "Nunu Kumba Branch"
+  },
+  {
+    "id": 205,
+    "branchCode": "ET0010205",
+    "companyName": "Jimma Rare Branch"
+  },
+  {
+    "id": 206,
+    "branchCode": "ET0010206",
+    "companyName": "Qurqura Branch"
+  },
+  {
+    "id": 207,
+    "branchCode": "ET0010207",
+    "companyName": "Sibu Sire Branch"
+  },
+  {
+    "id": 208,
+    "branchCode": "ET0010208",
+    "companyName": "Ganji Branch"
+  },
+  {
+    "id": 209,
+    "branchCode": "ET0010209",
+    "companyName": "Mandi Branch"
+  },
+  {
+    "id": 210,
+    "branchCode": "ET0010210",
+    "companyName": "Begi Branch"
+  },
+  {
+    "id": 211,
+    "branchCode": "ET0010211",
+    "companyName": "Kiltu Karra Branch"
+  },
+  {
+    "id": 213,
+    "branchCode": "ET0010213",
+    "companyName": "Jiren Branch"
+  },
+  {
+    "id": 214,
+    "branchCode": "ET0010214",
+    "companyName": "Dawo Branch"
+  },
+  {
+    "id": 215,
+    "branchCode": "ET0010215",
+    "companyName": "Soddo Dachi Branch"
+  },
+  {
+    "id": 216,
+    "branchCode": "ET0010216",
+    "companyName": "Meta Walkite Branch"
+  },
+  {
+    "id": 217,
+    "branchCode": "ET0010217",
+    "companyName": "Oda Karra Branch"
+  },
+  {
+    "id": 218,
+    "branchCode": "ET0010218",
+    "companyName": "Muka Arara Branch"
+  },
+  {
+    "id": 219,
+    "branchCode": "ET0010219",
+    "companyName": "Hababo Guduru Branch"
+  },
+  {
+    "id": 221,
+    "branchCode": "ET0010221",
+    "companyName": "Qeto Machara Branch"
+  },
+  {
+    "id": 222,
+    "branchCode": "ET0010222",
+    "companyName": "Finfine Branch"
+  },
+  {
+    "id": 223,
+    "branchCode": "ET0010223",
+    "companyName": "Lume Branch"
+  },
+  {
+    "id": 224,
+    "branchCode": "ET0010224",
+    "companyName": "Dolo Mana Branch"
+  },
+  {
+    "id": 225,
+    "branchCode": "ET0010225",
+    "companyName": "Mulo Branch"
+  },
+  {
+    "id": 226,
+    "branchCode": "ET0010226",
+    "companyName": "Xicho Branch"
+  },
+  {
+    "id": 227,
+    "branchCode": "ET0010227",
+    "companyName": "Goro Branch"
+  },
+  {
+    "id": 228,
+    "branchCode": "ET0010228",
+    "companyName": "Mada Walabu Branch"
+  },
+  {
+    "id": 229,
+    "branchCode": "ET0010229",
+    "companyName": "Harufa Branch"
+  },
+  {
+    "id": 230,
+    "branchCode": "ET0010230",
+    "companyName": "Anfillo Branch"
+  },
+  {
+    "id": 232,
+    "branchCode": "ET0010232",
+    "companyName": "Haro Dumal Branch"
+  },
+  {
+    "id": 233,
+    "branchCode": "ET0010233",
+    "companyName": "Harana Buluq Branch"
+  },
+  {
+    "id": 234,
+    "branchCode": "ET0010234",
+    "companyName": "Kula Branch"
+  },
+  {
+    "id": 235,
+    "branchCode": "ET0010235",
+    "companyName": "Chalchali Branch"
+  },
+  {
+    "id": 236,
+    "branchCode": "ET0010236",
+    "companyName": "Sadan Ekka Branch"
+  },
+  {
+    "id": 237,
+    "branchCode": "ET0010237",
+    "companyName": "Alge Sachi Branch"
+  },
+  {
+    "id": 239,
+    "branchCode": "ET0010239",
+    "companyName": "Laga Oda Branch"
+  },
+  {
+    "id": 240,
+    "branchCode": "ET0010240",
+    "companyName": "Qarcha Branch"
+  },
+  {
+    "id": 241,
+    "branchCode": "ET0010241",
+    "companyName": "Ada Barga Branch"
+  },
+  {
+    "id": 242,
+    "branchCode": "ET0010242",
+    "companyName": "Chinaksen Branch"
+  },
+  {
+    "id": 243,
+    "branchCode": "ET0010243",
+    "companyName": "Gode Branch"
+  },
+  {
+    "id": 244,
+    "branchCode": "ET0010244",
+    "companyName": "Boke Xiqo Branch"
+  },
+  {
+    "id": 246,
+    "branchCode": "ET0010246",
+    "companyName": "Aw-Abadir Branch"
+  },
+  {
+    "id": 248,
+    "branchCode": "ET0010248",
+    "companyName": "Kali Branch"
+  },
+  {
+    "id": 249,
+    "branchCode": "ET0010249",
+    "companyName": "Sulula Garbi Branch"
+  },
+  {
+    "id": 250,
+    "branchCode": "ET0010250",
+    "companyName": "Negelle Arba Gugu Br"
+  },
+  {
+    "id": 251,
+    "branchCode": "ET0010251",
+    "companyName": "Gololcha Branch"
+  },
+  {
+    "id": 252,
+    "branchCode": "ET0010252",
+    "companyName": "Gera Branch"
+  },
+  {
+    "id": 253,
+    "branchCode": "ET0010253",
+    "companyName": "Tullu Ejersa Branch"
+  },
+  {
+    "id": 254,
+    "branchCode": "ET0010254",
+    "companyName": "Chilalo Branch"
+  },
+  {
+    "id": 255,
+    "branchCode": "ET0010255",
+    "companyName": "Aleltu Branch"
+  },
+  {
+    "id": 256,
+    "branchCode": "ET0010256",
+    "companyName": "Limu Seqqa Branch"
+  },
+  {
+    "id": 257,
+    "branchCode": "ET0010257",
+    "companyName": "Ela Bala Branch"
+  },
+  {
+    "id": 258,
+    "branchCode": "ET0010258",
+    "companyName": "Eka Abado Branch"
+  },
+  {
+    "id": 260,
+    "branchCode": "ET0010260",
+    "companyName": "Bale Gesgar Branch"
+  },
+  {
+    "id": 261,
+    "branchCode": "ET0010261",
+    "companyName": "Bole Lami Branch"
+  },
+  {
+    "id": 262,
+    "branchCode": "ET0010262",
+    "companyName": "Abuna Branch"
+  },
+  {
+    "id": 263,
+    "branchCode": "ET0010263",
+    "companyName": "Jaldu Branch"
+  },
+  {
+    "id": 264,
+    "branchCode": "ET0010264",
+    "companyName": "Adami Branch"
+  },
+  {
+    "id": 265,
+    "branchCode": "ET0010265",
+    "companyName": "Ajje Branch"
+  },
+  {
+    "id": 266,
+    "branchCode": "ET0010266",
+    "companyName": "Mujja Branch"
+  },
+  {
+    "id": 268,
+    "branchCode": "ET0010268",
+    "companyName": "Baroda Branch"
+  },
+  {
+    "id": 269,
+    "branchCode": "ET0010269",
+    "companyName": "Gara Muleta Branch"
+  },
+  {
+    "id": 270,
+    "branchCode": "ET0010270",
+    "companyName": "Sadan Soddo Branch"
+  },
+  {
+    "id": 271,
+    "branchCode": "ET0010271",
+    "companyName": "Sayo Nole Branch"
+  },
+  {
+    "id": 272,
+    "branchCode": "ET0010272",
+    "companyName": "Karra Xuxxo Branch"
+  },
+  {
+    "id": 273,
+    "branchCode": "ET0010273",
+    "companyName": "Kiramu Branch"
+  },
+  {
+    "id": 274,
+    "branchCode": "ET0010274",
+    "companyName": "Amuru Branch"
+  },
+  {
+    "id": 275,
+    "branchCode": "ET0010275",
+    "companyName": "Gore Branch"
+  },
+  {
+    "id": 277,
+    "branchCode": "ET0010277",
+    "companyName": "Fugnan Bira Branch"
+  },
+  {
+    "id": 278,
+    "branchCode": "ET0010278",
+    "companyName": "Wanji Branch"
+  },
+  {
+    "id": 279,
+    "branchCode": "ET0010279",
+    "companyName": "Bulbula Branch"
+  },
+  {
+    "id": 280,
+    "branchCode": "ET0010280",
+    "companyName": "Qechema Branch"
+  },
+  {
+    "id": 281,
+    "branchCode": "ET0010281",
+    "companyName": "Karamile Branch"
+  },
+  {
+    "id": 282,
+    "branchCode": "ET0010282",
+    "companyName": "Greek Camp Branch"
+  },
+  {
+    "id": 283,
+    "branchCode": "ET0010283",
+    "companyName": "Megalla Branch"
+  },
+  {
+    "id": 284,
+    "branchCode": "ET0010284",
+    "companyName": "Weltea Branch"
+  },
+  {
+    "id": 285,
+    "branchCode": "ET0010285",
+    "companyName": "Chafe Branch"
+  },
+  {
+    "id": 286,
+    "branchCode": "ET0010286",
+    "companyName": "Jarra Branch"
+  },
+  {
+    "id": 288,
+    "branchCode": "ET0010288",
+    "companyName": "Heban Arsi Branch"
+  },
+  {
+    "id": 289,
+    "branchCode": "ET0010289",
+    "companyName": "Bantu Branch"
+  },
+  {
+    "id": 290,
+    "branchCode": "ET0010290",
+    "companyName": "Bokku Branch"
+  },
+  {
+    "id": 291,
+    "branchCode": "ET0010291",
+    "companyName": "Kombe Branch"
+  },
+  {
+    "id": 292,
+    "branchCode": "ET0010292",
+    "companyName": "Labu Branch"
+  },
+  {
+    "id": 293,
+    "branchCode": "ET0010293",
+    "companyName": "Karra Allo Branch"
+  },
+  {
+    "id": 295,
+    "branchCode": "ET0010295",
+    "companyName": "Jahan Jarso Branch"
+  },
+  {
+    "id": 296,
+    "branchCode": "ET0010296",
+    "companyName": "Shenen Dhugo Branch"
+  },
+  {
+    "id": 297,
+    "branchCode": "ET0010297",
+    "companyName": "Taji Branch"
+  },
+  {
+    "id": 298,
+    "branchCode": "ET0010298",
+    "companyName": "Yaya Gulale Branch"
+  },
+  {
+    "id": 299,
+    "branchCode": "ET0010299",
+    "companyName": "Bore Branch"
+  },
+  {
+    "id": 300,
+    "branchCode": "ET0010300",
+    "companyName": "Asgori Branch"
+  },
+  {
+    "id": 301,
+    "branchCode": "ET0010301",
+    "companyName": "Olonkomi Branch"
+  },
+  {
+    "id": 302,
+    "branchCode": "ET0010302",
+    "companyName": "Shufune Branch"
+  },
+  {
+    "id": 303,
+    "branchCode": "ET0010303",
+    "companyName": "Kutaye Branch"
+  },
+  {
+    "id": 305,
+    "branchCode": "ET0010305",
+    "companyName": "Qorke Karabu Branch"
+  },
+  {
+    "id": 306,
+    "branchCode": "ET0010306",
+    "companyName": "Ayetu Branch"
+  },
+  {
+    "id": 307,
+    "branchCode": "ET0010307",
+    "companyName": "Odo Liben Branch"
+  },
+  {
+    "id": 308,
+    "branchCode": "ET0010308",
+    "companyName": "Melka Gefersa Branch"
+  },
+  {
+    "id": 309,
+    "branchCode": "ET0010309",
+    "companyName": "Ochocha Branch"
+  },
+  {
+    "id": 310,
+    "branchCode": "ET0010310",
+    "companyName": "Butajira Branch"
+  },
+  {
+    "id": 311,
+    "branchCode": "ET0010311",
+    "companyName": "Yirgachafe Branch"
+  },
+  {
+    "id": 312,
+    "branchCode": "ET0010312",
+    "companyName": "Gafarsa Nono"
+  },
+  {
+    "id": 313,
+    "branchCode": "ET0010313",
+    "companyName": "Aba Jifar Branch"
+  },
+  {
+    "id": 314,
+    "branchCode": "ET0010314",
+    "companyName": "Mettu Branch"
+  },
+  {
+    "id": 316,
+    "branchCode": "ET0010316",
+    "companyName": "Bila Branch"
+  },
+  {
+    "id": 317,
+    "branchCode": "ET0010317",
+    "companyName": "Hawa Gelan Branch"
+  },
+  {
+    "id": 318,
+    "branchCode": "ET0010318",
+    "companyName": "Tullu Gana Branch"
+  },
+  {
+    "id": 319,
+    "branchCode": "ET0010319",
+    "companyName": "Ayira Branch"
+  },
+  {
+    "id": 320,
+    "branchCode": "ET0010320",
+    "companyName": "Liban Jawi Branch"
+  },
+  {
+    "id": 321,
+    "branchCode": "ET0010321",
+    "companyName": "Salgan Eggu Branch"
+  },
+  {
+    "id": 323,
+    "branchCode": "ET0010323",
+    "companyName": "Dhadacha Arara Branch"
+  },
+  {
+    "id": 324,
+    "branchCode": "ET0010324",
+    "companyName": "Abba Jama Branch"
+  },
+  {
+    "id": 325,
+    "branchCode": "ET0010325",
+    "companyName": "Boru Jawi Branch"
+  },
+  {
+    "id": 327,
+    "branchCode": "ET0010327",
+    "companyName": "Oda Bisil Branch"
+  },
+  {
+    "id": 328,
+    "branchCode": "ET0010328",
+    "companyName": "Dire Sololiya"
+  },
+  {
+    "id": 329,
+    "branchCode": "ET0010329",
+    "companyName": "Sechduna Branch"
+  },
+  {
+    "id": 330,
+    "branchCode": "ET0010330",
+    "companyName": "Hurufa Rare Branch"
+  },
+  {
+    "id": 331,
+    "branchCode": "ET0010331",
+    "companyName": "Chafe Arara Branch"
+  },
+  {
+    "id": 332,
+    "branchCode": "ET0010332",
+    "companyName": "Kuyera Branch"
+  },
+  {
+    "id": 333,
+    "branchCode": "ET0010333",
+    "companyName": "Qajela Doyo Branch"
+  },
+  {
+    "id": 335,
+    "branchCode": "ET0010335",
+    "companyName": "Ali Branch"
+  },
+  {
+    "id": 336,
+    "branchCode": "ET0010336",
+    "companyName": "Halaba Kulito Branch"
+  },
+  {
+    "id": 337,
+    "branchCode": "ET0010337",
+    "companyName": "Dolosebro Branch"
+  },
+  {
+    "id": 338,
+    "branchCode": "ET0010338",
+    "companyName": "Kobo Branch"
+  },
+  {
+    "id": 339,
+    "branchCode": "ET0010339",
+    "companyName": "Jara Abageda Branch"
+  },
+  {
+    "id": 340,
+    "branchCode": "ET0010340",
+    "companyName": "Michata Branch"
+  },
+  {
+    "id": 341,
+    "branchCode": "ET0010341",
+    "companyName": "Ahmed Imam Branch"
+  },
+  {
+    "id": 342,
+    "branchCode": "ET0010342",
+    "companyName": "Hirmata Branch"
+  },
+  {
+    "id": 344,
+    "branchCode": "ET0010344",
+    "companyName": "Bonaya Boshe Branch"
+  },
+  {
+    "id": 345,
+    "branchCode": "ET0010345",
+    "companyName": "Gudetu Arjo Branch"
+  },
+  {
+    "id": 346,
+    "branchCode": "ET0010346",
+    "companyName": "Oda Bilbila Branch"
+  },
+  {
+    "id": 347,
+    "branchCode": "ET0010347",
+    "companyName": "Bishan Guracha Branch"
+  },
+  {
+    "id": 348,
+    "branchCode": "ET0010348",
+    "companyName": "Koka Branch"
+  },
+  {
+    "id": 349,
+    "branchCode": "ET0010349",
+    "companyName": "Burka Branch"
+  },
+  {
+    "id": 350,
+    "branchCode": "ET0010350",
+    "companyName": "Ganda Hara Branch"
+  },
+  {
+    "id": 351,
+    "branchCode": "ET0010351",
+    "companyName": "Kiltu Lume Branch"
+  },
+  {
+    "id": 353,
+    "branchCode": "ET0010353",
+    "companyName": "Abichu Nya'a Branch"
+  },
+  {
+    "id": 354,
+    "branchCode": "ET0010354",
+    "companyName": "Gawassa Branch"
+  },
+  {
+    "id": 355,
+    "branchCode": "ET0010355",
+    "companyName": "Tufa Muna Branch"
+  },
+  {
+    "id": 356,
+    "branchCode": "ET0010356",
+    "companyName": "Shabe Branch"
+  },
+  {
+    "id": 357,
+    "branchCode": "ET0010357",
+    "companyName": "Awetu Branch"
+  },
+  {
+    "id": 358,
+    "branchCode": "ET0010358",
+    "companyName": "Gachi Branch"
+  },
+  {
+    "id": 359,
+    "branchCode": "ET0010359",
+    "companyName": "Sokoru Branch"
+  },
+  {
+    "id": 361,
+    "branchCode": "ET0010361",
+    "companyName": "Goro Muti Branch"
+  },
+  {
+    "id": 362,
+    "branchCode": "ET0010362",
+    "companyName": "Makkat Al-Mukkarama"
+  },
+  {
+    "id": 363,
+    "branchCode": "ET0010363",
+    "companyName": "Tana Branch"
+  },
+  {
+    "id": 364,
+    "branchCode": "ET0010364",
+    "companyName": "Bole Arabsa Branch"
+  },
+  {
+    "id": 365,
+    "branchCode": "ET0010365",
+    "companyName": "Xadacha Branch"
+  },
+  {
+    "id": 366,
+    "branchCode": "ET0010366",
+    "companyName": "Anole Micro Branch"
+  },
+  {
+    "id": 367,
+    "branchCode": "ET0010367",
+    "companyName": "Meraro Branch"
+  },
+  {
+    "id": 368,
+    "branchCode": "ET0010368",
+    "companyName": "Burka Walabu Branch"
+  },
+  {
+    "id": 369,
+    "branchCode": "ET0010369",
+    "companyName": "Hara Kello Branch"
+  },
+  {
+    "id": 371,
+    "branchCode": "ET0010371",
+    "companyName": "Ogolcho Branch"
+  },
+  {
+    "id": 372,
+    "branchCode": "ET0010372",
+    "companyName": "Haro Adi Branch"
+  },
+  {
+    "id": 373,
+    "branchCode": "ET0010373",
+    "companyName": "Baro Korma Branch"
+  },
+  {
+    "id": 374,
+    "branchCode": "ET0010374",
+    "companyName": "JAJA BRANCH"
+  },
+  {
+    "id": 375,
+    "branchCode": "ET0010375",
+    "companyName": "Doba Branch"
+  },
+  {
+    "id": 376,
+    "branchCode": "ET0010376",
+    "companyName": "Wadessa Branch"
+  },
+  {
+    "id": 378,
+    "branchCode": "ET0010378",
+    "companyName": "Sumuda Branch"
+  },
+  {
+    "id": 379,
+    "branchCode": "ET0010379",
+    "companyName": "Wadera Branch"
+  },
+  {
+    "id": 380,
+    "branchCode": "ET0010380",
+    "companyName": "Taltale Branch"
+  },
+  {
+    "id": 381,
+    "branchCode": "ET0010381",
+    "companyName": "Ganda Wuha Branch"
+  },
+  {
+    "id": 382,
+    "branchCode": "ET0010382",
+    "companyName": "Qebe Branch"
+  },
+  {
+    "id": 383,
+    "branchCode": "ET0010383",
+    "companyName": "Debre Markos Branch"
+  },
+  {
+    "id": 384,
+    "branchCode": "ET0010384",
+    "companyName": "Boku Migra Bake Branch"
+  },
+  {
+    "id": 385,
+    "branchCode": "ET0010385",
+    "companyName": "Goro Qerensa Branch"
+  },
+  {
+    "id": 386,
+    "branchCode": "ET0010386",
+    "companyName": "Bilile Branch"
+  },
+  {
+    "id": 387,
+    "branchCode": "ET0010387",
+    "companyName": "Sigmo Branch"
+  },
+  {
+    "id": 389,
+    "branchCode": "ET0010389",
+    "companyName": "Aksum Branch"
+  },
+  {
+    "id": 390,
+    "branchCode": "ET0010390",
+    "companyName": "Adigrat Branch"
+  },
+  {
+    "id": 391,
+    "branchCode": "ET0010391",
+    "companyName": "Laga Bari Branch"
+  },
+  {
+    "id": 392,
+    "branchCode": "ET0010392",
+    "companyName": "Wara Ganu Branch"
+  },
+  {
+    "id": 393,
+    "branchCode": "ET0010393",
+    "companyName": "Biftu Branch"
+  },
+  {
+    "id": 394,
+    "branchCode": "ET0010394",
+    "companyName": "Bensa Daye Branch"
+  },
+  {
+    "id": 395,
+    "branchCode": "ET0010395",
+    "companyName": "Sora Lume Branch"
+  },
+  {
+    "id": 396,
+    "branchCode": "ET0010396",
+    "companyName": "Saxamma Branch"
+  },
+  {
+    "id": 397,
+    "branchCode": "ET0010397",
+    "companyName": "Elemo Qiltu Branch"
+  },
+  {
+    "id": 398,
+    "branchCode": "ET0010398",
+    "companyName": "Agamsa Migir Branch"
+  },
+  {
+    "id": 399,
+    "branchCode": "ET0010399",
+    "companyName": "Babo Gambel Branch"
+  },
+  {
+    "id": 400,
+    "branchCode": "ET0010400",
+    "companyName": "Tullu Farda"
+  },
+  {
+    "id": 402,
+    "branchCode": "ET0010402",
+    "companyName": "Mayu Muluke"
+  },
+  {
+    "id": 403,
+    "branchCode": "ET0010403",
+    "companyName": "Dedo Branch"
+  },
+  {
+    "id": 404,
+    "branchCode": "ET0010404",
+    "companyName": "Chawaqa Branch"
+  },
+  {
+    "id": 405,
+    "branchCode": "ET0010405",
+    "companyName": "Harbu Branch"
+  },
+  {
+    "id": 406,
+    "branchCode": "ET0010406",
+    "companyName": "Shabu Ejersa Branch"
+  },
+  {
+    "id": 473,
+    "branchCode": "ET0010473",
+    "companyName": "Digital Banking"
+  },
+  {
+    "id": 408,
+    "branchCode": "ET0010408",
+    "companyName": "Burka Tirtira Branch"
+  },
+  {
+    "id": 409,
+    "branchCode": "ET0010409",
+    "companyName": "Mufti Dawud Branch"
+  },
+  {
+    "id": 410,
+    "branchCode": "ET0010410",
+    "companyName": "Hikma Branch"
+  },
+  {
+    "id": 411,
+    "branchCode": "ET0010411",
+    "companyName": "Abubeker Al-Siddiq Br"
+  },
+  {
+    "id": 412,
+    "branchCode": "ET0010412",
+    "companyName": "Bereka Branch"
+  },
+  {
+    "id": 413,
+    "branchCode": "ET0010413",
+    "companyName": "Ansar Branch"
+  },
+  {
+    "id": 415,
+    "branchCode": "ET0010415",
+    "companyName": "Bilal Branch"
+  },
+  {
+    "id": 416,
+    "branchCode": "ET0010416",
+    "companyName": "Hamza Mesgid Branch"
+  },
+  {
+    "id": 417,
+    "branchCode": "ET0010417",
+    "companyName": "Halal Branch"
+  },
+  {
+    "id": 418,
+    "branchCode": "ET0010418",
+    "companyName": "Medinat Al-Munawer Br"
+  },
+  {
+    "id": 419,
+    "branchCode": "ET0010419",
+    "companyName": "Fethi Mesjid Branch"
+  },
+  {
+    "id": 420,
+    "branchCode": "ET0010420",
+    "companyName": "Baro Tumsa Branch"
+  },
+  {
+    "id": 421,
+    "branchCode": "ET0010421",
+    "companyName": "Kello Mesqela Branch"
+  },
+  {
+    "id": 423,
+    "branchCode": "ET0010423",
+    "companyName": "OMER IBN AL-KHATTAB Br"
+  },
+  {
+    "id": 424,
+    "branchCode": "ET0010424",
+    "companyName": "Robale Branch"
+  },
+  {
+    "id": 425,
+    "branchCode": "ET0010425",
+    "companyName": "Tulu Dimtu Branch"
+  },
+  {
+    "id": 426,
+    "branchCode": "ET0010426",
+    "companyName": "Iman Branch"
+  },
+  {
+    "id": 427,
+    "branchCode": "ET0010427",
+    "companyName": "Selam Branch"
+  },
+  {
+    "id": 600,
+    "branchCode": "ET0010600",
+    "companyName": "Dawuro Branch"
+  },
+  {
+    "id": 428,
+    "branchCode": "ET0010428",
+    "companyName": "Haile Fida Branch"
+  },
+  {
+    "id": 429,
+    "branchCode": "ET0010429",
+    "companyName": "Ummu-Ayman Branch"
+  },
+  {
+    "id": 430,
+    "branchCode": "ET0010430",
+    "companyName": "Sheik Bekri Sapello"
+  },
+  {
+    "id": 431,
+    "branchCode": "ET0010431",
+    "companyName": "Sinqee Branch"
+  },
+  {
+    "id": 433,
+    "branchCode": "ET0010433",
+    "companyName": "Jagema Bedhane Branch"
+  },
+  {
+    "id": 434,
+    "branchCode": "ET0010434",
+    "companyName": "TEQWA BRANCH"
+  },
+  {
+    "id": 435,
+    "branchCode": "ET0010435",
+    "companyName": "Marwa Branch"
+  },
+  {
+    "id": 436,
+    "branchCode": "ET0010436",
+    "companyName": "Salahadin Ali-Ayub"
+  },
+  {
+    "id": 437,
+    "branchCode": "ET0010437",
+    "companyName": "Beriso Dukale Micro"
+  },
+  {
+    "id": 438,
+    "branchCode": "ET0010438",
+    "companyName": "Yirgalem Branch"
+  },
+  {
+    "id": 439,
+    "branchCode": "ET0010439",
+    "companyName": "Doyo Gena Branch"
+  },
+  {
+    "id": 440,
+    "branchCode": "ET0010440",
+    "companyName": "Hadero Branch"
+  },
+  {
+    "id": 441,
+    "branchCode": "ET0010441",
+    "companyName": "Harru Maru Branch"
+  },
+  {
+    "id": 442,
+    "branchCode": "ET0010442",
+    "companyName": "Bure Branch"
+  },
+  {
+    "id": 444,
+    "branchCode": "ET0010444",
+    "companyName": "Melba Branch"
+  },
+  {
+    "id": 445,
+    "branchCode": "ET0010445",
+    "companyName": "Bakalca Branch"
+  },
+  {
+    "id": 446,
+    "branchCode": "ET0010446",
+    "companyName": "Bishoftu Branch"
+  },
+  {
+    "id": 447,
+    "branchCode": "ET0010447",
+    "companyName": "Amana Branch"
+  },
+  {
+    "id": 448,
+    "branchCode": "ET0010448",
+    "companyName": "Qacha Branch"
+  },
+  {
+    "id": 449,
+    "branchCode": "ET0010449",
+    "companyName": "Beshale Branch"
+  },
+  {
+    "id": 450,
+    "branchCode": "ET0010450",
+    "companyName": "Bori Branch"
+  },
+  {
+    "id": 451,
+    "branchCode": "ET0010451",
+    "companyName": "Dulo Branch"
+  },
+  {
+    "id": 453,
+    "branchCode": "ET0010453",
+    "companyName": "Qale Branch"
+  },
+  {
+    "id": 454,
+    "branchCode": "ET0010454",
+    "companyName": "Sofomar Branch"
+  },
+  {
+    "id": 455,
+    "branchCode": "ET0010455",
+    "companyName": "Birmaji Branch"
+  },
+  {
+    "id": 456,
+    "branchCode": "ET0010456",
+    "companyName": "Burka Wayu Branch"
+  },
+  {
+    "id": 457,
+    "branchCode": "ET0010457",
+    "companyName": "Horsisa Branch"
+  },
+  {
+    "id": 458,
+    "branchCode": "ET0010458",
+    "companyName": "Halchisa Branch"
+  },
+  {
+    "id": 459,
+    "branchCode": "ET0010459",
+    "companyName": "Jate Branch"
+  },
+  {
+    "id": 461,
+    "branchCode": "ET0010461",
+    "companyName": "Jibat Branch"
+  },
+  {
+    "id": 462,
+    "branchCode": "ET0010462",
+    "companyName": "Dollo Ado Branch"
+  },
+  {
+    "id": 463,
+    "branchCode": "ET0010463",
+    "companyName": "Haro Wanchi Branch"
+  },
+  {
+    "id": 464,
+    "branchCode": "ET0010464",
+    "companyName": "Arefa Branch"
+  },
+  {
+    "id": 465,
+    "branchCode": "ET0010465",
+    "companyName": "Awaro Branch"
+  },
+  {
+    "id": 466,
+    "branchCode": "ET0010466",
+    "companyName": "Airport Forex Bureau"
+  },
+  {
+    "id": 467,
+    "branchCode": "ET0010467",
+    "companyName": "Serbo Branch"
+  },
+  {
+    "id": 468,
+    "branchCode": "ET0010468",
+    "companyName": "Yebu Branch"
+  },
+  {
+    "id": 470,
+    "branchCode": "ET0010470",
+    "companyName": "Melka Debana Branch"
+  },
+  {
+    "id": 471,
+    "branchCode": "ET0010471",
+    "companyName": "Sedecha Branch"
+  },
+  {
+    "id": 472,
+    "branchCode": "ET0010472",
+    "companyName": "Irbu Branch"
+  },
+  {
+    "id": 474,
+    "branchCode": "ET0010474",
+    "companyName": "Bole Airport Branch"
+  },
+  {
+    "id": 475,
+    "branchCode": "ET0010475",
+    "companyName": "Madaro Branch"
+  },
+  {
+    "id": 476,
+    "branchCode": "ET0010476",
+    "companyName": "Nagele Hasasa Branch"
+  },
+  {
+    "id": 477,
+    "branchCode": "ET0010477",
+    "companyName": "Sanate Branch"
+  },
+  {
+    "id": 479,
+    "branchCode": "ET0010479",
+    "companyName": "Sor Micro Branch"
+  },
+  {
+    "id": 480,
+    "branchCode": "ET0010480",
+    "companyName": "Newland Micro Branch"
+  },
+  {
+    "id": 481,
+    "branchCode": "ET0010481",
+    "companyName": "Damo Dadi Branch"
+  },
+  {
+    "id": 482,
+    "branchCode": "ET0010482",
+    "companyName": "Kura Jida Branch"
+  },
+  {
+    "id": 483,
+    "branchCode": "ET0010483",
+    "companyName": "Kefira Branch"
+  },
+  {
+    "id": 484,
+    "branchCode": "ET0010484",
+    "companyName": "Imam Ahmed Mesjid Bran"
+  },
+  {
+    "id": 485,
+    "branchCode": "ET0010485",
+    "companyName": "Abdisa Aga Branch"
+  },
+  {
+    "id": 486,
+    "branchCode": "ET0010486",
+    "companyName": "Nur Branch"
+  },
+  {
+    "id": 487,
+    "branchCode": "ET0010487",
+    "companyName": "Laku Branch"
+  },
+  {
+    "id": 489,
+    "branchCode": "ET0010489",
+    "companyName": "Migira Branch"
+  },
+  {
+    "id": 491,
+    "branchCode": "ET0010491",
+    "companyName": "Conolel Bezabih Petros"
+  },
+  {
+    "id": 493,
+    "branchCode": "ET0010493",
+    "companyName": "Shinshicho Branch"
+  },
+  {
+    "id": 494,
+    "branchCode": "ET0010494",
+    "companyName": "Areka Branch"
+  },
+  {
+    "id": 495,
+    "branchCode": "ET0010495",
+    "companyName": "Bonosha Branch"
+  },
+  {
+    "id": 496,
+    "branchCode": "ET0010496",
+    "companyName": "Bui Branch"
+  },
+  {
+    "id": 497,
+    "branchCode": "ET0010497",
+    "companyName": "Kela Branch"
+  },
+  {
+    "id": 498,
+    "branchCode": "ET0010498",
+    "companyName": "Enseno Branch"
+  },
+  {
+    "id": 499,
+    "branchCode": "ET0010499",
+    "companyName": "Katta Branch"
+  },
+  {
+    "id": 500,
+    "branchCode": "ET0010500",
+    "companyName": "Seka Chokorsa Branch"
+  },
+  {
+    "id": 501,
+    "branchCode": "ET0010501",
+    "companyName": "Mustafa Harawe Branch"
+  },
+  {
+    "id": 502,
+    "branchCode": "ET0010502",
+    "companyName": "Bure Ilu Branch"
+  },
+  {
+    "id": 504,
+    "branchCode": "ET0010504",
+    "companyName": "Bonga Branch"
+  },
+  {
+    "id": 505,
+    "branchCode": "ET0010505",
+    "companyName": "Miesso Branch"
+  },
+  {
+    "id": 506,
+    "branchCode": "ET0010506",
+    "companyName": "Ancher Branch"
+  },
+  {
+    "id": 507,
+    "branchCode": "ET0010507",
+    "companyName": "Gemechis Branch"
+  },
+  {
+    "id": 528,
+    "branchCode": "ET0010528",
+    "companyName": "Nejashi Branch"
+  },
+  {
+    "id": 508,
+    "branchCode": "ET0010508",
+    "companyName": "Chafe Anane Branch"
+  },
+  {
+    "id": 509,
+    "branchCode": "ET0010509",
+    "companyName": "Yai Goro Branch"
+  },
+  {
+    "id": 510,
+    "branchCode": "ET0010510",
+    "companyName": "Hara Dembel Branch"
+  },
+  {
+    "id": 511,
+    "branchCode": "ET0010511",
+    "companyName": "Sinana Branch"
+  },
+  {
+    "id": 513,
+    "branchCode": "ET0010513",
+    "companyName": "Oda Boqota"
+  },
+  {
+    "id": 514,
+    "branchCode": "ET0010514",
+    "companyName": "Dagaga Branch"
+  },
+  {
+    "id": 515,
+    "branchCode": "ET0010515",
+    "companyName": "Burqa Jato Branch"
+  },
+  {
+    "id": 516,
+    "branchCode": "ET0010516",
+    "companyName": "Al-Rahma Branch"
+  },
+  {
+    "id": 517,
+    "branchCode": "ET0010517",
+    "companyName": "Taiwan Branch"
+  },
+  {
+    "id": 518,
+    "branchCode": "ET0010518",
+    "companyName": "Bulullo Branch"
+  },
+  {
+    "id": 519,
+    "branchCode": "ET0010519",
+    "companyName": "Oda Bultum Branch"
+  },
+  {
+    "id": 520,
+    "branchCode": "ET0010520",
+    "companyName": "Garu Hira Branch"
+  },
+  {
+    "id": 521,
+    "branchCode": "ET0010521",
+    "companyName": "Digalu Branch"
+  },
+  {
+    "id": 522,
+    "branchCode": "ET0010522",
+    "companyName": "Tijo Branch"
+  },
+  {
+    "id": 524,
+    "branchCode": "ET0010524",
+    "companyName": "Ego Branch"
+  },
+  {
+    "id": 525,
+    "branchCode": "ET0010525",
+    "companyName": "Shafeta Branch"
+  },
+  {
+    "id": 526,
+    "branchCode": "ET0010526",
+    "companyName": "Alamura Branch"
+  },
+  {
+    "id": 527,
+    "branchCode": "ET0010527",
+    "companyName": "Daka Branch"
+  },
+  {
+    "id": 531,
+    "branchCode": "ET0010531",
+    "companyName": "Nesiha Branch"
+  },
+  {
+    "id": 532,
+    "branchCode": "ET0010532",
+    "companyName": "Gedeb Branch"
+  },
+  {
+    "id": 533,
+    "branchCode": "ET0010533",
+    "companyName": "Kamona Branch"
+  },
+  {
+    "id": 535,
+    "branchCode": "ET0010535",
+    "companyName": "Milqaye Branch"
+  },
+  {
+    "id": 536,
+    "branchCode": "ET0010536",
+    "companyName": "Al-Bukhari Branch"
+  },
+  {
+    "id": 537,
+    "branchCode": "ET0010537",
+    "companyName": "Rabadori Branch"
+  },
+  {
+    "id": 539,
+    "branchCode": "ET0010539",
+    "companyName": "Gara Duba Branch"
+  },
+  {
+    "id": 540,
+    "branchCode": "ET0010540",
+    "companyName": "Wabari Branch"
+  },
+  {
+    "id": 541,
+    "branchCode": "ET0010541",
+    "companyName": "Ramadan Branch"
+  },
+  {
+    "id": 542,
+    "branchCode": "ET0010542",
+    "companyName": "Kusaye Branch"
+  },
+  {
+    "id": 544,
+    "branchCode": "ET0010544",
+    "companyName": "Qoche Branch"
+  },
+  {
+    "id": 545,
+    "branchCode": "ET0010545",
+    "companyName": "Dhaga Bora Branch"
+  },
+  {
+    "id": 546,
+    "branchCode": "ET0010546",
+    "companyName": "Furkan Branch"
+  },
+  {
+    "id": 547,
+    "branchCode": "ET0010547",
+    "companyName": "Amal Branch"
+  },
+  {
+    "id": 548,
+    "branchCode": "ET0010548",
+    "companyName": "Guge Branch"
+  },
+  {
+    "id": 549,
+    "branchCode": "ET0010549",
+    "companyName": "Tobba Branch"
+  },
+  {
+    "id": 550,
+    "branchCode": "ET0010550",
+    "companyName": "Abebech Gobana Branch"
+  },
+  {
+    "id": 551,
+    "branchCode": "ET0010551",
+    "companyName": "Damboya Branch"
+  },
+  {
+    "id": 552,
+    "branchCode": "ET0010552",
+    "companyName": "Boditi Branch"
+  },
+  {
+    "id": 553,
+    "branchCode": "ET0010553",
+    "companyName": "Konso Branch"
+  },
+  {
+    "id": 555,
+    "branchCode": "ET0010555",
+    "companyName": "Hurufa Farado Branch"
+  },
+  {
+    "id": 556,
+    "branchCode": "ET0010556",
+    "companyName": "Tullo Branch"
+  },
+  {
+    "id": 557,
+    "branchCode": "ET0010557",
+    "companyName": "Lami Industrial park"
+  },
+  {
+    "id": 558,
+    "branchCode": "ET0010558",
+    "companyName": "Gara Bolo Branch"
+  },
+  {
+    "id": 559,
+    "branchCode": "ET0010559",
+    "companyName": "Itti Mako Branch"
+  },
+  {
+    "id": 560,
+    "branchCode": "ET0010560",
+    "companyName": "Mammo Mazamir Branch"
+  },
+  {
+    "id": 561,
+    "branchCode": "ET0010561",
+    "companyName": "Bekerware Branch"
+  },
+  {
+    "id": 562,
+    "branchCode": "ET0010562",
+    "companyName": "Sankura Branch"
+  },
+  {
+    "id": 564,
+    "branchCode": "ET0010564",
+    "companyName": "Logia-Sultan-Ali Mirah"
+  },
+  {
+    "id": 565,
+    "branchCode": "ET0010565",
+    "companyName": "Boke Branch"
+  },
+  {
+    "id": 566,
+    "branchCode": "ET0010566",
+    "companyName": "Mina Branch"
+  },
+  {
+    "id": 567,
+    "branchCode": "ET0010567",
+    "companyName": "Hayyu Branch"
+  },
+  {
+    "id": 568,
+    "branchCode": "ET0010568",
+    "companyName": "Lega Saqo Branch"
+  },
+  {
+    "id": 569,
+    "branchCode": "ET0010569",
+    "companyName": "Darraba Bido Branch"
+  },
+  {
+    "id": 573,
+    "branchCode": "ET0010573",
+    "companyName": "Iqra Branch"
+  },
+  {
+    "id": 574,
+    "branchCode": "ET0010574",
+    "companyName": "Fejir Branch"
+  },
+  {
+    "id": 575,
+    "branchCode": "ET0010575",
+    "companyName": "Folle Branch"
+  },
+  {
+    "id": 576,
+    "branchCode": "ET0010576",
+    "companyName": "Didimtu Branch"
+  },
+  {
+    "id": 577,
+    "branchCode": "ET0010577",
+    "companyName": "Dukem industry zone"
+  },
+  {
+    "id": 578,
+    "branchCode": "ET0010578",
+    "companyName": "Murtiguto Branch"
+  },
+  {
+    "id": 579,
+    "branchCode": "ET0010579",
+    "companyName": "Wollo Kombolcha Branch"
+  },
+  {
+    "id": 580,
+    "branchCode": "ET0010580",
+    "companyName": "Tona Branch"
+  },
+  {
+    "id": 581,
+    "branchCode": "ET0010581",
+    "companyName": "Lega Billawo Branch"
+  },
+  {
+    "id": 583,
+    "branchCode": "ET0010583",
+    "companyName": "DERARO BRANCH"
+  },
+  {
+    "id": 584,
+    "branchCode": "ET0010584",
+    "companyName": "AL-Nasir Branch"
+  },
+  {
+    "id": 585,
+    "branchCode": "ET0010585",
+    "companyName": "Tiyo Branch"
+  },
+  {
+    "id": 586,
+    "branchCode": "ET0010586",
+    "companyName": "Asabot Branch"
+  },
+  {
+    "id": 587,
+    "branchCode": "ET0010587",
+    "companyName": "Haro Charchar Branch"
+  },
+  {
+    "id": 588,
+    "branchCode": "ET0010588",
+    "companyName": "Burqa Dhintu Branch"
+  },
+  {
+    "id": 589,
+    "branchCode": "ET0010589",
+    "companyName": "Figa Branch"
+  },
+  {
+    "id": 590,
+    "branchCode": "ET0010590",
+    "companyName": "Hidhabu Abote Branch"
+  },
+  {
+    "id": 591,
+    "branchCode": "ET0010591",
+    "companyName": "Bedhatu Branch"
+  },
+  {
+    "id": 594,
+    "branchCode": "ET0010594",
+    "companyName": "Gurmu Branch"
+  },
+  {
+    "id": 595,
+    "branchCode": "ET0010595",
+    "companyName": "Abdi Qophe Branch"
+  },
+  {
+    "id": 596,
+    "branchCode": "ET0010596",
+    "companyName": "Wato Branch"
+  },
+  {
+    "id": 597,
+    "branchCode": "ET0010597",
+    "companyName": "Ilanso Hallo Branch"
+  },
+  {
+    "id": 598,
+    "branchCode": "ET0010598",
+    "companyName": "Fitala Branch"
+  },
+  {
+    "id": 599,
+    "branchCode": "ET0010599",
+    "companyName": "Catherine Hamlin"
+  },
+  {
+    "id": 603,
+    "branchCode": "ET0010603",
+    "companyName": "Haya Dima Branch"
+  },
+  {
+    "id": 604,
+    "branchCode": "ET0010604",
+    "companyName": "Gara Bushu Branch"
+  },
+  {
+    "id": 605,
+    "branchCode": "ET0010605",
+    "companyName": "Garba Guracha Branch"
+  },
+  {
+    "id": 606,
+    "branchCode": "ET0010606",
+    "companyName": "Lauret Tsegaye"
+  },
+  {
+    "id": 607,
+    "branchCode": "ET0010607",
+    "companyName": "Midhaga Branch"
+  },
+  {
+    "id": 608,
+    "branchCode": "ET0010608",
+    "companyName": "Kurfachale Branch"
+  },
+  {
+    "id": 609,
+    "branchCode": "ET0010609",
+    "companyName": "Dire Jitu Branch"
+  },
+  {
+    "id": 610,
+    "branchCode": "ET0010610",
+    "companyName": "Badr Branch"
+  },
+  {
+    "id": 611,
+    "branchCode": "ET0010611",
+    "companyName": "Artu Branch"
+  },
+  {
+    "id": 614,
+    "branchCode": "ET0010614",
+    "companyName": "Meja Demma Branch"
+  },
+  {
+    "id": 615,
+    "branchCode": "ET0010615",
+    "companyName": "Melka Oda Branch"
+  },
+  {
+    "id": 616,
+    "branchCode": "ET0010616",
+    "companyName": "Dida Boqe Branch"
+  },
+  {
+    "id": 617,
+    "branchCode": "ET0010617",
+    "companyName": "Dinsho Branch"
+  },
+  {
+    "id": 618,
+    "branchCode": "ET0010618",
+    "companyName": "Dambala Micro Branch"
+  },
+  {
+    "id": 619,
+    "branchCode": "ET0010619",
+    "companyName": "Mechaf Tulama Branch"
+  },
+  {
+    "id": 620,
+    "branchCode": "ET0010620",
+    "companyName": "Burqa Shobbe Branch"
+  },
+  {
+    "id": 621,
+    "branchCode": "ET0010621",
+    "companyName": "Edao Boru Branch"
+  },
+  {
+    "id": 625,
+    "branchCode": "ET0010625",
+    "companyName": "Maliyu Branch"
+  },
+  {
+    "id": 626,
+    "branchCode": "ET0010626",
+    "companyName": "Buludo Branch"
+  },
+  {
+    "id": 627,
+    "branchCode": "ET0010627",
+    "companyName": "Aleta Wondo Branch"
+  },
+  {
+    "id": 628,
+    "branchCode": "ET0010628",
+    "companyName": "Koromi Branch"
+  },
+  {
+    "id": 629,
+    "branchCode": "ET0010629",
+    "companyName": "Mogle Branch"
+  },
+  {
+    "id": 630,
+    "branchCode": "ET0010630",
+    "companyName": "Lugo Branch"
+  },
+  {
+    "id": 631,
+    "branchCode": "ET0010631",
+    "companyName": "Ebisa Adugna"
+  },
+  {
+    "id": 632,
+    "branchCode": "ET0010632",
+    "companyName": "Raso Branch"
+  },
+  {
+    "id": 634,
+    "branchCode": "ET0010634",
+    "companyName": "Abishe Gerba Branch"
+  },
+  {
+    "id": 635,
+    "branchCode": "ET0010635",
+    "companyName": "Urji Branch"
+  },
+  {
+    "id": 636,
+    "branchCode": "ET0010636",
+    "companyName": "Tunto Eco Branch"
+  },
+  {
+    "id": 637,
+    "branchCode": "ET0010637",
+    "companyName": "Hamus Gebeya Eco Bran"
+  },
+  {
+    "id": 638,
+    "branchCode": "ET0010638",
+    "companyName": "Hambecho Eco Branch"
+  },
+  {
+    "id": 639,
+    "branchCode": "ET0010639",
+    "companyName": "Dalatti Branch"
+  },
+  {
+    "id": 640,
+    "branchCode": "ET0010640",
+    "companyName": "Ali Bira Branch"
+  },
+  {
+    "id": 641,
+    "branchCode": "ET0010641",
+    "companyName": "Chuko Branch"
+  },
+  {
+    "id": 643,
+    "branchCode": "ET0010643",
+    "companyName": "Golja Branch"
+  },
+  {
+    "id": 644,
+    "branchCode": "ET0010644",
+    "companyName": "Injibara Branch"
+  },
+  {
+    "id": 645,
+    "branchCode": "ET0010645",
+    "companyName": "Melka Hurbu Branch"
+  },
+  {
+    "id": 646,
+    "branchCode": "ET0010646",
+    "companyName": "Roge Branch"
+  },
+  {
+    "id": 647,
+    "branchCode": "ET0010647",
+    "companyName": "Gara Dhanqu Branch"
+  },
+  {
+    "id": 648,
+    "branchCode": "ET0010648",
+    "companyName": "Koshe Mareko Branch"
+  },
+  {
+    "id": 649,
+    "branchCode": "ET0010649",
+    "companyName": "Tulu Kurfo Eco Branch"
+  },
+  {
+    "id": 650,
+    "branchCode": "ET0010650",
+    "companyName": "Hambiso Eco Branch"
+  },
+  {
+    "id": 652,
+    "branchCode": "ET0010652",
+    "companyName": "Dega Gora Eco Branch"
+  },
+  {
+    "id": 654,
+    "branchCode": "ET0010654",
+    "companyName": "Defo Eco Branch"
+  },
+  {
+    "id": 655,
+    "branchCode": "ET0010655",
+    "companyName": "Lole Bulchana Eco Br"
+  },
+  {
+    "id": 656,
+    "branchCode": "ET0010656",
+    "companyName": "Halila Eco Branch"
+  },
+  {
+    "id": 657,
+    "branchCode": "ET0010657",
+    "companyName": "Samera Kolba Eco"
+  },
+  {
+    "id": 659,
+    "branchCode": "ET0010659",
+    "companyName": "Godino Eco Branch"
+  },
+  {
+    "id": 660,
+    "branchCode": "ET0010660",
+    "companyName": "Tullu Jada Eco-Branch"
+  },
+  {
+    "id": 661,
+    "branchCode": "ET0010661",
+    "companyName": "Dire Eco Branch"
+  },
+  {
+    "id": 662,
+    "branchCode": "ET0010662",
+    "companyName": "Hadho Eco Branch"
+  },
+  {
+    "id": 663,
+    "branchCode": "ET0010663",
+    "companyName": "Baka Ijo Eco-Branch"
+  },
+  {
+    "id": 664,
+    "branchCode": "ET0010664",
+    "companyName": "Adadi Eco Branch"
+  },
+  {
+    "id": 665,
+    "branchCode": "ET0010666",
+    "companyName": "Kotoba Eco Branch"
+  },
+  {
+    "id": 666,
+    "branchCode": "ET0010667",
+    "companyName": "Bodda Eco Branch"
+  },
+  {
+    "id": 668,
+    "branchCode": "ET0010669",
+    "companyName": "Warqa Qore Eco Branch"
+  },
+  {
+    "id": 669,
+    "branchCode": "ET0010670",
+    "companyName": "Maya Eco Branch"
+  },
+  {
+    "id": 670,
+    "branchCode": "ET0010671",
+    "companyName": "Dire Xiyara Eco Branch"
+  },
+  {
+    "id": 671,
+    "branchCode": "ET0010672",
+    "companyName": "Wasanu Dido Branch"
+  },
+  {
+    "id": 672,
+    "branchCode": "ET0010673",
+    "companyName": "Tulu dhertu Branch"
+  },
+  {
+    "id": 673,
+    "branchCode": "ET0010674",
+    "companyName": "Elwaye Eco-Branch"
+  },
+  {
+    "id": 674,
+    "branchCode": "ET0010675",
+    "companyName": "Dari Kidame Eco-Branch"
+  },
+  {
+    "id": 675,
+    "branchCode": "ET0010676",
+    "companyName": "Gudetu Robale Eco Bran"
+  },
+  {
+    "id": 677,
+    "branchCode": "ET0010678",
+    "companyName": "Gomole Eco-Branch"
+  },
+  {
+    "id": 678,
+    "branchCode": "ET0010679",
+    "companyName": "Oda Roba Eco Branch"
+  },
+  {
+    "id": 679,
+    "branchCode": "ET0010680",
+    "companyName": "Dinsa Eco Branch"
+  },
+  {
+    "id": 680,
+    "branchCode": "ET0010681",
+    "companyName": "Selka Bakaye Eco Br"
+  },
+  {
+    "id": 681,
+    "branchCode": "ET0010682",
+    "companyName": "Holqa Sofumer Eco Bra"
+  },
+  {
+    "id": 682,
+    "branchCode": "ET0010683",
+    "companyName": "Rayitu Branch"
+  },
+  {
+    "id": 683,
+    "branchCode": "ET0010684",
+    "companyName": "Rayan Branch"
+  },
+  {
+    "id": 684,
+    "branchCode": "ET0010685",
+    "companyName": "Lega Jidha Branch"
+  },
+  {
+    "id": 685,
+    "branchCode": "ET0010686",
+    "companyName": "Akako Branch"
+  },
+  {
+    "id": 687,
+    "branchCode": "ET0010688",
+    "companyName": "Asgori-Suba Eco Branch"
+  },
+  {
+    "id": 688,
+    "branchCode": "ET0010689",
+    "companyName": "Uta Kaka Eco Branch"
+  },
+  {
+    "id": 689,
+    "branchCode": "ET0010690",
+    "companyName": "Serofta Eco Branch"
+  },
+  {
+    "id": 690,
+    "branchCode": "ET0010691",
+    "companyName": "Ardayta Eco Branch"
+  },
+  {
+    "id": 691,
+    "branchCode": "ET0010692",
+    "companyName": "Haqo Eco Branch"
+  },
+  {
+    "id": 692,
+    "branchCode": "ET0010693",
+    "companyName": "Negele Mexema Eco Br"
+  },
+  {
+    "id": 693,
+    "branchCode": "ET0010694",
+    "companyName": "Kuno Gebeya Eco Branch"
+  },
+  {
+    "id": 694,
+    "branchCode": "ET0010695",
+    "companyName": "Hailamariam Gamada Br"
+  },
+  {
+    "id": 696,
+    "branchCode": "ET0010697",
+    "companyName": "Chafe Muda Branch"
+  },
+  {
+    "id": 697,
+    "branchCode": "ET0010698",
+    "companyName": "Wami Biratu Branch"
+  },
+  {
+    "id": 698,
+    "branchCode": "ET0010699",
+    "companyName": "Agari Tullu Branch"
+  },
+  {
+    "id": 699,
+    "branchCode": "ET0010700",
+    "companyName": "Col Alemu Qixxeessa Br"
+  },
+  {
+    "id": 700,
+    "branchCode": "ET0010701",
+    "companyName": "Gadisa Biru Branch"
+  },
+  {
+    "id": 701,
+    "branchCode": "ET0010702",
+    "companyName": "Mari Luqe Branch"
+  },
+  {
+    "id": 702,
+    "branchCode": "ET0010703",
+    "companyName": "Yuba Branch"
+  },
+  {
+    "id": 703,
+    "branchCode": "ET0010704",
+    "companyName": "Lema Guya Branch"
+  },
+  {
+    "id": 704,
+    "branchCode": "ET0010706",
+    "companyName": "Oliqa Dingil Branch"
+  },
+  {
+    "id": 706,
+    "branchCode": "ET0010708",
+    "companyName": "Komto Branch"
+  },
+  {
+    "id": 707,
+    "branchCode": "ET0010709",
+    "companyName": "Anno Branch"
+  },
+  {
+    "id": 708,
+    "branchCode": "ET0010710",
+    "companyName": "Ako Manoye Branch"
+  },
+  {
+    "id": 709,
+    "branchCode": "ET0010711",
+    "companyName": "Boru Joka Branch"
+  },
+  {
+    "id": 710,
+    "branchCode": "ET0010712",
+    "companyName": "Asmerom Legesse Branch"
+  },
+  {
+    "id": 711,
+    "branchCode": "ET0010713",
+    "companyName": "Raphe Branch"
+  },
+  {
+    "id": 712,
+    "branchCode": "ET0010714",
+    "companyName": "Botor Tolay Branch"
+  },
+  {
+    "id": 713,
+    "branchCode": "ET0010715",
+    "companyName": "Meti Branch"
+  },
+  {
+    "id": 714,
+    "branchCode": "ET0010716",
+    "companyName": "Melka Oboshe Branch"
+  },
+  {
+    "id": 716,
+    "branchCode": "ET0010718",
+    "companyName": "Kara Makala Eco Branch"
+  },
+  {
+    "id": 717,
+    "branchCode": "ET0010719",
+    "companyName": "Kase Hija Eco Branch"
+  },
+  {
+    "id": 718,
+    "branchCode": "ET0010720",
+    "companyName": "Hardim Eco Branch"
+  },
+  {
+    "id": 719,
+    "branchCode": "ET0010721",
+    "companyName": "Dire Dawa Free Trade"
+  },
+  {
+    "id": 720,
+    "branchCode": "ET0010722",
+    "companyName": "Falana Eco Branch"
+  },
+  {
+    "id": 721,
+    "branchCode": "ET0010723",
+    "companyName": "Fachatu Eco Branch"
+  },
+  {
+    "id": 722,
+    "branchCode": "ET0010724",
+    "companyName": "Malka Shane Branch"
+  },
+  {
+    "id": 723,
+    "branchCode": "ET0010725",
+    "companyName": "Dusta Eco Branch"
+  },
+  {
+    "id": 725,
+    "branchCode": "ET0010727",
+    "companyName": "Gudattu Qarsa Eco Br"
+  },
+  {
+    "id": 726,
+    "branchCode": "ET0010728",
+    "companyName": "Soddo Garbo Eco Branch"
+  },
+  {
+    "id": 727,
+    "branchCode": "ET0010729",
+    "companyName": "Chachu Branch"
+  },
+  {
+    "id": 728,
+    "branchCode": "ET0010731",
+    "companyName": "Chafe Tuma Branch"
+  },
+  {
+    "id": 729,
+    "branchCode": "ET0010732",
+    "companyName": "Gachana Branch"
+  },
+  {
+    "id": 730,
+    "branchCode": "ET0010733",
+    "companyName": "Gebeyehu Gurmu Branch"
+  },
+  {
+    "id": 2,
+    "branchCode": "ET0010002",
+    "companyName": "Adama Branch"
+  },
+  {
+    "id": 4,
+    "branchCode": "ET0010004",
+    "companyName": "Kersa Main Branch"
+  },
+  {
+    "id": 13,
+    "branchCode": "ET0010013",
+    "companyName": "Dire Dawa Branch"
+  },
+  {
+    "id": 22,
+    "branchCode": "ET0010022",
+    "companyName": "Bole-Nura Hera Branch"
+  },
+  {
+    "id": 31,
+    "branchCode": "ET0010031",
+    "companyName": "Kuyyu Branch"
+  },
+  {
+    "id": 40,
+    "branchCode": "ET0010040",
+    "companyName": "Dilla Branch"
+  },
+  {
+    "id": 50,
+    "branchCode": "ET0010050",
+    "companyName": "Anger Gute Branch"
+  },
+  {
+    "id": 59,
+    "branchCode": "ET0010059",
+    "companyName": "Robe Dedea Branch"
+  },
+  {
+    "id": 68,
+    "branchCode": "ET0010068",
+    "companyName": "Gelemso Branch"
+  },
+  {
+    "id": 78,
+    "branchCode": "ET0010078",
+    "companyName": "Ginchi Branch"
+  },
+  {
+    "id": 82,
+    "branchCode": "ET0010082",
+    "companyName": "Kebena Branch"
+  },
+  {
+    "id": 83,
+    "branchCode": "ET0010083",
+    "companyName": "Sebeta Hawas Branch"
+  },
+  {
+    "id": 94,
+    "branchCode": "ET0010094",
+    "companyName": "Wolayita Soddo Branch"
+  },
+  {
+    "id": 105,
+    "branchCode": "ET0010105",
+    "companyName": "Metema Branch"
+  },
+  {
+    "id": 114,
+    "branchCode": "ET0010114",
+    "companyName": "Bedelle Branch"
+  },
+  {
+    "id": 123,
+    "branchCode": "ET0010123",
+    "companyName": "Shire Branch"
+  },
+  {
+    "id": 132,
+    "branchCode": "ET0010132",
+    "companyName": "Agemsa Branch"
+  },
+  {
+    "id": 141,
+    "branchCode": "ET0010141",
+    "companyName": "Gambella Branch"
+  },
+  {
+    "id": 150,
+    "branchCode": "ET0010150",
+    "companyName": "Batu Branch"
+  },
+  {
+    "id": 159,
+    "branchCode": "ET0010159",
+    "companyName": "Tepi Branch"
+  },
+  {
+    "id": 164,
+    "branchCode": "ET0010164",
+    "companyName": "Bole Atlas Branch"
+  },
+  {
+    "id": 165,
+    "branchCode": "ET0010165",
+    "companyName": "Mogor Branch"
+  },
+  {
+    "id": 173,
+    "branchCode": "ET0010173",
+    "companyName": "Wirtu Merkato Branch"
+  },
+  {
+    "id": 184,
+    "branchCode": "ET0010184",
+    "companyName": "Awash Sebat Kilo"
+  },
+  {
+    "id": 193,
+    "branchCode": "ET0010193",
+    "companyName": "Warra Jarso Branch"
+  },
+  {
+    "id": 202,
+    "branchCode": "ET0010202",
+    "companyName": "Leka Dulacha Branch"
+  },
+  {
+    "id": 212,
+    "branchCode": "ET0010212",
+    "companyName": "Dambi Branch"
+  },
+  {
+    "id": 220,
+    "branchCode": "ET0010220",
+    "companyName": "Ilu Gelan Branch"
+  },
+  {
+    "id": 231,
+    "branchCode": "ET0010231",
+    "companyName": "Qore Branch"
+  },
+  {
+    "id": 238,
+    "branchCode": "ET0010238",
+    "companyName": "Shararo Branch"
+  },
+  {
+    "id": 245,
+    "branchCode": "ET0010245",
+    "companyName": "Badano Branch"
+  },
+  {
+    "id": 732,
+    "branchCode": "ET0010735",
+    "companyName": "Badho Dachas Branch"
+  },
+  {
+    "id": 733,
+    "branchCode": "ET0010736",
+    "companyName": "Laga Jajja Branch"
+  },
+  {
+    "id": 734,
+    "branchCode": "ET0010738",
+    "companyName": "Jimma Sanbate Branch"
+  },
+  {
+    "id": 735,
+    "branchCode": "ET0010739",
+    "companyName": "Yai Malka branch"
+  },
+  {
+    "id": 736,
+    "branchCode": "ET0010740",
+    "companyName": "Golbo branch"
+  },
+  {
+    "id": 737,
+    "branchCode": "ET0010741",
+    "companyName": "Ertu Branch"
+  },
+  {
+    "id": 739,
+    "branchCode": "ET0010743",
+    "companyName": "Gora Branch"
+  },
+  {
+    "id": 740,
+    "branchCode": "ET0010744",
+    "companyName": "Gada Melba Branch"
+  },
+  {
+    "id": 741,
+    "branchCode": "ET0010747",
+    "companyName": "Koye Fache Branch"
+  },
+  {
+    "id": 742,
+    "branchCode": "ET0010748",
+    "companyName": "Koticha Branch"
+  },
+  {
+    "id": 743,
+    "branchCode": "ET0010749",
+    "companyName": "Konno Branch"
+  },
+  {
+    "id": 744,
+    "branchCode": "ET0010750",
+    "companyName": "Zerihun Wadajo branch"
+  },
+  {
+    "id": 745,
+    "branchCode": "ET0010751",
+    "companyName": "Tokumma branch"
+  },
+  {
+    "id": 747,
+    "branchCode": "ET0010753",
+    "companyName": "Shonkola Branch"
+  },
+  {
+    "id": 748,
+    "branchCode": "ET0010755",
+    "companyName": "Allache Branch"
+  },
+  {
+    "id": 749,
+    "branchCode": "ET0010756",
+    "companyName": "Adi-Haki Branch"
+  },
+  {
+    "id": 750,
+    "branchCode": "ET0010757",
+    "companyName": "Enkodo Branch"
+  },
+  {
+    "id": 751,
+    "branchCode": "ET0010758",
+    "companyName": "Adwa Branch"
+  },
+  {
+    "id": 752,
+    "branchCode": "ET0010759",
+    "companyName": "Godena selam"
+  },
+  {
+    "id": 753,
+    "branchCode": "ET0010760",
+    "companyName": "Wukro Branch"
+  },
+  {
+    "id": 754,
+    "branchCode": "ET0010761",
+    "companyName": "Ijo Old Branch"
+  },
+  {
+    "id": 755,
+    "branchCode": "ET0010762",
+    "companyName": "Sharif Kalid Eco-Branc"
+  },
+  {
+    "id": 757,
+    "branchCode": "ET0010764",
+    "companyName": "Bordode Eco-Branch"
+  },
+  {
+    "id": 758,
+    "branchCode": "ET0010765",
+    "companyName": "Oda Nagelle Eco-Branch"
+  },
+  {
+    "id": 759,
+    "branchCode": "ET0010766",
+    "companyName": "Qanxicha Eco-Branch"
+  },
+  {
+    "id": 760,
+    "branchCode": "ET0010767",
+    "companyName": "Udassa Eco-Branch"
+  },
+  {
+    "id": 761,
+    "branchCode": "ET0010768",
+    "companyName": "Qollo Siri Eco-Branch"
+  },
+  {
+    "id": 762,
+    "branchCode": "ET0010769",
+    "companyName": "Aba Goro Eco-Branch"
+  },
+  {
+    "id": 763,
+    "branchCode": "ET0010770",
+    "companyName": "Choche Eco-Branch"
+  },
+  {
+    "id": 764,
+    "branchCode": "ET0010771",
+    "companyName": "Akko Eco-Branch"
+  },
+  {
+    "id": 766,
+    "branchCode": "ET0010773",
+    "companyName": "Challo Eco-Branch"
+  },
+  {
+    "id": 767,
+    "branchCode": "ET0010774",
+    "companyName": "Haso Eco-Branch"
+  },
+  {
+    "id": 768,
+    "branchCode": "ET0010775",
+    "companyName": "Gaba Jimata Eco-Branch"
+  },
+  {
+    "id": 769,
+    "branchCode": "ET0010776",
+    "companyName": "Waqenxira Xijo Eco-Bra"
+  },
+  {
+    "id": 770,
+    "branchCode": "ET0010777",
+    "companyName": "Eddo Eco-Branch"
+  },
+  {
+    "id": 771,
+    "branchCode": "ET0010778",
+    "companyName": "Hisu Eco-Branch"
+  },
+  {
+    "id": 772,
+    "branchCode": "ET0010779",
+    "companyName": "Ambentu Eco-Branch"
+  },
+  {
+    "id": 773,
+    "branchCode": "ET0010780",
+    "companyName": "Dillo Eco-Branch"
+  },
+  {
+    "id": 774,
+    "branchCode": "ET0010781",
+    "companyName": "Burqa Gogeti Branch"
+  },
+  {
+    "id": 247,
+    "branchCode": "ET0010247",
+    "companyName": "Chalanqo Branch"
+  },
+  {
+    "id": 259,
+    "branchCode": "ET0010259",
+    "companyName": "Tabor Branch"
+  },
+  {
+    "id": 267,
+    "branchCode": "ET0010267",
+    "companyName": "Derartu Tullu Branch"
+  },
+  {
+    "id": 276,
+    "branchCode": "ET0010276",
+    "companyName": "Melka Jebdu Branch"
+  },
+  {
+    "id": 287,
+    "branchCode": "ET0010287",
+    "companyName": "Kokosa Branch"
+  },
+  {
+    "id": 294,
+    "branchCode": "ET0010294",
+    "companyName": "Mechara Branch"
+  },
+  {
+    "id": 304,
+    "branchCode": "ET0010304",
+    "companyName": "Torban Wale Branch"
+  },
+  {
+    "id": 315,
+    "branchCode": "ET0010315",
+    "companyName": "Bake Jama Branch"
+  },
+  {
+    "id": 322,
+    "branchCode": "ET0010322",
+    "companyName": "Karra Qore Branch"
+  },
+  {
+    "id": 326,
+    "branchCode": "ET0010326",
+    "companyName": "Dabe Soloke Branch"
+  },
+  {
+    "id": 334,
+    "branchCode": "ET0010334",
+    "companyName": "GeneralWakoGutu Branch"
+  },
+  {
+    "id": 343,
+    "branchCode": "ET0010343",
+    "companyName": "Merde Branch"
+  },
+  {
+    "id": 352,
+    "branchCode": "ET0010352",
+    "companyName": "Warka Branch"
+  },
+  {
+    "id": 360,
+    "branchCode": "ET0010360",
+    "companyName": "Omo Nada Branch"
+  },
+  {
+    "id": 370,
+    "branchCode": "ET0010370",
+    "companyName": "Gara Baru Branch"
+  },
+  {
+    "id": 377,
+    "branchCode": "ET0010377",
+    "companyName": "Sheik Mohammed Reshad"
+  },
+  {
+    "id": 388,
+    "branchCode": "ET0010388",
+    "companyName": "Handhura Tulama Branch"
+  },
+  {
+    "id": 401,
+    "branchCode": "ET0010401",
+    "companyName": "Harato Branch"
+  },
+  {
+    "id": 407,
+    "branchCode": "ET0010407",
+    "companyName": "Fedis Branch"
+  },
+  {
+    "id": 414,
+    "branchCode": "ET0010414",
+    "companyName": "Haramain Branch"
+  },
+  {
+    "id": 422,
+    "branchCode": "ET0010422",
+    "companyName": "Debasso Branch"
+  },
+  {
+    "id": 432,
+    "branchCode": "ET0010432",
+    "companyName": "Liban Chukala Branch"
+  },
+  {
+    "id": 443,
+    "branchCode": "ET0010443",
+    "companyName": "Shala Branch"
+  },
+  {
+    "id": 452,
+    "branchCode": "ET0010452",
+    "companyName": "Tiksa Jima Branch"
+  },
+  {
+    "id": 460,
+    "branchCode": "ET0010460",
+    "companyName": "Lemo Branch"
+  },
+  {
+    "id": 469,
+    "branchCode": "ET0010469",
+    "companyName": "Fincha'a Branch"
+  },
+  {
+    "id": 478,
+    "branchCode": "ET0010478",
+    "companyName": "Ganda Qore Branch"
+  },
+  {
+    "id": 488,
+    "branchCode": "ET0010488",
+    "companyName": "Madha Galma Branch"
+  },
+  {
+    "id": 490,
+    "branchCode": "ET0010490",
+    "companyName": "Bole Cargo Branch"
+  },
+  {
+    "id": 492,
+    "branchCode": "ET0010492",
+    "companyName": "Durame Branch"
+  },
+  {
+    "id": 503,
+    "branchCode": "ET0010503",
+    "companyName": "Hurumu Branch"
+  },
+  {
+    "id": 512,
+    "branchCode": "ET0010512",
+    "companyName": "Kiltu Dema Branch"
+  },
+  {
+    "id": 523,
+    "branchCode": "ET0010523",
+    "companyName": "Barecha Branch"
+  },
+  {
+    "id": 534,
+    "branchCode": "ET0010534",
+    "companyName": "Dhumuga Branch"
+  },
+  {
+    "id": 543,
+    "branchCode": "ET0010543",
+    "companyName": "Axale Jatani Branch"
+  },
+  {
+    "id": 554,
+    "branchCode": "ET0010554",
+    "companyName": "Jajura Branch"
+  },
+  {
+    "id": 563,
+    "branchCode": "ET0010563",
+    "companyName": "Gesupa Branch"
+  },
+  {
+    "id": 570,
+    "branchCode": "ET0010570",
+    "companyName": "Abba Sena Branch"
+  },
+  {
+    "id": 571,
+    "branchCode": "ET0010571",
+    "companyName": "Kolobo Branch"
+  },
+  {
+    "id": 572,
+    "branchCode": "ET0010572",
+    "companyName": "Homecho Branch"
+  },
+  {
+    "id": 582,
+    "branchCode": "ET0010582",
+    "companyName": "Debre Birhan Branch"
+  },
+  {
+    "id": 593,
+    "branchCode": "ET0010593",
+    "companyName": "Qulubi Branch"
+  },
+  {
+    "id": 601,
+    "branchCode": "ET0010601",
+    "companyName": "Geja Geribo Branch"
+  },
+  {
+    "id": 613,
+    "branchCode": "ET0010613",
+    "companyName": "Birbirsa Qaraxa Branch"
+  },
+  {
+    "id": 624,
+    "branchCode": "ET0010624",
+    "companyName": "Boru Bilo Branch"
+  },
+  {
+    "id": 633,
+    "branchCode": "ET0010633",
+    "companyName": "Aba Gemechis Branch"
+  },
+  {
+    "id": 642,
+    "branchCode": "ET0010642",
+    "companyName": "Chelelektu Branch"
+  },
+  {
+    "id": 651,
+    "branchCode": "ET0010651",
+    "companyName": "Dubar Eco Branch"
+  },
+  {
+    "id": 653,
+    "branchCode": "ET0010653",
+    "companyName": "Arba Eco Branch"
+  },
+  {
+    "id": 667,
+    "branchCode": "ET0010668",
+    "companyName": "Guddu Eco Branch"
+  },
+  {
+    "id": 676,
+    "branchCode": "ET0010677",
+    "companyName": "Birbirsa Kojowa Eco-Br"
+  },
+  {
+    "id": 686,
+    "branchCode": "ET0010687",
+    "companyName": "Tulu Fati Branch"
+  },
+  {
+    "id": 695,
+    "branchCode": "ET0010696",
+    "companyName": "Aster Gano Branch"
+  },
+  {
+    "id": 705,
+    "branchCode": "ET0010707",
+    "companyName": "Chalalaqi Branch"
+  },
+  {
+    "id": 715,
+    "branchCode": "ET0010717",
+    "companyName": "Gara Muktar Eco Branch"
+  },
+  {
+    "id": 724,
+    "branchCode": "ET0010726",
+    "companyName": "Yukiro Kamise Eco-Bran"
+  },
+  {
+    "id": 731,
+    "branchCode": "ET0010734",
+    "companyName": "Ona Jarsayu Branch"
+  },
+  {
+    "id": 738,
+    "branchCode": "ET0010742",
+    "companyName": "Darge Branch"
+  },
+  {
+    "id": 746,
+    "branchCode": "ET0010752",
+    "companyName": "Kara Mexi Branch"
+  },
+  {
+    "id": 756,
+    "branchCode": "ET0010763",
+    "companyName": "Biyo Awale Eco-Branch"
+  },
+  {
+    "id": 765,
+    "branchCode": "ET0010772",
+    "companyName": "Gatta Eco-Branch"
+  }
+]
