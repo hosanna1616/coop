@@ -1,6 +1,7 @@
 import { getServerAuthSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getCurrentUser, getLeaderboardForDashboard, getProfileStats } from "@/app/actions/users";
+import { getRanks } from "@/app/actions/ranks";
 import { getTerritoryDashboardStats } from "@/app/actions/mission";
 import { getBranchTerritoryForMember, getTerritoryCellsForMember, getAllBranchTerritoriesForAdmin } from "@/app/actions/branch-territory";
 import { xpProgress, xpToNextRank, nextRankLabel } from "@/lib/rank";
@@ -8,11 +9,16 @@ import { TerritoryDashboard } from "@/components/territory/TerritoryDashboard";
 
 export const dynamic = "force-dynamic";
 
-const RANK_LABELS: Record<string, string> = {
-  CADET: "R1 - CADET",
-  OFFICER: "R2 - OFFICER",
-  CAPTAIN: "R3 - CAPTAIN",
-};
+function buildRankLabels(ranks: Awaited<ReturnType<typeof getRanks>>): Record<string, string> {
+  const sorted = [...ranks].sort(
+    (a, b) => a.displayOrder - b.displayOrder || a.minXp - b.minXp
+  );
+  const map: Record<string, string> = {};
+  sorted.forEach((r, i) => {
+    map[r.code] = `R${i + 1} - ${r.name.toUpperCase()}`;
+  });
+  return map;
+}
 
 export default async function HomePage() {
   const session = await getServerAuthSession();
@@ -29,7 +35,22 @@ export default async function HomePage() {
   const isAdmin = session.role === "ADMIN";
   const isBranchManager = session.role === "BRANCH_MANAGER";
 
-  const [stats, leaderboardData, profileStats, xpProgressData, branchTerritory, territoryCells, adminTerritories] =
+  let ranks: Awaited<ReturnType<typeof getRanks>> = [];
+  try {
+    ranks = await getRanks();
+  } catch {
+    ranks = [];
+  }
+  const RANK_LABELS = buildRankLabels(ranks);
+  const rankTierByCode: Record<string, string> = {};
+  [...ranks]
+    .sort((a, b) => a.displayOrder - b.displayOrder || a.minXp - b.minXp)
+    .forEach((r, i) => {
+      rankTierByCode[r.code] = `R${i + 1}`;
+    });
+  const currentUserRankTier = rankTierByCode[user.rank];
+
+  const [stats, leaderboardData, profileStats, branchTerritory, territoryCells, adminTerritories] =
     await Promise.all([
       getTerritoryDashboardStats(branchIdForStatsAndMap),
       getLeaderboardForDashboard(
@@ -41,7 +62,6 @@ export default async function HomePage() {
         branchId: session.role === "ADMIN" ? null : (user.branchId ?? user.team?.branchId ?? null),
         role: session.role,
       }),
-      Promise.resolve(xpProgress(user.xp)),
       !isAdmin && branchIdForStatsAndMap
         ? getBranchTerritoryForMember(branchIdForStatsAndMap).catch(() => null)
         : Promise.resolve(null),
@@ -50,6 +70,8 @@ export default async function HomePage() {
         : Promise.resolve([]),
       isAdmin ? getAllBranchTerritoriesForAdmin().catch(() => []) : Promise.resolve([]),
     ]);
+
+  const xpProgressData = xpProgress(ranks, user.xp);
 
   const useGoogleMaps = Boolean(process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY);
 
@@ -92,8 +114,8 @@ export default async function HomePage() {
       leaderboardEntries={leaderboardEntries}
       leaderboardPosition={leaderboardData.position}
       leaderboardCurrentUserEntry={currentUserEntry}
-      xpToNextRank={xpToNextRank(user.xp)}
-      nextRankLabel={nextRankLabel(user.xp)}
+      xpToNextRank={xpToNextRank(ranks, user.xp)}
+      nextRankLabel={nextRankLabel(ranks, user.xp)}
       profileStats={{
         zonesCaptured: profileStats.zonesCaptured,
         merchantsInducted: profileStats.merchantsInducted,
@@ -105,6 +127,7 @@ export default async function HomePage() {
       currentUserRank={user.rank}
       showOfficerProfile={session.role !== "ADMIN"}
       branchId={branchIdForStatsAndMap}
+      rankTier={currentUserRankTier}
       branchTerritory={branchTerritory ?? null}
       territoryCells={territoryCells}
       isBranchManager={isBranchManager}

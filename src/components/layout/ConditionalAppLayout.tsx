@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { SidebarLayout } from "@/components/layout/SidebarLayout";
 import { useUserRole } from "@/contexts/UserRoleContext";
+import { NotificationHost } from "@/components/notifications/NotificationHost";
 
 export function ConditionalAppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -14,9 +15,14 @@ export function ConditionalAppLayout({ children }: { children: React.ReactNode }
   }
 
   const useSidebar = role === "ADMIN" || role === "BRANCH_MANAGER";
-  return useSidebar ? (
-    <SidebarLayout>{children}</SidebarLayout>
-  ) : (
-    <MobileLayout>{children}</MobileLayout>
+  return (
+    <>
+      <NotificationHost />
+      {useSidebar ? (
+        <SidebarLayout>{children}</SidebarLayout>
+      ) : (
+        <MobileLayout>{children}</MobileLayout>
+      )}
+    </>
   );
 }

@@ -1,7 +1,9 @@
 import { prisma } from "@/lib/prisma";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { ScoutReportForm } from "@/components/forms/scout-report-form";
+import { getServerAuthSession } from "@/lib/auth";
 
 function formatZoneCode(zoneId: string): string {
   if (/^[A-Z0-9]+-[A-Z0-9]+-[A-Z0-9]+-\d+$/i.test(zoneId)) {
@@ -15,6 +17,9 @@ export default async function ScoutPage({
 }: {
   params: Promise<{ zoneId: string }>;
 }) {
+  const session = await getServerAuthSession();
+  if (session?.role === "ADMIN") redirect("/");
+
   const { zoneId: zoneIdParam } = await params;
   const zoneCode = formatZoneCode(zoneIdParam);
 

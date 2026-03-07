@@ -510,9 +510,9 @@ function AdminMerchantDetailView({ detail }: { detail: MerchantDetail }) {
       <dl className="grid grid-cols-[minmax(8rem,auto)_1fr] gap-x-4 gap-y-1 font-mono text-sm">
         <AdminDetailRow label="Owner name" value={detail.ownerName} />
         <AdminDetailRow label="Citizen number" value={detail.citizenNumber} />
-        <AdminDetailRow label="National ID" value={detail.nationalIdNumber} />
-        <AdminDetailRow label="Trade license" value={detail.tradeLicenseNumber} />
-        <AdminDetailRow label="TIN" value={detail.tinNumber} />
+        <AdminDetailRow label="National ID" value={detail.nationalIdNumber ?? "—"} />
+        <AdminDetailRow label="Trade license" value={detail.tradeLicenseNumber ?? "—"} />
+        <AdminDetailRow label="TIN" value={detail.tinNumber ?? "—"} />
         <AdminDetailRow label="Phone" value={detail.phoneNumber} />
         <AdminDetailRow label="Merchant account" value={detail.merchantAccountNumber || "—"} />
         <dt className="text-muted-foreground">Deployment assets</dt>

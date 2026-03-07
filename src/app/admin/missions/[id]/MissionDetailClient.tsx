@@ -22,9 +22,11 @@ type Mission = {
     title: string;
     description: string | null;
     status: string;
+    territoryCell?: { id: string; code: string } | null;
     assignee: { id: string; name: string };
   }[];
   branch: { id: string; name: string } | null;
+  territoryCell?: { id: string; code: string } | null;
 };
 
 export function MissionDetailClient({ mission }: { mission: Mission }) {
@@ -49,6 +51,7 @@ export function MissionDetailClient({ mission }: { mission: Mission }) {
           <CardTitle className="font-mono">{mission.name}</CardTitle>
           <p className="text-sm text-muted-foreground">
             Status: {mission.status} {mission.branch && `· ${mission.branch.name}`}
+            {mission.territoryCell && ` · Cell: ${mission.territoryCell.code}`}
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -86,6 +89,7 @@ export function MissionDetailClient({ mission }: { mission: Mission }) {
                 {mission.tasks.map((t) => (
                   <li key={t.id}>
                     {t.title} → {t.assignee.name} ({t.status})
+                    {t.territoryCell && ` · Cell: ${t.territoryCell.code}`}
                   </li>
                 ))}
               </ul>

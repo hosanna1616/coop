@@ -25,6 +25,40 @@ import { useUserRole } from "@/contexts/UserRoleContext";
 import { PortalLoadingInline } from "@/components/ui/portal-loading";
 import type { SelectedZone } from "./types";
 import type { TerritoryCellWithCoords, AdminBranchTerritory, TerritoryCellWithBranchName } from "@/app/actions/branch-territory";
+import { getMapPins, type MapPinScouted, type MapPinInducted } from "@/app/actions/map-pins";
+import { getMerchantDetail, type MerchantDetail } from "@/app/actions/merchants";
+import { MapPinDetailDrawer } from "./MapPinDetailDrawer";
+
+const PIN_CLUSTER_RADIUS_DEG = 0.00008;
+
+/** Spread pins that share the same position so multiple merchants in one cell are all visible. */
+function spreadPinPositions<T extends { locationLat: number; locationLng: number }>(
+  pins: T[]
+): { pin: T; lat: number; lng: number }[] {
+  const key = (lat: number, lng: number) => `${lat.toFixed(6)},${lng.toFixed(6)}`;
+  const groups = new Map<string, T[]>();
+  for (const pin of pins) {
+    const k = key(pin.locationLat, pin.locationLng);
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k)!.push(pin);
+  }
+  const result: { pin: T; lat: number; lng: number }[] = [];
+  for (const [, group] of groups) {
+    if (group.length === 1) {
+      result.push({ pin: group[0], lat: group[0].locationLat, lng: group[0].locationLng });
+    } else {
+      group.forEach((p, i) => {
+        const angle = (i / group.length) * 2 * Math.PI;
+        result.push({
+          pin: p,
+          lat: p.locationLat + PIN_CLUSTER_RADIUS_DEG * Math.cos(angle),
+          lng: p.locationLng + PIN_CLUSTER_RADIUS_DEG * Math.sin(angle),
+        });
+      });
+    }
+  }
+  return result;
+}
 
 export type { SelectedZone };
 
@@ -112,7 +146,10 @@ function AdminTerritoryContent({
   onCellClick,
 }: {
   adminTerritories: AdminBranchTerritory[];
-  onCellClick: (cell: TerritoryCellWithBranchName) => void;
+  onCellClick: (
+    cell: TerritoryCellWithBranchName,
+    tapPosition?: { lat: number; lng: number }
+  ) => void;
 }) {
   return (
     <>
@@ -144,7 +181,11 @@ function AdminTerritoryContent({
                   fillOpacity: 0.6,
                 }}
                 eventHandlers={{
-                  click: () => onCellClick(cell),
+                  click: (e) =>
+                    onCellClick(cell, {
+                      lat: e.latlng.lat,
+                      lng: e.latlng.lng,
+                    }),
                 }}
               />
             );
@@ -168,7 +209,10 @@ function TerritoryContent({
   territoryCells: TerritoryCellWithCoords[];
   isBranchManager: boolean;
   boundaryPreview: { lat: number; lng: number }[];
-  onCellClick: (cell: TerritoryCellWithCoords) => void;
+  onCellClick: (
+    cell: TerritoryCellWithCoords,
+    tapPosition?: { lat: number; lng: number }
+  ) => void;
   isEditMode?: boolean;
   onVertexDrag?: (index: number, point: { lat: number; lng: number }) => void;
 }) {
@@ -217,8 +261,12 @@ function TerritoryContent({
               fillOpacity: 0.6,
             }}
             eventHandlers={{
-                  click: () => onCellClick(cell),
-                }}
+              click: (e) =>
+                onCellClick(cell, {
+                  lat: e.latlng.lat,
+                  lng: e.latlng.lng,
+                }),
+            }}
           />
         );
       })}
@@ -253,6 +301,7 @@ export function MapViewClient({
   const [zones, setZones] = useState<ZoneWithStats[]>([]);
   const [selected, setSelected] = useState<SelectedZone | null>(null);
   const [selectedTerritoryCell, setSelectedTerritoryCell] = useState<TerritoryCellWithCoords | TerritoryCellWithBranchName | null>(null);
+  const [tapPosition, setTapPosition] = useState<{ lat: number; lng: number } | null>(null);
   const [view, setView] = useState<"details" | "scout-form">("details");
   const [loading, setLoading] = useState(true);
   const [boundaryPoints, setBoundaryPoints] = useState<{ lat: number; lng: number }[]>([]);
@@ -262,6 +311,15 @@ export function MapViewClient({
     () => new Set(ZONE_STATUS_LABELS)
   );
   const { role: userRole } = useUserRole();
+
+  const [mapPins, setMapPins] = useState<{ scouted: MapPinScouted[]; inducted: MapPinInducted[] } | null>(null);
+  const [selectedPin, setSelectedPin] = useState<
+    | { type: "scouted"; data: MapPinScouted }
+    | { type: "inducted"; id: string }
+    | null
+  >(null);
+  const [merchantDetailForPin, setMerchantDetailForPin] = useState<MerchantDetail | null>(null);
+  const [pinDetailLoading, setPinDetailLoading] = useState(false);
 
   const inDefineMode = isBranchManager && !branchTerritory && !isEditingBoundary;
   const inEditBoundaryMode = isBranchManager && branchTerritory && isEditingBoundary;
@@ -298,6 +356,38 @@ export function MapViewClient({
       }
     })();
   }, [branchId]);
+
+  const showPins = userRole === "ADMIN" || userRole === "BRANCH_MANAGER" || userRole === "PLAYER";
+  const refetchMapPins = useCallback(() => {
+    if (!showPins) return;
+    getMapPins(branchId ?? null).then((p) => setMapPins(p)).catch(() => setMapPins(null));
+  }, [showPins, branchId]);
+  useEffect(() => {
+    if (!showPins) {
+      setMapPins(null);
+      return;
+    }
+    refetchMapPins();
+  }, [showPins, branchId, refetchMapPins]);
+
+  const spreadScouted = useMemo(
+    () => (mapPins ? spreadPinPositions(mapPins.scouted) : []),
+    [mapPins]
+  );
+  const spreadInducted = useMemo(
+    () => (mapPins ? spreadPinPositions(mapPins.inducted) : []),
+    [mapPins]
+  );
+
+  useEffect(() => {
+    if (selectedPin?.type === "inducted" && selectedPin.id) {
+      setPinDetailLoading(true);
+      setMerchantDetailForPin(null);
+      getMerchantDetail(selectedPin.id).then((d) => setMerchantDetailForPin(d ?? null)).finally(() => setPinDetailLoading(false));
+    } else {
+      setMerchantDetailForPin(null);
+    }
+  }, [selectedPin?.type, selectedPin?.id]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -354,13 +444,19 @@ export function MapViewClient({
 
   const handleZoneClick = (sel: SelectedZone) => {
     setSelectedTerritoryCell(null);
+    setSelectedPin(null);
     setSelected(sel);
     setView("details");
   };
 
-  const handleTerritoryCellClick = (cell: TerritoryCellWithCoords | TerritoryCellWithBranchName) => {
+  const handleTerritoryCellClick = (
+    cell: TerritoryCellWithCoords | TerritoryCellWithBranchName,
+    clickedPosition?: { lat: number; lng: number }
+  ) => {
     setSelected(null);
+    setSelectedPin(null);
     setSelectedTerritoryCell(cell);
+    if (clickedPosition) setTapPosition(clickedPosition);
   };
 
   const openScoutForm = () => {
@@ -370,6 +466,8 @@ export function MapViewClient({
   const closeDrawer = () => {
     setSelected(null);
     setSelectedTerritoryCell(null);
+    setSelectedPin(null);
+    setMerchantDetailForPin(null);
     setView("details");
   };
 
@@ -434,7 +532,11 @@ export function MapViewClient({
     );
   }
 
-  const showEmptyState = adminTerritories.length === 0 && !branchTerritory && !isBranchManager;
+  const showEmptyState =
+    userRole !== "ADMIN" &&
+    adminTerritories.length === 0 &&
+    !branchTerritory &&
+    !isBranchManager;
   if (showEmptyState) {
     return (
       <div
@@ -520,6 +622,50 @@ export function MapViewClient({
               onVertexDrag={inEditBoundaryMode ? handleVertexDrag : undefined}
             />
           )}
+          {mapPins && (
+            <>
+              {spreadScouted.map(({ pin: lead, lat, lng }) => (
+                <Marker
+                  key={`scouted-${lead.id}`}
+                  position={[lat, lng]}
+                  eventHandlers={{
+                    click: () => {
+                      setSelected(null);
+                      setSelectedTerritoryCell(null);
+                      setSelectedPin({ type: "scouted", data: lead });
+                    },
+                  }}
+                  icon={L.divIcon({
+                    className: "pin-icon-scouted",
+                    html: `<div style="width:16px;height:16px;border-radius:50%;background:#3b82f6;border:2px solid white;cursor:pointer"></div>`,
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                  })}
+                  title={lead.businessName}
+                />
+              ))}
+              {spreadInducted.map(({ pin: m, lat, lng }) => (
+                <Marker
+                  key={`inducted-${m.id}`}
+                  position={[lat, lng]}
+                  eventHandlers={{
+                    click: () => {
+                      setSelected(null);
+                      setSelectedTerritoryCell(null);
+                      setSelectedPin({ type: "inducted", id: m.id });
+                    },
+                  }}
+                  icon={L.divIcon({
+                    className: "pin-icon-inducted",
+                    html: `<div style="width:16px;height:16px;border-radius:50%;background:#22c55e;border:2px solid white;cursor:pointer"></div>`,
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                  })}
+                  title={m.businessName}
+                />
+              ))}
+            </>
+          )}
         </MapContainer>
         <MapOverlay
           zoneCount={zoneCount}
@@ -535,14 +681,22 @@ export function MapViewClient({
       </div>
 
       <Drawer
-        open={!!selected || !!selectedTerritoryCell}
+        open={!!selected || !!selectedTerritoryCell || !!selectedPin}
         onOpenChange={(open) => !open && closeDrawer()}
         direction="bottom"
       >
         <DrawerContent className="max-h-[85vh] flex flex-col border-t border-border bg-card text-card-foreground">
-          <DrawerTitle className="sr-only">Zone or cell details</DrawerTitle>
+          <DrawerTitle className="sr-only">Zone, cell, or location details</DrawerTitle>
           <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden pb-24">
-            {view === "details" && selected && (
+            {selectedPin && (
+              <MapPinDetailDrawer
+                selectedPin={selectedPin}
+                merchantDetail={merchantDetailForPin}
+                loading={pinDetailLoading}
+                onClose={closeDrawer}
+              />
+            )}
+            {!selectedPin && view === "details" && selected && (
             <ZoneDrawer
               isOpen={!!selected}
               onClose={closeDrawer}
@@ -560,48 +714,51 @@ export function MapViewClient({
               embedded
             />
           )}
-          {view === "scout-form" && selected && (
+          {!selectedPin && view === "scout-form" && selected && (
             <ScoutReportForm
               zoneId={selected.zone?.id ?? null}
               zoneCode={selected.cell.code}
               branchId={branchId ?? undefined}
               coordinates={selected.cell.polygon}
-              centerLat={selected.cell.centerLat}
-              centerLng={selected.cell.centerLng}
+              centerLat={tapPosition?.lat ?? selected.cell.centerLat}
+              centerLng={tapPosition?.lng ?? selected.cell.centerLng}
               embedded
               onCancel={closeDrawer}
               onSuccess={async () => {
                 await refetchZones();
+                refetchMapPins();
                 closeDrawer();
               }}
             />
           )}
-          {view === "scout-form" && selectedTerritoryCell && (
+          {!selectedPin && view === "scout-form" && selectedTerritoryCell && (
             <ScoutReportForm
               zoneId={zoneIdForSelectedCell}
               zoneCode={selectedTerritoryCell.code}
               branchId={branchId ?? undefined}
               coordinates={selectedTerritoryCell.coordinates}
-              centerLat={cellCenter?.lat}
-              centerLng={cellCenter?.lng}
+              centerLat={tapPosition?.lat ?? cellCenter?.lat}
+              centerLng={tapPosition?.lng ?? cellCenter?.lng}
               embedded
               onCancel={closeDrawer}
               onSuccess={async () => {
                 await refetchZones();
+                refetchMapPins();
                 closeDrawer();
               }}
             />
           )}
-          {view === "details" && selectedTerritoryCell && isBranchManager && (
+          {!selectedPin && view === "details" && selectedTerritoryCell && (isBranchManager || userRole === "ADMIN") && (
             <TerritoryCellDrawer
               cell={selectedTerritoryCell}
               onClose={closeDrawer}
               onSave={"branchName" in selectedTerritoryCell ? undefined : handleUpdateCell}
               branchName={"branchName" in selectedTerritoryCell ? selectedTerritoryCell.branchName : undefined}
+              branchId={("branchId" in selectedTerritoryCell ? selectedTerritoryCell.branchId : branchId) ?? undefined}
               readOnly={"branchName" in selectedTerritoryCell}
             />
           )}
-          {view === "details" && selectedTerritoryCell && !isBranchManager && (
+          {!selectedPin && view === "details" && selectedTerritoryCell && userRole === "PLAYER" && (
             <PlayerCellDrawer
               cell={selectedTerritoryCell}
               zoneId={zoneIdForSelectedCell}

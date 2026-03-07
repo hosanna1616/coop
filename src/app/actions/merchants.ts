@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { getServerAuthSession } from "@/lib/auth";
 import { authorize } from "@/lib/auth";
 import { getCurrentUser } from "@/app/actions/users";
+import { getRanks } from "@/app/actions/ranks";
 import { logActivity } from "@/app/actions/activity-log";
 
 const XP_INDUCT = 100;
@@ -20,8 +21,12 @@ async function getOrCreateDevUserId(): Promise<string> {
   }
   let user = await prisma.user.findFirst();
   if (user) return user.id;
+  const defaultRank = await prisma.rank.findFirst({
+    orderBy: { displayOrder: "asc" },
+    select: { code: true },
+  });
   user = await prisma.user.create({
-    data: { name: "Dev Officer", rank: "CADET", xp: 0 },
+    data: { name: "Dev Officer", rank: defaultRank?.code ?? "CADET", xp: 0 },
   });
   return user.id;
 }
@@ -33,9 +38,9 @@ function generateCitizenNumber(): string {
 export type UpdateMerchantKYCInput = {
   leadId: string;
   ownerName: string;
-  nationalIdNumber: string;
-  tradeLicenseNumber: string;
-  tinNumber: string;
+  nationalIdNumber?: string;
+  tradeLicenseNumber?: string;
+  tinNumber?: string;
   phoneNumber: string;
   merchantAccountNumber?: string;
 };
@@ -45,8 +50,8 @@ export async function updateMerchantProductsAndKYC(
   input: UpdateMerchantKYCInput
 ): Promise<{ ok: boolean; error?: string }> {
   try {
-    const session = await getServerAuthSession();
-    const userId = session?.id ?? (await getOrCreateDevUserId());
+    const session = await authorize(["BRANCH_MANAGER", "PLAYER"], "updateMerchantProductsAndKYC");
+    const userId = session.id;
 
     const lead = await prisma.lead.findUnique({
       where: { id: input.leadId },
@@ -63,9 +68,9 @@ export async function updateMerchantProductsAndKYC(
         where: { id: lead.merchant.id },
         data: {
           ownerName: input.ownerName.trim(),
-          nationalIdNumber: input.nationalIdNumber.trim(),
-          tradeLicenseNumber: input.tradeLicenseNumber.trim(),
-          tinNumber: input.tinNumber.trim(),
+          nationalIdNumber: input.nationalIdNumber?.trim() ?? null,
+          tradeLicenseNumber: input.tradeLicenseNumber?.trim() ?? null,
+          tinNumber: input.tinNumber?.trim() ?? null,
           phoneNumber: input.phoneNumber.trim(),
           merchantAccountNumber: input.merchantAccountNumber?.trim() ?? "",
           inductedById: userId,
@@ -76,9 +81,9 @@ export async function updateMerchantProductsAndKYC(
         data: {
           leadId: input.leadId,
           ownerName: input.ownerName.trim(),
-          nationalIdNumber: input.nationalIdNumber.trim(),
-          tradeLicenseNumber: input.tradeLicenseNumber.trim(),
-          tinNumber: input.tinNumber.trim(),
+          nationalIdNumber: input.nationalIdNumber?.trim() ?? null,
+          tradeLicenseNumber: input.tradeLicenseNumber?.trim() ?? null,
+          tinNumber: input.tinNumber?.trim() ?? null,
           phoneNumber: input.phoneNumber.trim(),
           merchantAccountNumber: input.merchantAccountNumber?.trim() ?? "",
           oathSignatureUrl: placeholderSignature,
@@ -110,8 +115,8 @@ export async function completeInduction(
   input: CompleteInductionInput
 ): Promise<{ ok: boolean; error?: string }> {
   try {
-    const session = await getServerAuthSession();
-    const userId = session?.id ?? (await getOrCreateDevUserId());
+    const session = await authorize(["BRANCH_MANAGER", "PLAYER"], "completeInduction");
+    const userId = session.id;
 
     const lead = await prisma.lead.findUnique({
       where: { id: input.leadId },
@@ -134,19 +139,7 @@ export async function completeInduction(
       },
     });
 
-    const activeAssets = await prisma.deploymentAsset.findMany({
-      where: { status: "ACTIVE" },
-      select: { id: true },
-    });
-    if (activeAssets.length > 0) {
-      await prisma.merchantDeploymentAsset.createMany({
-        data: activeAssets.map((a) => ({
-          merchantId: lead.merchant!.id,
-          deploymentAssetId: a.id,
-        })),
-        skipDuplicates: true,
-      });
-    }
+    // Deployment assets are offered only after registration (see Merchants list / edit merchant).
 
     await prisma.lead.update({
       where: { id: input.leadId },
@@ -167,9 +160,11 @@ export async function completeInduction(
 
     const xpToAdd = XP_INDUCT + (merchantCount >= ZONE_CAPTURE_THRESHOLD ? XP_CAPTURE_ZONE : 0);
     const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
+    const ranks = await getRanks();
+    const newRank = rankFromXp(ranks, user.xp + xpToAdd);
     await prisma.user.update({
       where: { id: userId },
-      data: { xp: user.xp + xpToAdd, rank: rankFromXp(user.xp + xpToAdd) },
+      data: { xp: user.xp + xpToAdd, rank: newRank },
     });
 
     if (session) {
@@ -206,9 +201,9 @@ export async function completeInduction(
 export type InductMerchantInput = {
   leadId: string;
   ownerName: string;
-  nationalIdNumber: string;
-  tradeLicenseNumber: string;
-  tinNumber: string;
+  nationalIdNumber?: string;
+  tradeLicenseNumber?: string;
+  tinNumber?: string;
   phoneNumber: string;
   merchantAccountNumber?: string;
   oathSignatureUrl?: string;
@@ -320,9 +315,9 @@ export async function getMerchantsByBranch(filters: MerchantsByBranchFilters): P
 export type MerchantDetail = {
   id: string;
   ownerName: string;
-  nationalIdNumber: string;
-  tradeLicenseNumber: string;
-  tinNumber: string;
+  nationalIdNumber: string | null;
+  tradeLicenseNumber: string | null;
+  tinNumber: string | null;
   phoneNumber: string;
   merchantAccountNumber: string;
   citizenNumber: string;
@@ -396,9 +391,9 @@ export async function getMerchantDetail(merchantId: string): Promise<MerchantDet
   return {
     id: merchant.id,
     ownerName: merchant.ownerName,
-    nationalIdNumber: merchant.nationalIdNumber,
-    tradeLicenseNumber: merchant.tradeLicenseNumber,
-    tinNumber: merchant.tinNumber,
+    nationalIdNumber: merchant.nationalIdNumber ?? null,
+    tradeLicenseNumber: merchant.tradeLicenseNumber ?? null,
+    tinNumber: merchant.tinNumber ?? null,
     phoneNumber: merchant.phoneNumber,
     merchantAccountNumber: merchant.merchantAccountNumber,
     citizenNumber: merchant.citizenNumber,
@@ -428,15 +423,15 @@ export async function getMerchantDetail(merchantId: string): Promise<MerchantDet
 
 export type UpdateMerchantDetailsInput = {
   ownerName: string;
-  nationalIdNumber: string;
-  tradeLicenseNumber: string;
-  tinNumber: string;
+  nationalIdNumber?: string | null;
+  tradeLicenseNumber?: string | null;
+  tinNumber?: string | null;
   phoneNumber: string;
   merchantAccountNumber?: string;
   deploymentAssetIds: string[];
 };
 
-/** Update merchant details. Allowed for PLAYER/BRANCH_MANAGER (same branch) or ADMIN. */
+/** Update merchant details. BRANCH_MANAGER (same branch), ADMIN, or PLAYER only if they inducted this merchant. */
 export async function updateMerchantDetails(
   merchantId: string,
   data: UpdateMerchantDetailsInput
@@ -446,13 +441,19 @@ export async function updateMerchantDetails(
     const detail = await getMerchantDetail(merchantId);
     if (!detail) return { ok: false, error: "Merchant not found or access denied" };
 
+    if (session.role === "PLAYER") {
+      if (detail.inductedBy.id !== session.id) {
+        return { ok: false, error: "You can only edit merchants you inducted." };
+      }
+    }
+
     await prisma.merchant.update({
       where: { id: merchantId },
       data: {
         ownerName: data.ownerName.trim(),
-        nationalIdNumber: data.nationalIdNumber.trim(),
-        tradeLicenseNumber: data.tradeLicenseNumber.trim(),
-        tinNumber: data.tinNumber.trim(),
+        nationalIdNumber: data.nationalIdNumber?.trim() ?? null,
+        tradeLicenseNumber: data.tradeLicenseNumber?.trim() ?? null,
+        tinNumber: data.tinNumber?.trim() ?? null,
         phoneNumber: data.phoneNumber.trim(),
         merchantAccountNumber: data.merchantAccountNumber?.trim() ?? "",
       },

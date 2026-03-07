@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createBranch, getBranchesPaginated } from "@/app/actions/branches";
+import { createBranch, getBranchesFromDb } from "@/app/actions/branches";
 import { PortalLoadingInline } from "@/components/ui/portal-loading";
+
+const PAGE_SIZE = 20;
 
 type BranchRow = {
   id: string;
@@ -16,44 +18,56 @@ type BranchRow = {
 };
 
 export function AdminBranchesClient() {
-  const [branches, setBranches] = useState<BranchRow[]>([]);
-  const [totalBranches, setTotalBranches] = useState(0);
+  const [allBranches, setAllBranches] = useState<BranchRow[]>([]);
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [branchSearch, setBranchSearch] = useState("");
-  const limit = 20;
 
-  const refetch = async (pageOffset = 0) => {
+  const fetchAll = async () => {
     setLoading(true);
     try {
-      const result = await getBranchesPaginated({ limit, offset: pageOffset });
-      setBranches(result.branches);
-      setTotalBranches(result.total);
-      setPage(Math.floor(pageOffset / limit));
+      const list = await getBranchesFromDb();
+      setAllBranches(list);
     } finally {
       setLoading(false);
     }
   };
 
-  const goToPage = (newPage: number) => {
-    if (newPage < 0 || newPage >= Math.ceil(totalBranches / limit)) return;
-    refetch(newPage * limit);
-  };
-
   useEffect(() => {
-    refetch(0);
+    fetchAll();
   }, []);
 
   const filteredBranches = useMemo(() => {
     const q = branchSearch.trim().toLowerCase();
-    if (!q) return branches;
-    return branches.filter(
+    if (!q) return allBranches;
+    return allBranches.filter(
       (b) =>
         b.name.toLowerCase().includes(q) ||
         (b.branchCode?.toLowerCase().includes(q) ?? false)
     );
-  }, [branches, branchSearch]);
+  }, [allBranches, branchSearch]);
+
+  const totalFiltered = filteredBranches.length;
+  const totalPages = Math.max(1, Math.ceil(totalFiltered / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages - 1);
+  const paginatedBranches = useMemo(
+    () =>
+      filteredBranches.slice(
+        currentPage * PAGE_SIZE,
+        currentPage * PAGE_SIZE + PAGE_SIZE
+      ),
+    [filteredBranches, currentPage]
+  );
+
+  useEffect(() => {
+    setPage((p) => (p >= totalPages ? Math.max(0, totalPages - 1) : p));
+  }, [totalPages]);
+
+  const goToPage = (newPage: number) => {
+    if (newPage < 0 || newPage >= totalPages) return;
+    setPage(newPage);
+  };
 
   return (
     <div className="flex flex-col gap-6 p-4">
@@ -69,7 +83,7 @@ export function AdminBranchesClient() {
             <div className="min-h-[120px]">
               <PortalLoadingInline className="min-h-[120px]" />
             </div>
-          ) : branches.length === 0 ? (
+          ) : allBranches.length === 0 ? (
             <p className="text-sm text-muted-foreground">No branches. Create one below.</p>
           ) : (
             <>
@@ -80,12 +94,15 @@ export function AdminBranchesClient() {
                   type="search"
                   placeholder="Type to filter branches…"
                   value={branchSearch}
-                  onChange={(e) => setBranchSearch(e.target.value)}
+                  onChange={(e) => {
+                    setBranchSearch(e.target.value);
+                    setPage(0);
+                  }}
                   className="max-w-xs font-mono"
                 />
               </div>
               <ul className="flex flex-col gap-2">
-                {filteredBranches.map((b) => (
+                {paginatedBranches.map((b) => (
                 <li
                   key={b.id}
                   className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-card/50 p-3 font-mono text-sm"
@@ -97,6 +114,11 @@ export function AdminBranchesClient() {
                     </span>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
+                    <Button asChild size="sm" variant="outline" className="font-mono h-8">
+                      <Link href={`/admin/operational-summary?branchId=${encodeURIComponent(b.id)}`}>
+                        Operational Summary
+                      </Link>
+                    </Button>
                     <Button asChild size="sm" variant="outline" className="font-mono h-8">
                       <Link href={`/missions?branchId=${encodeURIComponent(b.id)}`}>
                         Missions
@@ -121,32 +143,33 @@ export function AdminBranchesClient() {
                 </li>
               ))}
               </ul>
+              {totalFiltered > PAGE_SIZE && (
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-4">
+                  <span className="font-mono text-xs text-muted-foreground">
+                    Page {currentPage + 1} of {totalPages} ({totalFiltered} branch{totalFiltered !== 1 ? "es" : ""})
+                    {branchSearch.trim() ? " matching search" : ""})
+                  </span>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={currentPage === 0 || loading}
+                      onClick={() => goToPage(currentPage - 1)}
+                    >
+                      Previous
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={currentPage >= totalPages - 1 || loading}
+                      onClick={() => goToPage(currentPage + 1)}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              )}
             </>
-          )}
-          {totalBranches > limit && (
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-4">
-              <span className="font-mono text-xs text-muted-foreground">
-                Page {page + 1} of {Math.ceil(totalBranches / limit)} ({totalBranches} total)
-              </span>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={page === 0 || loading}
-                  onClick={() => goToPage(page - 1)}
-                >
-                  Previous
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={page >= Math.ceil(totalBranches / limit) - 1 || loading}
-                  onClick={() => goToPage(page + 1)}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
           )}
         </CardContent>
       </Card>
@@ -156,7 +179,8 @@ export function AdminBranchesClient() {
           onClose={() => setCreateOpen(false)}
           onSuccess={async () => {
             setCreateOpen(false);
-            await refetch(page * limit);
+            await fetchAll();
+            setPage(0);
           }}
         />
       )}

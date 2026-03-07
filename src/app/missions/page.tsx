@@ -1,6 +1,6 @@
 import { getServerAuthSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { getMissions, getMyTasks, getPendingTaskApprovals } from "@/app/actions/mission";
+import { getMissions, getMyTasks, getMyScoutedAndRegistered, getPendingTaskApprovals } from "@/app/actions/mission";
 import { getBranchesFromDb } from "@/app/actions/branches";
 import { BranchListNav } from "@/components/admin/BranchListNav";
 import { MissionsClient } from "./MissionsClient";
@@ -39,7 +39,8 @@ export default async function MissionsPage({
   }
 
   const missionsLimit = 20;
-  const [missionsData, myTasks, pendingApprovals] = await Promise.all([
+  const isBranchStaff = session.role === "BRANCH_MANAGER" || session.role === "PLAYER";
+  const [missionsData, myTasks, pendingApprovals, myScoutedAndRegistered] = await Promise.all([
     getMissions(
       branchIdFromUrl != null
         ? { branchId: branchIdFromUrl, limit: missionsLimit, offset: 0 }
@@ -49,6 +50,7 @@ export default async function MissionsPage({
     session.role === "BRANCH_MANAGER" || session.role === "ADMIN"
       ? getPendingTaskApprovals({ branchId: branchIdFromUrl ?? session.branchId ?? null })
       : Promise.resolve([]),
+    isBranchStaff ? getMyScoutedAndRegistered() : Promise.resolve({ scoutedLeads: [], inductedMerchants: [] }),
   ]);
 
   let branchName: string | null = null;
@@ -67,6 +69,8 @@ export default async function MissionsPage({
       missionsLimit={missionsLimit}
       myTasks={myTasks}
       pendingApprovals={pendingApprovals}
+      myScoutedLeads={myScoutedAndRegistered.scoutedLeads}
+      myInductedMerchants={myScoutedAndRegistered.inductedMerchants}
       role={session.role}
       branchId={branchIdFromUrl}
       branchName={branchName}

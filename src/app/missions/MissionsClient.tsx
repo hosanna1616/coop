@@ -19,11 +19,13 @@ type Mission = {
   id: string;
   name: string;
   status: string;
+  territoryCell?: { id: string; code: string } | null;
   goals: { id: string; title: string; targetValue: number | null; unit: string | null }[];
   tasks: {
     id: string;
     title: string;
     status: string;
+    territoryCell?: { id: string; code: string } | null;
     assignee: { id: string; name: string };
   }[];
 };
@@ -34,6 +36,7 @@ type MyTask = {
   description: string | null;
   status: string;
   mission: { id: string; name: string; status: string };
+  territoryCell?: { id: string; code: string } | null;
 };
 
 type PendingTask = {
@@ -45,12 +48,32 @@ type PendingTask = {
   assignee: { id: string; name: string };
 };
 
+type MyScoutedLead = {
+  id: string;
+  businessName: string;
+  category: string;
+  status: string;
+  createdAt: Date;
+  zoneCode: string | null;
+};
+
+type MyInductedMerchant = {
+  id: string;
+  ownerName: string;
+  citizenNumber: string;
+  onboardingDate: Date;
+  businessName: string;
+  category: string;
+};
+
 export function MissionsClient({
   missions: initialMissions,
   totalMissions,
   missionsLimit = 20,
   myTasks,
   pendingApprovals,
+  myScoutedLeads = [],
+  myInductedMerchants = [],
   role,
   branchId,
   branchName,
@@ -60,6 +83,8 @@ export function MissionsClient({
   missionsLimit?: number;
   myTasks: MyTask[];
   pendingApprovals: PendingTask[];
+  myScoutedLeads?: MyScoutedLead[];
+  myInductedMerchants?: MyInductedMerchant[];
   role: string;
   branchId?: string | null;
   branchName?: string | null;
@@ -211,6 +236,7 @@ export function MissionsClient({
                         </p>
                         <p className="mt-1 text-xs text-muted-foreground">
                           {t.mission.name} · {TASK_STATUS_LABELS[t.status] ?? t.status}
+                          {t.territoryCell && ` · Cell: ${t.territoryCell.code}`}
                         </p>
                       </div>
                       <Button
@@ -229,6 +255,90 @@ export function MissionsClient({
             </ul>
           )}
         </section>
+
+        {(role === "BRANCH_MANAGER" || role === "PLAYER") && (myScoutedLeads.length > 0 || myInductedMerchants.length > 0) && (
+          <section>
+            <h2 className="mb-3 font-mono text-base font-semibold text-foreground">
+              SCOUTED & REGISTERED BY ME
+            </h2>
+            <p className="mb-3 text-xs text-muted-foreground">
+              Leads you scouted and merchants you inducted in this branch.
+            </p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Card className="border-border bg-card text-card-foreground">
+                <CardHeader className="pb-2">
+                  <CardTitle className="font-mono text-sm font-semibold text-primary">
+                    Scouted ({myScoutedLeads.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {myScoutedLeads.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">No unconverted leads scouted by you.</p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {myScoutedLeads.slice(0, 10).map((l) => (
+                        <li key={l.id}>
+                          <Link
+                            href={`/induct/${l.id}`}
+                            className="font-mono text-sm text-primary hover:underline"
+                          >
+                            {l.businessName}
+                          </Link>
+                          <span className="ml-1 font-mono text-xs text-muted-foreground">
+                            {l.category}
+                            {l.zoneCode && ` · ${l.zoneCode}`}
+                          </span>
+                        </li>
+                      ))}
+                      {myScoutedLeads.length > 10 && (
+                        <li>
+                          <Link href="/merchants" className="font-mono text-xs text-muted-foreground hover:underline">
+                            +{myScoutedLeads.length - 10} more →
+                          </Link>
+                        </li>
+                      )}
+                    </ul>
+                  )}
+                </CardContent>
+              </Card>
+              <Card className="border-border bg-card text-card-foreground">
+                <CardHeader className="pb-2">
+                  <CardTitle className="font-mono text-sm font-semibold text-primary">
+                    Registered ({myInductedMerchants.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {myInductedMerchants.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">No merchants inducted by you yet.</p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {myInductedMerchants.slice(0, 10).map((m) => (
+                        <li key={m.id}>
+                          <Link
+                            href="/merchants"
+                            className="font-mono text-sm text-primary hover:underline"
+                          >
+                            {m.businessName || m.ownerName}
+                          </Link>
+                          <span className="ml-1 font-mono text-xs text-muted-foreground">
+                            {m.category} · {new Date(m.onboardingDate).toLocaleDateString()}
+                          </span>
+                        </li>
+                      ))}
+                      {myInductedMerchants.length > 10 && (
+                        <li>
+                          <Link href="/merchants" className="font-mono text-xs text-muted-foreground hover:underline">
+                            +{myInductedMerchants.length - 10} more →
+                          </Link>
+                        </li>
+                      )}
+                    </ul>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </section>
+        )}
 
         <section>
           <h2 className="mb-3 font-mono text-base font-semibold text-foreground">
@@ -251,6 +361,7 @@ export function MissionsClient({
                       </CardTitle>
                       <p className="font-mono text-xs text-muted-foreground">
                         Status: {m.status}
+                        {m.territoryCell && ` · Cell: ${m.territoryCell.code}`}
                       </p>
                     </CardHeader>
                     <CardContent className="space-y-2">
@@ -278,6 +389,7 @@ export function MissionsClient({
                             {m.tasks.map((t) => (
                               <li key={t.id}>
                                 {t.title} → {t.assignee.name} ({TASK_STATUS_LABELS[t.status]})
+                                {t.territoryCell && ` · ${t.territoryCell.code}`}
                               </li>
                             ))}
                           </ul>
@@ -286,6 +398,13 @@ export function MissionsClient({
                       {(role === "BRANCH_MANAGER" || role === "ADMIN") && (
                         <Button asChild size="sm" variant="outline" className="mt-2 font-mono">
                           <Link href={branchId ? `/admin/missions/${m.id}?branchId=${encodeURIComponent(branchId)}` : `/admin/missions/${m.id}`}>Manage goals & tasks</Link>
+                        </Button>
+                      )}
+                      {(role === "PLAYER" || role === "BRANCH_MANAGER" || role === "ADMIN") && (
+                        <Button asChild size="sm" variant="outline" className="mt-2 font-mono">
+                          <Link href={branchId ? `/missions/${m.id}?branchId=${encodeURIComponent(branchId)}` : `/missions/${m.id}`}>
+                            {role === "PLAYER" ? "View mission" : "View"}
+                          </Link>
                         </Button>
                       )}
                     </CardContent>

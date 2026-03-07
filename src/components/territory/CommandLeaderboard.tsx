@@ -148,7 +148,7 @@ export function CommandLeaderboard({
                       RANK_PILL_CLASS[entry.rank] ?? "bg-muted text-muted-foreground"
                     )}
                   >
-                    {entry.rank}
+                    {entry.rankLabel}
                   </span>
                 </div>
                 <p className="font-mono text-xs text-muted-foreground">

@@ -19,14 +19,19 @@ import { getBranchesForAdmin } from "@/app/actions/users";
 export function CreateMissionClient({
   callerRole,
   defaultBranchId,
+  defaultTerritoryCellId = null,
+  territoryCellCode = null,
 }: {
   callerRole: string;
   defaultBranchId?: string | null;
+  defaultTerritoryCellId?: string | null;
+  territoryCellCode?: string | null;
 }) {
   const router = useRouter();
   const [name, setName] = useState("");
   const [status, setStatus] = useState("DRAFT");
   const [branchId, setBranchId] = useState<string | null>(defaultBranchId ?? null);
+  const [territoryCellId] = useState<string | null>(defaultTerritoryCellId ?? null);
   const [branches, setBranches] = useState<{ id: string; branchCode: string | null; companyName: string }[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,8 +56,9 @@ export function CreateMissionClient({
         status,
         branchId: branchId ?? undefined,
         branchCode: branchId ? undefined : undefined,
+        territoryCellId: territoryCellId ?? undefined,
       });
-      router.push("/missions");
+      router.push(branchId ? `/missions?branchId=${encodeURIComponent(branchId)}` : "/missions");
       router.refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to create mission");
@@ -65,6 +71,9 @@ export function CreateMissionClient({
     <Card className="mx-auto max-w-md">
       <CardHeader>
         <CardTitle className="font-mono">Create Mission</CardTitle>
+        {territoryCellCode && (
+          <p className="text-sm text-muted-foreground">Cell: {territoryCellCode}</p>
+        )}
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">

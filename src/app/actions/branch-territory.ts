@@ -177,7 +177,7 @@ export type TerritoryCellWithCoords = {
   col: number;
 };
 
-export type TerritoryCellWithBranchName = TerritoryCellWithCoords & { branchName: string };
+export type TerritoryCellWithBranchName = TerritoryCellWithCoords & { branchName: string; branchId: string };
 
 export type AdminBranchTerritory = {
   branchId: string;
@@ -214,6 +214,7 @@ export async function getAllBranchTerritoriesForAdmin(): Promise<AdminBranchTerr
       row: c.row,
       col: c.col,
       branchName: b.name,
+      branchId: b.id,
     })),
   }));
 }

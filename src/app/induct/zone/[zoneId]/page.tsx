@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getLeadsForZone } from "@/app/actions/leads-list";
 import { prisma } from "@/lib/prisma";
+import { getServerAuthSession } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronRight } from "lucide-react";
@@ -13,6 +14,9 @@ export default async function InductZonePage({
 }: {
   params: Promise<{ zoneId: string }>;
 }) {
+  const session = await getServerAuthSession();
+  if (session?.role === "ADMIN") redirect("/");
+
   const { zoneId } = await params;
 
   const zone = await prisma.zone.findUnique({

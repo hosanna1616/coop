@@ -77,9 +77,9 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
             className="h-auto w-full max-w-[140px] object-contain"
             priority
           />
-          <span className="font-mono text-sm font-semibold text-foreground">
+          {/* <span className="font-mono text-sm font-semibold text-foreground">
             Merchant Nation
-          </span>
+          </span> */}
         </div>
         <div className="flex-1 overflow-y-auto pt-2">
           <SidebarNav />

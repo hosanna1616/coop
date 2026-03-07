@@ -74,6 +74,22 @@ async function main() {
     });
   }
 
+  const SEED_SCOUT_CATEGORIES = [
+    { name: "Cafe", displayName: "Cafe", iconName: "Coffee", displayOrder: 0 },
+    { name: "Retail", displayName: "Retail", iconName: "ShoppingCart", displayOrder: 1 },
+    { name: "Pharmacy", displayName: "Pharmacy", iconName: "Pill", displayOrder: 2 },
+    { name: "Fuel", displayName: "Fuel", iconName: "Fuel", displayOrder: 3 },
+    { name: "Other", displayName: "Other", iconName: "Other", displayOrder: 4 },
+  ];
+  for (const cat of SEED_SCOUT_CATEGORIES) {
+    await prisma.scoutCategory.upsert({
+      where: { name: cat.name },
+      create: { name: cat.name, displayName: cat.displayName, iconName: cat.iconName, displayOrder: cat.displayOrder, active: true },
+      update: {},
+    });
+  }
+  console.log("Scout categories:", SEED_SCOUT_CATEGORIES.length);
+
   for (const u of SEED_USERS) {
     const existing = await prisma.user.findFirst({
       where: { name: u.name, role: u.role },

@@ -19,11 +19,13 @@ const PHONE_PREFIX = "+251";
 
 const kycProductsSchema = z.object({
   ownerName: z.string().min(1, "Owner name is required"),
-  nationalIdNumber: z.string().min(1, "National ID is required"),
-  tradeLicenseNumber: z.string().min(1, "Trade license is required"),
-  tinNumber: z.string().min(1, "TIN is required"),
-  phoneNumber: z.string().min(1, "Mobile number is required"),
-  merchantAccountNumber: z.string().optional(),
+  tradeLicenseNumber: z.string().optional(),
+  tinNumber: z.string().optional(),
+  phoneNumber: z
+    .string()
+    .min(1, "Mobile number is required")
+    .regex(/^\+251\d{9}$/, "Enter 9 digits after +251 (e.g. +251912345678)"),
+  merchantAccountNumber: z.string().min(1, "Merchant account number is required"),
 });
 
 export type KycProductsFormValues = z.infer<typeof kycProductsSchema>;
@@ -31,23 +33,26 @@ export type KycProductsFormValues = z.infer<typeof kycProductsSchema>;
 export interface KycProductsStepProps {
   leadId: string;
   businessName: string;
-  activeDeploymentAssets?: { id: string; name: string; displayName: string }[];
   defaultValues?: Partial<KycProductsFormValues>;
   onContinue: (data: KycProductsFormValues) => void | Promise<void>;
+  /** When provided, show "Save and continue later" and call with current form values (may be partial). */
+  onSaveProgress?: (data: Partial<KycProductsFormValues>) => void | Promise<void>;
+  /** When true, disable Save and continue later (e.g. while saving). */
+  saving?: boolean;
 }
 
 export function KycProductsStep({
   leadId,
   businessName,
-  activeDeploymentAssets = [],
   defaultValues,
   onContinue,
+  onSaveProgress,
+  saving,
 }: KycProductsStepProps) {
   const form = useForm<KycProductsFormValues>({
     resolver: zodResolver(kycProductsSchema),
     defaultValues: {
       ownerName: "",
-      nationalIdNumber: "",
       tradeLicenseNumber: "",
       tinNumber: "",
       phoneNumber: PHONE_PREFIX,
@@ -88,23 +93,10 @@ export function KycProductsStep({
             />
             <FormField
               control={form.control}
-              name="nationalIdNumber"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>National ID Number</FormLabel>
-                  <FormControl>
-                    <Input className="min-h-[44px]" placeholder="National ID" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
               name="tradeLicenseNumber"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Trade License Number</FormLabel>
+                  <FormLabel>Trade License Number (optional)</FormLabel>
                   <FormControl>
                     <Input className="min-h-[44px]" placeholder="Trade license" {...field} />
                   </FormControl>
@@ -117,7 +109,7 @@ export function KycProductsStep({
               name="tinNumber"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>TIN Number</FormLabel>
+                  <FormLabel>TIN Number (optional)</FormLabel>
                   <FormControl>
                     <Input className="min-h-[44px]" placeholder="TIN" {...field} />
                   </FormControl>
@@ -141,9 +133,10 @@ export function KycProductsStep({
                       onChange={(e) => {
                         const v = e.target.value;
                         if (!v.startsWith(PHONE_PREFIX)) {
-                          field.onChange(PHONE_PREFIX + v.replace(/\D/g, ""));
+                          field.onChange(PHONE_PREFIX + v.replace(/\D/g, "").slice(0, 9));
                         } else {
-                          field.onChange(v);
+                          const digits = v.slice(PHONE_PREFIX.length).replace(/\D/g, "").slice(0, 9);
+                          field.onChange(PHONE_PREFIX + digits);
                         }
                       }}
                     />
@@ -157,11 +150,11 @@ export function KycProductsStep({
               name="merchantAccountNumber"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Merchant Account Number (optional)</FormLabel>
+                  <FormLabel>Merchant Account Number</FormLabel>
                   <FormControl>
                     <Input
                       className="min-h-[44px]"
-                      placeholder="Bank account placeholder"
+                      placeholder="Bank account number"
                       {...field}
                     />
                   </FormControl>
@@ -170,22 +163,20 @@ export function KycProductsStep({
               )}
             />
 
-            {activeDeploymentAssets.length > 0 && (
-              <div className="rounded-lg border border-border bg-muted/30 p-3">
-                <p className="font-mono text-xs font-medium text-muted-foreground">
-                  On induction this merchant will be introduced to these deployment assets:
-                </p>
-                <ul className="mt-2 list-inside list-disc font-mono text-xs text-foreground">
-                  {activeDeploymentAssets.map((a) => (
-                    <li key={a.id}>{a.displayName}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
             <Button type="submit" className="min-h-[44px] w-full">
               Continue to Oath
             </Button>
+            {onSaveProgress && (
+              <Button
+                type="button"
+                variant="outline"
+                className="min-h-[44px] w-full"
+                onClick={() => onSaveProgress(form.getValues())}
+                disabled={saving}
+              >
+                {saving ? "Saving…" : "Save and continue later"}
+              </Button>
+            )}
           </form>
         </Form>
       </CardContent>

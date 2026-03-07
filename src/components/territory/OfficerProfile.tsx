@@ -19,6 +19,8 @@ export type OfficerProfileProps = {
   name: string;
   rank: string;
   rankLabel: string;
+  /** Optional tier from ranks config (e.g. R1, R2, R3). */
+  rankTier?: string;
   territoryLabel?: string;
   districtName?: string;
   xp: number;
@@ -41,6 +43,7 @@ export function OfficerProfile({
   name,
   rank,
   rankLabel,
+  rankTier,
   territoryLabel = "Territory Holder",
   districtName = "Bole District",
   xp,
@@ -61,7 +64,7 @@ export function OfficerProfile({
       <div className="mb-4 flex items-start gap-4">
         <div className="relative flex size-14 shrink-0 items-center justify-center rounded-lg bg-amber-500/20">
           <span className="font-mono text-2xl font-bold text-amber-400">
-            {RANK_TIER[rank] ?? "R1"}
+            {rankTier ?? RANK_TIER[rank] ?? "R1"}
           </span>
         </div>
         <div className="min-w-0 flex-1">
@@ -75,7 +78,7 @@ export function OfficerProfile({
               RANK_PILL_CLASS[rank] ?? "bg-muted text-muted-foreground"
             )}
           >
-            {rank}
+            {rankLabel}
           </span>
         </div>
       </div>

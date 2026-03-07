@@ -1,7 +1,6 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { xpProgress } from "@/lib/rank";
 import { authorize, type Role } from "@/lib/auth";
 import { getBranches } from "@/lib/branches";
 import { hashPassword } from "@/lib/auth";
