@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   DrawerHeader,
   DrawerTitle,
@@ -11,6 +13,7 @@ import { X } from "lucide-react";
 import type { MapZoneStatus } from "@/lib/zoneStatusColors";
 import type { TerritoryCellWithCoords, TerritoryCellWithBranchName } from "@/app/actions/branch-territory";
 import { CellMerchantsPanel } from "./CellMerchantsPanel";
+import { getMyTaskForCell } from "@/app/actions/mission";
 
 const STATUS_BADGE_CLASS: Record<MapZoneStatus, string> = {
   UNSEEN: "bg-muted",
@@ -36,6 +39,15 @@ export function PlayerCellDrawer({
   onScout: () => void;
   onInduct?: () => void;
 }) {
+  const [taskForCell, setTaskForCell] = useState<{ id: string; title: string; mission: { id: string; name: string } } | null>(null);
+
+  useEffect(() => {
+    getMyTaskForCell(cell.id).then((t) => {
+      if (t) setTaskForCell({ id: t.id, title: t.title, mission: t.mission });
+      else setTaskForCell(null);
+    }).catch(() => setTaskForCell(null));
+  }, [cell.id]);
+
   return (
     <>
       <DrawerHeader className="flex flex-row items-start justify-between gap-4 p-4 text-left">
@@ -57,6 +69,16 @@ export function PlayerCellDrawer({
         </DrawerClose>
       </DrawerHeader>
       <div className="flex flex-col gap-3 px-4 pb-6">
+        {taskForCell && (
+          <div className="rounded-md border border-border bg-muted/30 p-3">
+            <p className="font-mono text-xs font-medium text-muted-foreground">Your task for this cell</p>
+            <p className="font-mono text-sm font-semibold text-foreground">{taskForCell.title}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{taskForCell.mission.name}</p>
+            <Button asChild size="sm" variant="outline" className="mt-2 font-mono">
+              <Link href={`/missions/task/${taskForCell.id}`}>View task</Link>
+            </Button>
+          </div>
+        )}
         <Button className="h-12 font-mono" onClick={onScout}>
           Scout This Zone
         </Button>

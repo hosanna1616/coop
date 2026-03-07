@@ -7,6 +7,14 @@ import {
   Pill,
   Fuel,
   Camera,
+  Store,
+  UtensilsCrossed,
+  Building2,
+  Banknote,
+  Shirt,
+  Car,
+  MapPin,
+  Smartphone,
   type LucideIcon,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -32,6 +40,9 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { createLead, type ScoutZoneInput } from "@/app/actions/leads";
+import { getScoutCategories } from "@/app/actions/scout-categories";
+import { getExternalBanks } from "@/app/actions/external-banks";
+import { PortalLoadingInline } from "@/components/ui/portal-loading";
 
 const VOLUME_OPTIONS = ["LOW", "MEDIUM", "HIGH"] as const;
 
@@ -41,6 +52,7 @@ const scoutReportSchema = z
     category: z.string().min(1, "Select a category"),
     categoryOther: z.string().optional(),
     estimatedVolume: z.enum(VOLUME_OPTIONS),
+    externalBankIds: z.array(z.string()).default([]),
     photoUrl: z.string().nullable().optional(),
   })
   .refine(
@@ -50,13 +62,20 @@ const scoutReportSchema = z
 
 export type ScoutReportFormValues = z.infer<typeof scoutReportSchema>;
 
-const CATEGORIES: { id: string; label: string; Icon: LucideIcon }[] = [
-  { id: "Cafe", label: "Cafe", Icon: Coffee },
-  { id: "Retail", label: "Retail", Icon: ShoppingCart },
-  { id: "Pharmacy", label: "Pharmacy", Icon: Pill },
-  { id: "Fuel", label: "Fuel", Icon: Fuel },
-  { id: "Other", label: "Other", Icon: ShoppingCart },
-];
+const ICON_MAP: Record<string, LucideIcon> = {
+  Coffee,
+  ShoppingCart,
+  Pill,
+  Fuel,
+  Store,
+  UtensilsCrossed,
+  Building2,
+  Banknote,
+  Camera,
+  Shirt,
+  Car,
+  Other: ShoppingCart,
+};
 
 export interface ScoutReportFormProps {
   zoneId: string | null;
@@ -91,8 +110,69 @@ export function ScoutReportForm({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [geo, setGeo] = useState<{ lat: number; lng: number } | null>(null);
   const [geoError, setGeoError] = useState<string | null>(null);
+  const [loadingGeo, setLoadingGeo] = useState(false);
+  const [locationChoice, setLocationChoice] = useState<"device" | "map" | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [categories, setCategories] = useState<Awaited<ReturnType<typeof getScoutCategories>>>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [externalBanks, setExternalBanks] = useState<Awaited<ReturnType<typeof getExternalBanks>>>([]);
+  const [externalBanksLoading, setExternalBanksLoading] = useState(true);
+  const [banksDropdownOpen, setBanksDropdownOpen] = useState(false);
+
+  const mapCenter =
+    centerLat != null && centerLng != null
+      ? { lat: centerLat, lng: centerLng }
+      : coordinates.length > 0
+        ? {
+            lat: coordinates.reduce((s, p) => s + p.lat, 0) / coordinates.length,
+            lng: coordinates.reduce((s, p) => s + p.lng, 0) / coordinates.length,
+          }
+        : null;
+
+  useEffect(() => {
+    getScoutCategories()
+      .then(setCategories)
+      .catch(() => setCategories([]))
+      .finally(() => setCategoriesLoading(false));
+  }, []);
+
+  useEffect(() => {
+    getExternalBanks()
+      .then(setExternalBanks)
+      .catch(() => setExternalBanks([]))
+      .finally(() => setExternalBanksLoading(false));
+  }, []);
+
+  const requestDeviceLocation = () => {
+    setLocationChoice("device");
+    setGeoError(null);
+    setLoadingGeo(true);
+    if (!navigator?.geolocation) {
+      setGeoError("Geolocation not supported");
+      setLoadingGeo(false);
+      if (mapCenter) setGeo(mapCenter);
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setGeo({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setLoadingGeo(false);
+      },
+      () => {
+        setGeoError("Location blocked or unavailable");
+        setLoadingGeo(false);
+        if (mapCenter) setGeo(mapCenter);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
+
+  const selectMapLocation = () => {
+    setLocationChoice("map");
+    setGeoError(null);
+    if (mapCenter) setGeo(mapCenter);
+  };
 
   const form = useForm<ScoutReportFormValues>({
     resolver: zodResolver(scoutReportSchema),
@@ -101,38 +181,30 @@ export function ScoutReportForm({
       category: "",
       categoryOther: "",
       estimatedVolume: "MEDIUM",
+      externalBankIds: [],
       photoUrl: null,
     },
   });
 
-  useEffect(() => {
-    if (!navigator?.geolocation) {
-      setGeoError("Geolocation not supported");
-      if (centerLat != null && centerLng != null) {
-        setGeo({ lat: centerLat, lng: centerLng });
-      }
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => setGeo({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => {
-        setGeoError("Location blocked or unavailable");
-        if (centerLat != null && centerLng != null) {
-          setGeo({ lat: centerLat, lng: centerLng });
-        }
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
-    );
-  }, [centerLat, centerLng]);
-
   const photoUrl = form.watch("photoUrl");
   const hasPhoto = !!photoUrl;
   const category = form.watch("category");
+  const selectedExternalBankIds = form.watch("externalBankIds");
   const isOtherCategory = category === "Other";
+  const categoryOptions = [
+    ...categories
+      .filter((c) => c.name !== "Other")
+      .map((c) => ({
+        id: c.name,
+        label: c.displayName,
+        Icon: (ICON_MAP[c.iconName ?? ""] ?? ShoppingCart) as LucideIcon,
+      })),
+    { id: "Other", label: "Other", Icon: ShoppingCart as LucideIcon },
+  ];
 
   async function onSubmit(values: ScoutReportFormValues) {
-    const lat = geo?.lat ?? centerLat ?? 0;
-    const lng = geo?.lng ?? centerLng ?? 0;
+    const lat = geo?.lat ?? mapCenter?.lat ?? centerLat ?? 0;
+    const lng = geo?.lng ?? mapCenter?.lng ?? centerLng ?? 0;
     setSubmitting(true);
     setSubmitError(null);
 
@@ -144,6 +216,7 @@ export function ScoutReportForm({
       businessName: values.businessName,
       category: values.category === "Other" ? (values.categoryOther?.trim() ?? "") : values.category,
       estimatedVolume: values.estimatedVolume,
+      externalBankIds: values.externalBankIds,
       locationLat: lat,
       locationLng: lng,
       photoUrl: values.photoUrl ?? null,
@@ -159,6 +232,12 @@ export function ScoutReportForm({
     }
   }
 
+  const hasLocation =
+    locationChoice === "map" && mapCenter
+      ? true
+      : locationChoice === "device" && geo != null && !loadingGeo;
+  const locationBlockingSubmit = !hasLocation;
+
   const content = (
     <Form {...form}>
       <form
@@ -168,32 +247,70 @@ export function ScoutReportForm({
       >
         <input type="hidden" name="zoneId" value={zoneId ?? ""} />
 
-        {!embedded && (
-          <Card className="border-border bg-card text-card-foreground">
-            <CardHeader className="pb-2">
-              <CardTitle className="font-mono text-sm font-medium text-muted-foreground">
-                Zone & GPS
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-1 font-mono text-sm">
-              <p className="text-primary">{zoneCode}</p>
-              <p className="text-muted-foreground">
-                {geoError
-                  ? `${geoError}${centerLat != null ? " (using zone center)" : ""}`
-                  : geo
-                    ? `GPS: ${geo.lat.toFixed(5)}, ${geo.lng.toFixed(5)}`
-                    : "Getting location…"}
-              </p>
-            </CardContent>
-          </Card>
-        )}
-
-        {geoError && embedded && (
+        <div className="space-y-3">
+          <p className="font-medium text-foreground">Merchant location</p>
           <p className="text-muted-foreground text-xs">
-            {geoError}
-            {centerLat != null && " (using zone center)"}
+            Where is this merchant? This will be shown on the map.
           </p>
-        )}
+          <div className="grid gap-2 sm:grid-cols-2">
+            <Button
+              type="button"
+              variant="outline"
+              className={cn(
+                "h-auto flex-col items-start gap-1 p-4 text-left",
+                locationChoice === "map" && "border-primary ring-2 ring-primary"
+              )}
+              onClick={selectMapLocation}
+              disabled={!mapCenter}
+            >
+              <span className="flex items-center gap-2 font-medium">
+                <MapPin className="size-4 shrink-0" />
+                Use location from the map
+              </span>
+              <span className="text-muted-foreground text-xs font-normal">
+                The place I pressed on the map (this cell/zone)
+              </span>
+              {locationChoice === "map" && geo && (
+                <span className="mt-1 font-mono text-xs">
+                  {geo.lat.toFixed(5)}, {geo.lng.toFixed(5)}
+                </span>
+              )}
+              {!mapCenter && (
+                <span className="mt-1 text-muted-foreground text-xs">Map center not available</span>
+              )}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className={cn(
+                "h-auto flex-col items-start gap-1 p-4 text-left",
+                locationChoice === "device" && "border-primary ring-2 ring-primary"
+              )}
+              onClick={requestDeviceLocation}
+              disabled={loadingGeo}
+            >
+              <span className="flex items-center gap-2 font-medium">
+                <Smartphone className="size-4 shrink-0" />
+                Use my current location
+              </span>
+              <span className="text-muted-foreground text-xs font-normal">
+                GPS from this device right now
+              </span>
+              {loadingGeo && (
+                <span className="mt-1 text-muted-foreground text-xs">Getting location…</span>
+              )}
+              {locationChoice === "device" && geo && !loadingGeo && (
+                <span className="mt-1 font-mono text-xs">
+                  {geo.lat.toFixed(5)}, {geo.lng.toFixed(5)}
+                </span>
+              )}
+            </Button>
+          </div>
+          {geoError && <p className="text-destructive text-xs">{geoError}</p>}
+          {!embedded && zoneCode && (
+            <p className="font-mono text-xs text-muted-foreground">Zone: {zoneCode}</p>
+          )}
+        </div>
 
         <FormField
           control={form.control}
@@ -220,50 +337,58 @@ export function ScoutReportForm({
             <FormItem>
               <FormLabel className="text-foreground">Business Category</FormLabel>
               <FormControl>
-                <div
-                  ref={field.ref}
-                  className="grid grid-cols-2 gap-3"
-                  role="group"
-                  aria-label="Business category"
-                >
-                  {CATEGORIES.map(({ id, label, Icon }) => (
-                    <Button
-                      key={id}
-                      type="button"
-                      variant="outline"
-                      className={cn(
-                        "h-14 w-full border-2 bg-card font-medium hover:bg-muted",
-                        field.value === id
-                          ? "border-cyan-700 bg-cyan-700 text-primary-foreground hover:bg-cyan-700/90"
-                          : "border-border"
-                      )}
-                      onClick={() => field.onChange(id)}
+                {categoriesLoading ? (
+                  <div className="min-h-[52px]">
+                    <PortalLoadingInline className="min-h-[52px]" />
+                  </div>
+                ) : categoryOptions.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    No categories configured. Ask an admin to add Scout Categories.
+                  </p>
+                ) : (
+                  <Select
+                    value={field.value || undefined}
+                    onValueChange={field.onChange}
+                  >
+                    <SelectTrigger
+                      id="category"
+                      className="min-h-[48px] w-full font-mono"
+                      aria-label="Business category"
                     >
-                      <Icon className="size-5 shrink-0" aria-hidden />
-                      {label}
-                    </Button>
-                  ))}
-                </div>
-              </FormControl>
-                {isOtherCategory && (
-                  <FormField
-                    control={form.control}
-                    name="categoryOther"
-                    render={({ field }) => (
-                      <FormItem className="mt-3">
-                        <FormLabel className="text-foreground">Specify category</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            className="min-h-[44px] bg-card placeholder:text-muted-foreground"
-                            placeholder="e.g. Bakery, Restaurant, Salon"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categoryOptions.map(({ id, label, Icon }) => (
+                        <SelectItem key={id} value={id} className="font-mono">
+                          <span className="flex items-center gap-2">
+                            <Icon className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+                            {label}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 )}
+              </FormControl>
+              {isOtherCategory && (
+                <FormField
+                  control={form.control}
+                  name="categoryOther"
+                  render={({ field: otherField }) => (
+                    <FormItem className="mt-3">
+                      <FormLabel className="text-foreground">Specify category</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...otherField}
+                          className="min-h-[44px] bg-card placeholder:text-muted-foreground"
+                          placeholder="e.g. Bakery, Restaurant, Salon"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
               <FormMessage />
             </FormItem>
           )}
@@ -296,6 +421,79 @@ export function ScoutReportForm({
 
         <FormField
           control={form.control}
+          name="externalBankIds"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-foreground">Other services used</FormLabel>
+              {externalBanksLoading ? (
+                <div className="min-h-[52px]">
+                  <PortalLoadingInline className="min-h-[52px]" />
+                </div>
+              ) : externalBanks.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No other services configured. Ask an admin to add Other Services.
+                </p>
+              ) : (
+                <div className="relative">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="min-h-[44px] w-full justify-between font-normal"
+                    onClick={() => setBanksDropdownOpen((prev) => !prev)}
+                  >
+                    <span className="truncate text-left">
+                      {field.value.length > 0
+                        ? `${field.value.length} selected`
+                        : "Select one or more services"}
+                    </span>
+                    <span className="text-xs text-muted-foreground">▼</span>
+                  </Button>
+                  {banksDropdownOpen && (
+                    <div className="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-md border border-border bg-background p-2 shadow-lg">
+                      {externalBanks.map((bank) => {
+                        const checked = field.value.includes(bank.id);
+                        return (
+                          <label
+                            key={bank.id}
+                            className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-muted"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  field.onChange([...field.value, bank.id]);
+                                } else {
+                                  field.onChange(
+                                    field.value.filter((id) => id !== bank.id)
+                                  );
+                                }
+                              }}
+                              className="h-4 w-4 rounded border-border"
+                            />
+                            <span className="font-mono">{bank.name}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+              {selectedExternalBankIds.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  {selectedExternalBankIds
+                    .map((id) => externalBanks.find((b) => b.id === id)?.name)
+                    .filter(Boolean)
+                    .join(", ")}
+                </p>
+              )}
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
           name="photoUrl"
           render={({ field }) => (
             <FormItem>
@@ -317,26 +515,56 @@ export function ScoutReportForm({
                   }}
                 />
               </FormControl>
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className={cn(
-                  "flex w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-8 text-center transition-colors",
-                  "border-border hover:border-muted-foreground/50 hover:bg-muted/50",
-                  hasPhoto && "border-cyan-700 bg-cyan-700/10"
+              <div className="space-y-3">
+                {hasPhoto ? (
+                  <>
+                    <div className="relative overflow-hidden rounded-lg border-2 border-border bg-muted">
+                      <img
+                        src={photoUrl ?? undefined}
+                        alt="Storefront"
+                        className="block max-h-64 w-full object-contain"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="font-mono"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        Change photo
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="font-mono text-muted-foreground"
+                        onClick={() => field.onChange(null)}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className={cn(
+                      "flex w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-8 text-center transition-colors",
+                      "border-border hover:border-muted-foreground/50 hover:bg-muted/50"
+                    )}
+                  >
+                    <Camera
+                      className="size-12 shrink-0 text-muted-foreground"
+                      aria-hidden
+                    />
+                    <span className="font-mono text-sm text-muted-foreground">
+                      Tap to Capture Storefront Image
+                    </span>
+                  </button>
                 )}
-              >
-                <Camera
-                  className={cn(
-                    "size-12 shrink-0",
-                    hasPhoto ? "text-cyan-700" : "text-muted-foreground"
-                  )}
-                  aria-hidden
-                />
-                <span className="font-mono text-sm text-muted-foreground">
-                  {hasPhoto ? "Image captured" : "Tap to Capture Storefront Image"}
-                </span>
-              </button>
+              </div>
               <FormMessage />
             </FormItem>
           )}
@@ -362,7 +590,7 @@ export function ScoutReportForm({
             type="submit"
             form="scout-report-form"
             className="min-h-[44px] flex-1"
-            disabled={submitting}
+            disabled={submitting || categoriesLoading || categoryOptions.length === 0 || locationBlockingSubmit}
           >
             {submitting ? "Saving…" : "TRANSMIT INTEL (+20 XP)"}
           </Button>
@@ -393,7 +621,7 @@ export function ScoutReportForm({
           type="submit"
           form="scout-report-form"
           className="h-14 w-full text-lg font-bold"
-          disabled={submitting}
+          disabled={submitting || categoriesLoading || categoryOptions.length === 0 || locationBlockingSubmit}
         >
           {submitting ? "Saving…" : "TRANSMIT INTEL (+20 XP)"}
         </Button>

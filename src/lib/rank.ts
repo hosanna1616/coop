@@ -1,35 +1,53 @@
-import type { UserRank } from "@prisma/client";
+/** Rank configuration used by pure helpers. Matches Rank table shape for display order. */
+export type RankConfig = {
+  id: string;
+  code: string;
+  name: string;
+  minXp: number;
+  displayOrder: number;
+};
 
-const XP_CADET_MAX = 500;
-const XP_OFFICER_MAX = 2000;
-
-export function rankFromXp(xp: number): UserRank {
-  if (xp >= XP_OFFICER_MAX) return "CAPTAIN";
-  if (xp >= XP_CADET_MAX) return "OFFICER";
-  return "CADET";
+/** Ordered ranks by displayOrder then minXp (assumed already sorted from DB). */
+function sortedRanks(ranks: RankConfig[]): RankConfig[] {
+  return [...ranks].sort(
+    (a, b) => a.displayOrder - b.displayOrder || a.minXp - b.minXp
+  );
 }
 
-export function xpProgress(xp: number): {
-  rank: UserRank;
+/** Returns the code of the highest rank whose minXp <= xp. Empty ranks: returns empty string. */
+export function rankFromXp(ranks: RankConfig[], xp: number): string {
+  const sorted = sortedRanks(ranks);
+  let match = sorted[0]?.code ?? "";
+  for (const r of sorted) {
+    if (xp >= r.minXp) match = r.code;
+  }
+  return match;
+}
+
+export function xpProgress(
+  ranks: RankConfig[],
+  xp: number
+): {
+  rank: string;
   currentTierMin: number;
   nextTierMax: number | null;
   progressFraction: number;
 } {
-  const rank = rankFromXp(xp);
-  let currentTierMin = 0;
-  let nextTierMax: number | null = XP_CADET_MAX;
-  if (rank === "OFFICER") {
-    currentTierMin = XP_CADET_MAX;
-    nextTierMax = XP_OFFICER_MAX;
-  } else if (rank === "CAPTAIN") {
-    currentTierMin = XP_OFFICER_MAX;
-    nextTierMax = null;
-  }
+  const sorted = sortedRanks(ranks);
+  const rankCode = rankFromXp(ranks, xp);
+  const currentIndex = sorted.findIndex((r) => r.code === rankCode);
+  const currentRank = currentIndex >= 0 ? sorted[currentIndex]! : sorted[0];
+  const nextRank = currentIndex >= 0 && currentIndex < sorted.length - 1 ? sorted[currentIndex + 1]! : null;
+
+  const currentTierMin = currentRank?.minXp ?? 0;
+  const nextTierMax = nextRank?.minXp ?? null;
   const tierSize = nextTierMax != null ? nextTierMax - currentTierMin : 1;
   const progressInTier = nextTierMax != null ? xp - currentTierMin : 1;
-  const progressFraction = nextTierMax != null ? progressInTier / tierSize : 1;
+  const progressFraction =
+    nextTierMax != null ? progressInTier / tierSize : 1;
+
   return {
-    rank,
+    rank: rankCode,
     currentTierMin,
     nextTierMax,
     progressFraction: Math.min(1, Math.max(0, progressFraction)),
@@ -37,17 +55,24 @@ export function xpProgress(xp: number): {
 }
 
 /** XP needed to reach next rank, or null if at max rank. */
-export function xpToNextRank(xp: number): number | null {
-  const { nextTierMax } = xpProgress(xp);
+export function xpToNextRank(ranks: RankConfig[], xp: number): number | null {
+  const { nextTierMax } = xpProgress(ranks, xp);
   if (nextTierMax == null) return null;
   return Math.max(0, nextTierMax - xp);
 }
 
-/** Label for next rank (e.g. "Officer", "Captain", "Commander"), or null if at max. */
-export function nextRankLabel(xp: number): string | null {
-  const { rank, nextTierMax } = xpProgress(xp);
-  if (nextTierMax == null) return null;
-  if (rank === "CADET") return "Officer";
-  if (rank === "OFFICER") return "Captain";
-  return "Commander";
+/** Display name of next rank, or null if at max. */
+export function nextRankLabel(ranks: RankConfig[], xp: number): string | null {
+  const sorted = sortedRanks(ranks);
+  const rankCode = rankFromXp(ranks, xp);
+  const currentIndex = sorted.findIndex((r) => r.code === rankCode);
+  const nextRank =
+    currentIndex >= 0 && currentIndex < sorted.length - 1 ? sorted[currentIndex + 1]! : null;
+  return nextRank?.name ?? null;
+}
+
+/** Code of the default (lowest) rank for new users. */
+export function getDefaultRankCode(ranks: RankConfig[]): string {
+  const sorted = sortedRanks(ranks);
+  return sorted[0]?.code ?? "CADET";
 }

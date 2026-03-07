@@ -45,6 +45,7 @@ type TaskDetail = {
     goals: { id: string; title: string; targetValue: number | null; unit: string | null }[];
   };
   assignee: { id: string; name: string };
+  territoryCell?: { id: string; code: string } | null;
   taskReportLeads: {
     id: string;
     businessName: string;
@@ -153,6 +154,7 @@ export function TaskDetailClient({
             </CardTitle>
             <p className="font-mono text-xs text-muted-foreground">
               Mission: {task.mission.name} · {TASK_STATUS_LABELS[task.status] ?? task.status}
+              {task.territoryCell && ` · Cell: ${task.territoryCell.code}`}
             </p>
           </CardHeader>
           <CardContent className="space-y-3">

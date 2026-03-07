@@ -39,7 +39,7 @@ export default async function MerchantsPage() {
       <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-center border-b border-border bg-background">
         <h1 className="font-mono text-lg font-semibold text-foreground">Merchants</h1>
       </header>
-      <StaffMerchantsClient branchId={branchId} userRole={session.role} />
+      <StaffMerchantsClient branchId={branchId} userRole={session.role} currentUserId={session.id} />
     </div>
   );
 }

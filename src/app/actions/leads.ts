@@ -3,8 +3,9 @@
 import { prisma } from "@/lib/prisma";
 import { rankFromXp } from "@/lib/rank";
 import { revalidatePath } from "next/cache";
-import { getServerAuthSession } from "@/lib/auth";
 import { authorize } from "@/lib/auth";
+import { getCurrentUser } from "@/app/actions/users";
+import { getRanks } from "@/app/actions/ranks";
 import { logActivity } from "@/app/actions/activity-log";
 
 const SCOUT_XP = 20;
@@ -17,10 +18,14 @@ async function getOrCreateDevUserId(): Promise<string> {
   }
   let user = await prisma.user.findFirst();
   if (user) return user.id;
+  const defaultRank = await prisma.rank.findFirst({
+    orderBy: { displayOrder: "asc" },
+    select: { code: true },
+  });
   user = await prisma.user.create({
     data: {
       name: "Dev Officer",
-      rank: "CADET",
+      rank: defaultRank?.code ?? "CADET",
       xp: 0,
     },
   });
@@ -36,6 +41,7 @@ export type ScoutZoneInput = {
   businessName: string;
   category: string;
   estimatedVolume: string; // "LOW" | "MEDIUM" | "HIGH" or free text
+  externalBankIds?: string[];
   locationLat: number;
   locationLng: number;
   photoUrl?: string | null;
@@ -50,8 +56,11 @@ export async function createLead(input: ScoutZoneInput): Promise<{ ok: boolean; 
 
 export async function scoutZone(input: ScoutZoneInput): Promise<{ ok: boolean; error?: string }> {
   try {
-    const session = await getServerAuthSession();
-    const userId = session?.id ?? (await getOrCreateDevUserId());
+    const session = await authorize(["BRANCH_MANAGER", "PLAYER"], "scoutZone");
+    const userId = session.id;
+
+    const user = await getCurrentUser(userId);
+    const resolvedBranchId = input.branchId ?? session.branchId ?? user?.branchId ?? user?.team?.branchId ?? null;
 
     let zoneId = input.zoneId;
     if (!zoneId) {
@@ -61,10 +70,17 @@ export async function scoutZone(input: ScoutZoneInput): Promise<{ ok: boolean; e
           coordinates: input.coordinates as object,
           status: "UNSEEN",
           ownerId: userId,
-          ...(input.branchId && { branchId: input.branchId }),
+          ...(resolvedBranchId && { branchId: resolvedBranchId }),
         },
       });
       zoneId = zone.id;
+    } else {
+      if (resolvedBranchId) {
+        await prisma.zone.update({
+          where: { id: zoneId },
+          data: { branchId: resolvedBranchId },
+        }).catch(() => {});
+      }
     }
 
     let missionTaskId: string | null = null;
@@ -78,6 +94,7 @@ export async function scoutZone(input: ScoutZoneInput): Promise<{ ok: boolean; e
         businessName: input.businessName,
         category: input.category,
         estimatedVolume: input.estimatedVolume,
+        externalBankIds: input.externalBankIds ?? [],
         locationLat: input.locationLat,
         locationLng: input.locationLng,
         photoUrl: input.photoUrl ?? undefined,
@@ -93,9 +110,10 @@ export async function scoutZone(input: ScoutZoneInput): Promise<{ ok: boolean; e
       data: { status: "SCOUTED", ownerId: userId },
     });
 
-    const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
-    const newXp = user.xp + SCOUT_XP;
-    const newRank = rankFromXp(newXp);
+    const dbUser = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
+    const newXp = dbUser.xp + SCOUT_XP;
+    const ranks = await getRanks();
+    const newRank = rankFromXp(ranks, newXp);
     await prisma.user.update({
       where: { id: userId },
       data: { xp: newXp, rank: newRank },
@@ -123,6 +141,33 @@ export async function scoutZone(input: ScoutZoneInput): Promise<{ ok: boolean; e
   } catch (e) {
     console.error("scoutZone error", e);
     return { ok: false, error: e instanceof Error ? e.message : "Scout failed" };
+  }
+}
+
+/** Update a lead's location (e.g. when inducting and user chooses device location). BRANCH_MANAGER, PLAYER. Lead must not be converted. */
+export async function updateLeadLocation(
+  leadId: string,
+  locationLat: number,
+  locationLng: number
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    await authorize(["BRANCH_MANAGER", "PLAYER"], "updateLeadLocation");
+    const lead = await prisma.lead.findUnique({
+      where: { id: leadId },
+      select: { id: true, status: true },
+    });
+    if (!lead) return { ok: false, error: "Lead not found" };
+    if (lead.status === "CONVERTED") return { ok: false, error: "Lead already converted" };
+    await prisma.lead.update({
+      where: { id: leadId },
+      data: { locationLat, locationLng },
+    });
+    revalidatePath("/");
+    revalidatePath(`/induct/${leadId}`);
+    return { ok: true };
+  } catch (e) {
+    console.error("updateLeadLocation error", e);
+    return { ok: false, error: e instanceof Error ? e.message : "Update failed" };
   }
 }
 

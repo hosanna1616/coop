@@ -11,6 +11,9 @@ import {
   Building2,
   Store,
   Shield,
+  Tag,
+  Landmark,
+  Medal,
 } from "lucide-react";
 import type { Role } from "@/lib/auth";
 
@@ -34,18 +37,23 @@ const mapBaseNavItems: NavItem[] = [
 const profileItem: NavItem = { href: "/profile", label: "Profile", icon: User };
 
 const adminNavItems: NavItem[] = [
+  { href: "/admin/operational-summary", label: "Operational Summary", icon: BarChart2 },
   { href: "/admin/reports", label: "Reports", icon: FileText },
   { href: "/admin/merchants", label: "Merchants", icon: Store },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/teams", label: "Teams", icon: Users2 },
   { href: "/admin/branches", label: "Branches", icon: Building2 },
+  { href: "/admin/categories", label: "Scout Categories", icon: Tag },
+  { href: "/admin/external-banks", label: "Other Services", icon: Landmark },
+  { href: "/admin/ranks", label: "Ranks", icon: Medal },
   { href: "/admin/assets", label: "Deployment Assets", icon: Shield },
 ];
 
 const branchManagerNavItems: NavItem[] = [
+  { href: "/admin/operational-summary", label: "Operational Summary", icon: BarChart2 },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/teams", label: "Teams", icon: Users2 },
-  { href: "/admin/reports", label: "Reports", icon: BarChart2 },
+  { href: "/admin/reports", label: "Reports", icon: FileText },
   { href: "/admin/merchants", label: "Merchants", icon: Store },
 ];
 

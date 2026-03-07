@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { VerifyStep } from "@/components/wizards/induction/verify-step";
@@ -8,7 +8,7 @@ import { KycProductsStep } from "@/components/wizards/induction/kyc-products-ste
 import type { KycProductsFormValues } from "@/components/wizards/induction/kyc-products-step";
 import { OathStep } from "@/components/wizards/induction/oath-step";
 import { updateMerchantProductsAndKYC, completeInduction } from "@/app/actions/merchants";
-import { getDeploymentAssets } from "@/app/actions/deployment-assets";
+import { saveInductionDraft, clearInductionDraft } from "@/app/actions/induction-draft";
 
 const STEPS = ["Verify", "KYC & Products", "The Oath"] as const;
 
@@ -23,23 +23,33 @@ export interface LeadForInduction {
 
 export interface InductionWizardProps {
   lead: LeadForInduction;
+  /** Step to show on load (0–2). Used when resuming. */
+  initialStep?: number;
+  /** Prefill for KYC step when resuming. */
+  initialKycValues?: Partial<KycProductsFormValues>;
 }
 
-export function InductionWizard({ lead }: InductionWizardProps) {
+export function InductionWizard({ lead, initialStep = 0, initialKycValues }: InductionWizardProps) {
   const router = useRouter();
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(initialStep);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeAssets, setActiveAssets] = useState<{ id: string; name: string; displayName: string }[]>([]);
-
-  useEffect(() => {
-    getDeploymentAssets().then((list) =>
-      setActiveAssets(list.map((a) => ({ id: a.id, name: a.name, displayName: a.displayName })))
-    );
-  }, []);
 
   const next = () => setStep((s) => Math.min(s + 1, STEPS.length - 1));
   const prev = () => setStep((s) => Math.max(s - 1, 0));
+
+  async function handleSaveAndContinueLater(stepIndex: number, kycFormData?: Partial<KycProductsFormValues>) {
+    setError(null);
+    setSubmitting(true);
+    const result = await saveInductionDraft(lead.id, stepIndex, kycFormData ?? null);
+    setSubmitting(false);
+    if (result.ok) {
+      router.push("/");
+      router.refresh();
+    } else {
+      setError(result.error ?? "Failed to save progress");
+    }
+  }
 
   async function handleKycContinue(data: KycProductsFormValues) {
     setError(null);
@@ -47,14 +57,14 @@ export function InductionWizard({ lead }: InductionWizardProps) {
     const result = await updateMerchantProductsAndKYC({
       leadId: lead.id,
       ownerName: data.ownerName,
-      nationalIdNumber: data.nationalIdNumber,
-      tradeLicenseNumber: data.tradeLicenseNumber,
-      tinNumber: data.tinNumber,
+      tradeLicenseNumber: data.tradeLicenseNumber ?? "",
+      tinNumber: data.tinNumber ?? "",
       phoneNumber: data.phoneNumber,
       merchantAccountNumber: data.merchantAccountNumber ?? "",
     });
     setSubmitting(false);
     if (result.ok) {
+      await clearInductionDraft(lead.id);
       next();
     } else {
       setError(result.error ?? "Failed to save KYC");
@@ -70,6 +80,7 @@ export function InductionWizard({ lead }: InductionWizardProps) {
     });
     setSubmitting(false);
     if (result.ok) {
+      await clearInductionDraft(lead.id);
       router.push("/");
       router.refresh();
     } else {
@@ -85,6 +96,7 @@ export function InductionWizard({ lead }: InductionWizardProps) {
 
       {step === 0 && (
         <VerifyStep
+          leadId={lead.id}
           lead={{
             businessName: lead.businessName,
             category: lead.category,
@@ -93,6 +105,8 @@ export function InductionWizard({ lead }: InductionWizardProps) {
             zone: lead.zone,
           }}
           onContinue={next}
+          onSaveProgress={() => handleSaveAndContinueLater(1)}
+          saving={submitting}
         />
       )}
 
@@ -100,8 +114,10 @@ export function InductionWizard({ lead }: InductionWizardProps) {
         <KycProductsStep
           leadId={lead.id}
           businessName={lead.businessName}
-          activeDeploymentAssets={activeAssets}
+          defaultValues={initialKycValues}
           onContinue={handleKycContinue}
+          onSaveProgress={(data) => handleSaveAndContinueLater(1, data)}
+          saving={submitting}
         />
       )}
 

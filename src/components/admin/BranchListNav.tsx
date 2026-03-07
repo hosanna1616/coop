@@ -1,9 +1,12 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+
+const PAGE_SIZE = 20;
 
 export type BranchForList = {
   id: string;
@@ -21,6 +24,7 @@ export function BranchListNav({
   title?: string;
 }) {
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(0);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -32,6 +36,27 @@ export function BranchListNav({
     );
   }, [branches, search]);
 
+  const totalFiltered = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(totalFiltered / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages - 1);
+  const paginated = useMemo(
+    () =>
+      filtered.slice(
+        currentPage * PAGE_SIZE,
+        currentPage * PAGE_SIZE + PAGE_SIZE
+      ),
+    [filtered, currentPage]
+  );
+
+  useEffect(() => {
+    setPage((p) => (p >= totalPages ? Math.max(0, totalPages - 1) : p));
+  }, [totalPages]);
+
+  const goToPage = (newPage: number) => {
+    if (newPage < 0 || newPage >= totalPages) return;
+    setPage(newPage);
+  };
+
   return (
     <div className="flex flex-col gap-4 p-4">
       <p className="text-sm text-muted-foreground">{title}</p>
@@ -42,17 +67,20 @@ export function BranchListNav({
           type="search"
           placeholder="Type to filter branches…"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(0);
+          }}
           className="font-mono"
         />
       </div>
       <ul className="flex flex-col gap-2">
-        {filtered.length === 0 ? (
+        {paginated.length === 0 ? (
           <li className="rounded-lg border border-dashed border-border p-3 font-mono text-sm text-muted-foreground">
             {search.trim() ? "No branches match your search." : "No branches."}
           </li>
         ) : (
-          filtered.map((b) => (
+          paginated.map((b) => (
             <li key={b.id}>
               <Link
                 href={`${basePath}?branchId=${b.id}`}
@@ -67,6 +95,32 @@ export function BranchListNav({
           ))
         )}
       </ul>
+      {totalFiltered > PAGE_SIZE && (
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-4">
+          <span className="font-mono text-xs text-muted-foreground">
+            Page {currentPage + 1} of {totalPages} ({totalFiltered} branch{totalFiltered !== 1 ? "es" : ""}
+            {search.trim() ? " matching search" : ""})
+          </span>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={currentPage === 0}
+              onClick={() => goToPage(currentPage - 1)}
+            >
+              Previous
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={currentPage >= totalPages - 1}
+              onClick={() => goToPage(currentPage + 1)}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

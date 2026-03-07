@@ -2,10 +2,15 @@
 
 import { prisma } from "@/lib/prisma";
 import { authorize } from "@/lib/auth";
+import { getCurrentUser } from "@/app/actions/users";
 import { logActivity } from "@/app/actions/activity-log";
+import {
+  createMissionAssignedNotifications,
+  createTaskAssignedNotification,
+} from "@/app/actions/notifications";
 import type { MissionTaskStatus } from "@prisma/client";
 
-/** Territory dashboard: zone and merchant counts for the home page. When branchId is set, counts are scoped to that branch. */
+/** Territory dashboard: zone and merchant counts for the home page. When branchId is set, counts are scoped to that branch. Uses TerritoryCell for zone stats so they match the map. */
 export async function getTerritoryDashboardStats(branchId?: string | null): Promise<{
   zonesCaptured: number;
   zonesAtRisk: number;
@@ -14,7 +19,7 @@ export async function getTerritoryDashboardStats(branchId?: string | null): Prom
   totalZones: number;
 }> {
   try {
-    const zoneWhere = branchId ? { branchId } : undefined;
+    const cellWhere = branchId ? { branchId } : {};
     const missionWhere = branchId
       ? { branchId, status: { not: "DRAFT" } }
       : { status: { not: "DRAFT" } };
@@ -23,11 +28,11 @@ export async function getTerritoryDashboardStats(branchId?: string | null): Prom
       : undefined;
 
     const [zonesCaptured, zonesAtRisk, activeMerchants, activeMissions, totalZones] = await Promise.all([
-      prisma.zone.count({ where: { ...zoneWhere, status: "CAPTURED" } }),
-      prisma.zone.count({ where: { ...zoneWhere, status: "AT_RISK" } }),
+      prisma.territoryCell.count({ where: { ...cellWhere, status: "CAPTURED" } }),
+      prisma.territoryCell.count({ where: { ...cellWhere, status: "AT_RISK" } }),
       prisma.merchant.count(merchantWhere ? { where: merchantWhere } : {}),
       prisma.mission.count({ where: missionWhere }),
-      prisma.zone.count(zoneWhere ? { where: zoneWhere } : {}),
+      prisma.territoryCell.count({ where: cellWhere }),
     ]);
     return { zonesCaptured, zonesAtRisk, activeMerchants, activeMissions, totalZones };
   } catch {
@@ -41,6 +46,8 @@ export type CreateMissionData = {
   branchId?: string | null;
   /** Branch from branches.json; resolved to branchId */
   branchCode?: string | null;
+  /** Optional: scope mission to a territory cell (must belong to mission branch) */
+  territoryCellId?: string | null;
 };
 
 export async function createMission(data: CreateMissionData) {
@@ -57,17 +64,30 @@ export async function createMission(data: CreateMissionData) {
     if (!session.branchId) throw new Error("Branch manager has no branch assigned.");
     branchId = session.branchId;
   }
+  if (data.territoryCellId && branchId) {
+    const cell = await prisma.territoryCell.findUnique({
+      where: { id: data.territoryCellId },
+      select: { branchId: true },
+    });
+    if (!cell || cell.branchId !== branchId) {
+      throw new Error("Territory cell must belong to the mission branch.");
+    }
+  }
   const mission = await prisma.mission.create({
     data: {
       name: data.name,
       status: data.status ?? "DRAFT",
       branchId: branchId ?? undefined,
+      territoryCellId: data.territoryCellId ?? undefined,
     },
   });
   const actor = await prisma.user.findUnique({
     where: { id: session.id },
     select: { name: true },
   });
+  if (mission.branchId) {
+    await createMissionAssignedNotifications(mission.id, mission.branchId, mission.name);
+  }
   await logActivity(session, actor?.name ?? "User", "MISSION_CREATE", {
     entityType: "Mission",
     entityId: mission.id,
@@ -82,7 +102,8 @@ export async function getMissions(filters?: { branchId?: string | null; limit?: 
   const session = await authorize(["ADMIN", "BRANCH_MANAGER", "PLAYER"], "getMissions");
   let branchId: string | null = filters?.branchId ?? null;
   if (session.role === "BRANCH_MANAGER" || session.role === "PLAYER") {
-    branchId = session.branchId ?? null;
+    const user = await getCurrentUser(session.id);
+    branchId = session.branchId ?? user?.branchId ?? user?.team?.branchId ?? null;
   }
   // ADMIN must specify a branch to see missions; no cross-branch listing
   if (session.role === "ADMIN" && !branchId) {
@@ -103,8 +124,12 @@ export async function getMissions(filters?: { branchId?: string | null; limit?: 
         skip: offset,
         include: {
           goals: true,
+          territoryCell: { select: { id: true, code: true } },
           tasks: {
-            include: { assignee: { select: { id: true, name: true } } },
+            include: {
+              assignee: { select: { id: true, name: true } },
+              territoryCell: { select: { id: true, code: true } },
+            },
           },
         },
       }),
@@ -116,18 +141,23 @@ export async function getMissions(filters?: { branchId?: string | null; limit?: 
   }
 }
 
-/** Single mission by id (for edit page). Manager/admin only. Branch-scoped: admin must pass branchId to view a mission. */
+/** Single mission by id (for edit page or read-only view). Manager/admin can edit; PLAYER can view (same branch). Branch-scoped. */
 export async function getMissionById(missionId: string, branchIdFilter?: string | null) {
-  const session = await authorize(["ADMIN", "BRANCH_MANAGER"], "getMissionById");
+  const session = await authorize(["ADMIN", "BRANCH_MANAGER", "PLAYER"], "getMissionById");
   const mission = await prisma.mission.findUnique({
     where: { id: missionId },
     include: {
       goals: true,
-      tasks: { include: { assignee: { select: { id: true, name: true } } } },
+      tasks: { include: { assignee: { select: { id: true, name: true } }, territoryCell: { select: { id: true, code: true } } } },
       branch: { select: { id: true, name: true } },
+      territoryCell: { select: { id: true, code: true } },
     },
   });
   if (!mission) return null;
+  if (session.role === "PLAYER") {
+    if (mission.branchId !== session.branchId) return null;
+    return mission;
+  }
   if (session.role === "BRANCH_MANAGER" && mission.branchId !== session.branchId) return null;
   if (session.role === "ADMIN" && branchIdFilter != null && mission.branchId !== branchIdFilter) return null;
   return mission;
@@ -141,6 +171,7 @@ export async function getTaskByIdForAssignee(taskId: string, branchIdFilter?: st
     include: {
       mission: { select: { id: true, name: true, status: true, branchId: true, goals: true } },
       assignee: { select: { id: true, name: true } },
+      territoryCell: { select: { id: true, code: true } },
       taskReportLeads: {
         select: {
           id: true,
@@ -164,14 +195,35 @@ export async function getTaskByIdForAssignee(taskId: string, branchIdFilter?: st
   return task;
 }
 
+/** Task assigned to current user for a specific territory cell (for player map drawer). */
+export async function getMyTaskForCell(territoryCellId: string) {
+  const session = await authorize(["PLAYER", "BRANCH_MANAGER", "ADMIN"], "getMyTaskForCell");
+  const task = await prisma.missionTask.findFirst({
+    where: {
+      assigneeId: session.id,
+      territoryCellId,
+    },
+    orderBy: { createdAt: "desc" },
+    include: {
+      mission: { select: { id: true, name: true } },
+      territoryCell: { select: { id: true, code: true } },
+    },
+  });
+  return task;
+}
+
 /** Missions and tasks assigned to current user (for staff "My tasks"). Only tasks from the user's branch. */
 export async function getMyTasks() {
   const session = await authorize(["PLAYER", "BRANCH_MANAGER", "ADMIN"], "getMyTasks");
   if (typeof (prisma as { missionTask?: { findMany: unknown } }).missionTask?.findMany !== "function") {
     return [];
   }
-  // Only show tasks from the user's branch; no other branch can see another branch's tasks
-  const branchId = session.branchId;
+  // Resolve branch: session (from JWT) or user's branch/team from DB (players may only have team.branchId)
+  let branchId = session.branchId;
+  if (!branchId && (session.role === "PLAYER" || session.role === "BRANCH_MANAGER")) {
+    const user = await getCurrentUser(session.id);
+    branchId = user?.branchId ?? user?.team?.branchId ?? null;
+  }
   if (!branchId) return [];
   const tasks = await prisma.missionTask.findMany({
     where: {
@@ -182,9 +234,99 @@ export async function getMyTasks() {
     take: 100,
     include: {
       mission: { select: { id: true, name: true, status: true } },
+      territoryCell: { select: { id: true, code: true } },
     },
   });
   return tasks;
+}
+
+export type MyScoutedLead = {
+  id: string;
+  businessName: string;
+  category: string;
+  status: string;
+  createdAt: Date;
+  zoneCode: string | null;
+};
+
+export type MyInductedMerchant = {
+  id: string;
+  ownerName: string;
+  citizenNumber: string;
+  onboardingDate: Date;
+  businessName: string;
+  category: string;
+};
+
+/** Scouted leads and inducted merchants by the current user, scoped to their branch. For branch staff/players on the tasks screen. */
+export async function getMyScoutedAndRegistered(): Promise<{
+  scoutedLeads: MyScoutedLead[];
+  inductedMerchants: MyInductedMerchant[];
+}> {
+  const session = await authorize(["BRANCH_MANAGER", "PLAYER"], "getMyScoutedAndRegistered");
+  const user = await getCurrentUser(session.id);
+  const branchId = session.branchId ?? user?.branchId ?? user?.team?.branchId ?? null;
+  if (!branchId) return { scoutedLeads: [], inductedMerchants: [] };
+
+  const [leads, merchants] = await Promise.all([
+    prisma.lead.findMany({
+      where: {
+        scoutedById: session.id,
+        status: { not: "CONVERTED" },
+        OR: [
+          { scoutedBy: { branchId } },
+          { zone: { branchId } },
+        ],
+      },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+      select: {
+        id: true,
+        businessName: true,
+        category: true,
+        status: true,
+        createdAt: true,
+        zone: { select: { code: true } },
+      },
+    }),
+    prisma.merchant.findMany({
+      where: {
+        inductedById: session.id,
+        OR: [
+          { inductedBy: { branchId } },
+          { lead: { zone: { branchId } } },
+        ],
+      },
+      orderBy: { onboardingDate: "desc" },
+      take: 100,
+      select: {
+        id: true,
+        ownerName: true,
+        citizenNumber: true,
+        onboardingDate: true,
+        lead: { select: { businessName: true, category: true } },
+      },
+    }),
+  ]);
+
+  return {
+    scoutedLeads: leads.map((l) => ({
+      id: l.id,
+      businessName: l.businessName,
+      category: l.category,
+      status: l.status,
+      createdAt: l.createdAt,
+      zoneCode: l.zone?.code ?? null,
+    })),
+    inductedMerchants: merchants.map((m) => ({
+      id: m.id,
+      ownerName: m.ownerName,
+      citizenNumber: m.citizenNumber,
+      onboardingDate: m.onboardingDate,
+      businessName: m.lead?.businessName ?? "",
+      category: m.lead?.category ?? "",
+    })),
+  };
 }
 
 /** Pending task approvals. Branch manager: own branch. Admin: only the branch passed (no cross-branch). */
@@ -208,6 +350,7 @@ export async function getPendingTaskApprovals(filters?: { branchId?: string | nu
     include: {
       mission: { select: { id: true, name: true } },
       assignee: { select: { id: true, name: true } },
+      territoryCell: { select: { id: true, code: true } },
     },
   });
   return tasks;
@@ -314,6 +457,8 @@ export type CreateMissionTaskData = {
   assigneeId: string;
   title: string;
   description?: string | null;
+  /** Optional: task scoped to this territory cell (must belong to mission branch) */
+  territoryCellId?: string | null;
 };
 
 export async function createMissionTask(data: CreateMissionTaskData) {
@@ -339,18 +484,35 @@ export async function createMissionTask(data: CreateMissionTaskData) {
   if (session.role === "BRANCH_MANAGER" && assignee.role !== "PLAYER") {
     throw new Error("You can only assign tasks to branch staff.");
   }
+  if (data.territoryCellId && mission.branchId) {
+    const cell = await prisma.territoryCell.findUnique({
+      where: { id: data.territoryCellId },
+      select: { branchId: true },
+    });
+    if (!cell || cell.branchId !== mission.branchId) {
+      throw new Error("Territory cell must belong to the mission branch.");
+    }
+  }
   const task = await prisma.missionTask.create({
     data: {
       missionId: data.missionId,
       assigneeId: data.assigneeId,
       title: data.title,
       description: data.description ?? undefined,
+      territoryCellId: data.territoryCellId ?? undefined,
     },
   });
   const actor = await prisma.user.findUnique({
     where: { id: session.id },
     select: { name: true },
   });
+  await createTaskAssignedNotification(
+    task.id,
+    data.assigneeId,
+    mission.name,
+    task.title,
+    mission.branchId
+  );
   await logActivity(session, actor?.name ?? "User", "MISSION_TASK_ASSIGN", {
     entityType: "MissionTask",
     entityId: task.id,

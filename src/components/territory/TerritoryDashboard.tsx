@@ -11,12 +11,6 @@ import { OfficerProfile } from "./OfficerProfile";
 import { saveBranchTerritory, updateTerritoryCell } from "@/app/actions/branch-territory";
 import type { TerritoryCellWithCoords, AdminBranchTerritory } from "@/app/actions/branch-territory";
 
-const RANK_LABELS: Record<string, string> = {
-  CADET: "R1 - CADET",
-  OFFICER: "R2 - OFFICER",
-  CAPTAIN: "R3 - CAPTAIN",
-};
-
 function getGreeting(): string {
   const h = new Date().getHours();
   if (h < 12) return "Good Morning";
@@ -58,6 +52,7 @@ export function TerritoryDashboard({
   territoryCells = [],
   isBranchManager = false,
   adminTerritories,
+  rankTier,
 }: {
   userName: string;
   rankLabel: string;
@@ -88,6 +83,8 @@ export function TerritoryDashboard({
   territoryCells?: TerritoryCellWithCoords[];
   isBranchManager?: boolean;
   adminTerritories?: AdminBranchTerritory[];
+  /** Optional tier label from ranks config (e.g. R1, R2, R3). */
+  rankTier?: string;
 }) {
   const router = useRouter();
   const [territoryEditModeActive, setTerritoryEditModeActive] = useState(false);
@@ -122,7 +119,7 @@ export function TerritoryDashboard({
         </div>
         <div className="flex items-center gap-3">
           <Link
-            href="/profile"
+            href="/notifications"
             className="relative flex size-9 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
             aria-label="Notifications"
           >
@@ -245,6 +242,7 @@ export function TerritoryDashboard({
               name={userName}
               rank={currentUserRank}
               rankLabel={rankLabel}
+              rankTier={rankTier}
               districtName={districtName}
               xp={currentUserXp}
               xpNextRank={xpToNextRank ?? null}

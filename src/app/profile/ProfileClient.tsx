@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { MapPin, Users, Target, CheckSquare } from "lucide-react";
+import { MapPin, Users, Target, CheckSquare, Sparkles, Medal, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { logout, changePassword } from "@/app/actions/auth";
 
@@ -18,8 +18,16 @@ type UserRow = {
   rankLabel: string;
 };
 
+export type RankStage = {
+  id: string;
+  shortLabel: string;
+  tier: string;
+  xpRange: string;
+};
+
 export function ProfileClient({
   user,
+  rankStages,
   stats,
   leaderboard,
   currentUserId,
@@ -35,7 +43,10 @@ export function ProfileClient({
     teamName: string | null;
     progressFraction: number;
     nextTierMax: number | null;
+    xpToNextRank: number | null;
+    nextRankLabel: string | null;
   };
+  rankStages: RankStage[];
   stats: {
     zonesScouted: number;
     merchantsInducted: number;
@@ -83,6 +94,7 @@ export function ProfileClient({
         ) : (
           <OfficerProfileCard
             user={user}
+            rankStages={rankStages}
             rankLine={rankLine}
             xpFormatted={xpFormatted}
           />
@@ -257,49 +269,163 @@ export function ProfileClient({
   );
 }
 
-/** Officer profile card (rank + XP) for non-admin users */
+/** Officer profile card: compact identity + horizontal rank progression with icons. */
 function OfficerProfileCard({
   user,
+  rankStages,
   rankLine,
   xpFormatted,
 }: {
-  user: { name: string; progressFraction: number };
+  user: {
+    name: string;
+    rank: string;
+    rankLabel: string;
+    xp: number;
+    progressFraction: number;
+    xpToNextRank: number | null;
+    nextRankLabel: string | null;
+  };
+  rankStages: RankStage[];
   rankLine: string;
   xpFormatted: string;
 }) {
+  const STAGE_ICONS = [Sparkles, Medal, Crown] as const;
+  const getIcon = (index: number) => STAGE_ICONS[Math.min(index, STAGE_ICONS.length - 1)] ?? Crown;
+
+  const currentIndex = rankStages.findIndex((s) => s.id === user.rank);
+  const nextStage = currentIndex >= 0 && currentIndex < rankStages.length - 1 ? rankStages[currentIndex + 1]! : null;
+  const isCurrent = (id: string) => id === user.rank;
+  const isPast = (index: number) => index < currentIndex;
+  const isNext = (id: string) => nextStage?.id === id;
+
+  if (rankStages.length === 0) {
+    return (
+      <div className="space-y-4">
+        <Card className="overflow-hidden border-border bg-card">
+          <CardContent className="flex flex-col items-center gap-3 pt-5 pb-4">
+            <p className="font-mono text-lg font-semibold text-foreground">{user.name}</p>
+            <p className="text-sm text-muted-foreground">No ranks configured. Ask an admin to set up officer ranks.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Track spans between first and last node; N nodes => (N-1) segments.
+  const segmentCount = Math.max(1, rankStages.length - 1);
+  const segmentWidth = 68 / segmentCount;
+  const filledWidth =
+    currentIndex < 0
+      ? 0
+      : currentIndex >= rankStages.length - 1
+        ? 68
+        : segmentWidth * currentIndex + segmentWidth * user.progressFraction;
+
   return (
-    <Card className="border-border bg-card text-card-foreground">
-      <CardContent className="flex flex-col items-center gap-4 pt-6">
-        <div
-          className="flex size-20 shrink-0 items-center justify-center rounded-full bg-muted font-mono text-2xl text-muted-foreground"
-          aria-hidden
-        >
-          {user.name.slice(0, 2).toUpperCase()}
-        </div>
-        <div className="text-center">
-          <p className="font-mono text-xl font-semibold text-primary">
-            {user.name}
-          </p>
-          <p className="mt-1 text-sm text-muted-foreground">{rankLine}</p>
-        </div>
-        <div className="w-full space-y-2">
-          <div className="flex justify-between font-mono text-xs text-muted-foreground">
-            <span>XP PROGRESS:</span>
-            <span className="text-primary">{xpFormatted} XP</span>
+    <div className="space-y-4">
+      {/* Identity card with subtle gradient accent */}
+      <Card className="relative overflow-hidden border-border bg-card shadow-sm">
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" aria-hidden />
+        <CardContent className="flex flex-col items-center gap-3 pt-5 pb-4">
+          <div
+            className="flex size-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary/30 via-primary/15 to-primary/5 font-mono text-xl font-bold text-primary shadow-inner ring-2 ring-primary/25 ring-offset-2 ring-offset-card"
+            aria-hidden
+          >
+            {user.name.slice(0, 2).toUpperCase()}
           </div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-            <div
-              className="h-full rounded-full bg-primary transition-[width]"
-              style={{ width: `${user.progressFraction * 100}%` }}
-            />
+          <div className="text-center">
+            <p className="font-mono text-lg font-semibold tracking-tight text-foreground">{user.name}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">{rankLine}</p>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      {/* Rank progression: track line + icons in a row */}
+      <Card className="overflow-hidden border-border bg-card shadow-sm">
+        <CardContent className="relative px-4 py-5">
+          {/* Background track (full width between first and last node) */}
+          <div className="absolute left-[16%] right-[16%] top-[2.125rem] h-0.5 bg-muted/80" aria-hidden />
+          {/* Filled track: only up to current node + progress within current segment */}
+          <div
+            className="absolute top-[2.125rem] h-0.5 rounded-full bg-gradient-to-r from-green-500 to-primary transition-all duration-700"
+            style={{
+              left: "16%",
+              width: `${filledWidth}%`,
+            }}
+            aria-hidden
+          />
+
+          <div className="relative flex items-start justify-between">
+            {rankStages.map((stage, index) => {
+              const Icon = getIcon(index);
+              const past = isPast(index);
+              const current = isCurrent(stage.id);
+              const next = isNext(stage.id);
+              return (
+                <div key={stage.id} className="flex flex-1 flex-col items-center">
+                  <div
+                    className={cn(
+                      "relative z-10 flex size-12 items-center justify-center rounded-full transition-all duration-300",
+                      current && "bg-primary text-primary-foreground shadow-lg shadow-primary/25 ring-4 ring-primary/20 scale-110",
+                      past && "bg-green-500 text-white shadow-md ring-2 ring-green-400/50",
+                      !current && !past && "bg-muted/90 text-muted-foreground ring-2 ring-border/80"
+                    )}
+                  >
+                    {past ? (
+                      <span className="text-xl font-bold leading-none" aria-hidden>✓</span>
+                    ) : (
+                      <Icon className="size-6 shrink-0" strokeWidth={2.5} aria-hidden />
+                    )}
+                  </div>
+                  <div className="mt-2 flex flex-col items-center gap-0.5">
+                    <span className="font-mono text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{stage.tier}</span>
+                    <span className={cn("font-mono text-sm font-semibold", current ? "text-primary" : "text-foreground/90")}>
+                      {stage.shortLabel}
+                    </span>
+                    <span className="font-mono text-[10px] text-muted-foreground" title={stage.xpRange}>{stage.xpRange}</span>
+                    {current && (
+                      <span className="mt-1 rounded-full bg-primary/15 px-2 py-0.5 font-mono text-[10px] font-bold text-primary">You are here</span>
+                    )}
+                    {next && (
+                      <span className="mt-1 rounded-full bg-amber-500/15 px-2 py-0.5 font-mono text-[10px] font-semibold text-amber-700 dark:text-amber-400">Next goal</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Progress to next rank */}
+          {user.xpToNextRank != null && user.nextRankLabel ? (
+            <div className="mt-4 rounded-xl border border-border/60 bg-gradient-to-br from-muted/40 to-muted/20 p-3">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-mono text-xs font-medium text-muted-foreground">Progress to {user.nextRankLabel}</span>
+                <span className="font-mono text-xs font-bold tabular-nums text-primary">{user.xpToNextRank} XP to go</span>
+              </div>
+              <div className="mt-2 flex items-center gap-2">
+                <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-primary via-primary to-primary/80 transition-[width] duration-700 ease-out"
+                    style={{ width: `${Math.round(user.progressFraction * 100)}%` }}
+                  />
+                </div>
+                <span className="min-w-[2.5rem] font-mono text-[10px] font-semibold tabular-nums text-muted-foreground">{Math.round(user.progressFraction * 100)}%</span>
+              </div>
+              <p className="mt-1.5 font-mono text-[10px] text-muted-foreground">{xpFormatted} XP total</p>
+            </div>
+          ) : (
+            <div className="mt-4 flex items-center justify-center gap-2 rounded-xl border border-primary/20 bg-primary/5 py-3">
+              <Crown className="size-4 text-primary" aria-hidden />
+              <p className="font-mono text-xs font-semibold text-primary">Max rank reached · {xpFormatted} XP</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 
-/** Command Post identity card for ADMIN – no rank, clearance-style UI (no stats grid; stats in OperationsOverviewSection) */
+/** Command Post identity card for ADMIN – no rank, clearance-style UI */
 function CommandPostProfile({ name }: { name: string }) {
   return (
     <Card className="overflow-hidden border-primary/30 bg-card text-card-foreground">
@@ -308,7 +434,7 @@ function CommandPostProfile({ name }: { name: string }) {
           Merchant Nation HQ
         </p>
         <p className="font-mono text-xs font-medium text-muted-foreground">
-          Secure command interface
+          Secure command interface · No ranking
         </p>
       </div>
       <CardContent className="flex flex-col gap-4 pt-6">
@@ -317,15 +443,16 @@ function CommandPostProfile({ name }: { name: string }) {
             {name.slice(0, 2).toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="font-mono text-lg font-semibold text-foreground">
-              {name}
-            </p>
+            <p className="font-mono text-lg font-semibold text-foreground">{name}</p>
             <p className="mt-0.5 font-mono text-xs text-muted-foreground">
-              COMMANDER · Full system access
+              Commander · Full system access
             </p>
             <span className="mt-2 inline-block rounded border border-primary/50 bg-primary/10 px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-primary">
               Clearance: FULL
             </span>
+            <p className="mt-2 font-mono text-[10px] text-muted-foreground">
+              Officer ranks (Cadet → Officer → Captain) do not apply to admin accounts.
+            </p>
           </div>
         </div>
       </CardContent>

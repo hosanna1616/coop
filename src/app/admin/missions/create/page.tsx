@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export default async function CreateMissionPage({
   searchParams,
 }: {
-  searchParams: Promise<{ branchId?: string }>;
+  searchParams: Promise<{ branchId?: string; territoryCellId?: string }>;
 }) {
   const session = await getServerAuthSession();
   if (!session || (session.role !== "ADMIN" && session.role !== "BRANCH_MANAGER")) {
@@ -15,7 +15,20 @@ export default async function CreateMissionPage({
   }
 
   const params = await searchParams;
-  const branchIdFromUrl = session.role === "ADMIN" ? (params.branchId ?? null) : null;
+  const branchIdFromUrl = session.role === "ADMIN" ? (params.branchId ?? null) : session.branchId ?? null;
+  const territoryCellIdFromUrl = params.territoryCellId ?? null;
+
+  let territoryCellCode: string | null = null;
+  if (territoryCellIdFromUrl) {
+    const { prisma } = await import("@/lib/prisma");
+    const cell = await prisma.territoryCell.findUnique({
+      where: { id: territoryCellIdFromUrl },
+      select: { code: true, branchId: true },
+    });
+    if (cell && (session.role === "ADMIN" || cell.branchId === session.branchId)) {
+      territoryCellCode = cell.code;
+    }
+  }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -25,7 +38,12 @@ export default async function CreateMissionPage({
         </h1>
       </header>
       <div className="flex flex-1 flex-col p-6">
-        <CreateMissionClient callerRole={session.role} defaultBranchId={branchIdFromUrl} />
+        <CreateMissionClient
+          callerRole={session.role}
+          defaultBranchId={branchIdFromUrl}
+          defaultTerritoryCellId={territoryCellIdFromUrl}
+          territoryCellCode={territoryCellCode}
+        />
       </div>
     </div>
   );

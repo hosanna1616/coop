@@ -55,7 +55,7 @@ type ViewFilter = "all" | "scouted" | "registered";
 
 type UserRole = "PLAYER" | "BRANCH_MANAGER" | "ADMIN";
 
-export function StaffMerchantsClient({ branchId, userRole }: { branchId: string; userRole: UserRole }) {
+export function StaffMerchantsClient({ branchId, userRole, currentUserId }: { branchId: string; userRole: UserRole; currentUserId?: string }) {
   const [leads, setLeads] = useState<LeadRow[]>([]);
   const [merchants, setMerchants] = useState<MerchantRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,7 +72,9 @@ export function StaffMerchantsClient({ branchId, userRole }: { branchId: string;
   const [saving, setSaving] = useState(false);
   const limit = 20;
 
-  const canEditMerchant = userRole === "PLAYER" || userRole === "BRANCH_MANAGER";
+  const canEditMerchant =
+    userRole === "BRANCH_MANAGER" ||
+    (userRole === "PLAYER" && currentUserId != null && merchantDetail?.inductedBy?.id === currentUserId);
 
   const loadDetail = useCallback(async (merchantId: string) => {
     setDetailLoading(true);
@@ -482,9 +484,9 @@ function MerchantDetailView({ detail }: { detail: MerchantDetail }) {
       <dl className="grid grid-cols-[minmax(8rem,auto)_1fr] gap-x-4 gap-y-1 font-mono text-sm">
       <DetailRow label="Owner name" value={detail.ownerName} />
       <DetailRow label="Citizen number" value={detail.citizenNumber} />
-      <DetailRow label="National ID" value={detail.nationalIdNumber} />
-      <DetailRow label="Trade license" value={detail.tradeLicenseNumber} />
-      <DetailRow label="TIN" value={detail.tinNumber} />
+      <DetailRow label="National ID" value={detail.nationalIdNumber ?? "—"} />
+      <DetailRow label="Trade license" value={detail.tradeLicenseNumber ?? "—"} />
+      <DetailRow label="TIN" value={detail.tinNumber ?? "—"} />
       <DetailRow label="Phone" value={detail.phoneNumber} />
       <DetailRow label="Merchant account" value={detail.merchantAccountNumber || "—"} />
       <dt className="text-muted-foreground">Deployment assets</dt>
@@ -536,9 +538,9 @@ function MerchantEditForm({
   onCancel: () => void;
 }) {
   const [ownerName, setOwnerName] = useState(detail.ownerName);
-  const [nationalIdNumber, setNationalIdNumber] = useState(detail.nationalIdNumber);
-  const [tradeLicenseNumber, setTradeLicenseNumber] = useState(detail.tradeLicenseNumber);
-  const [tinNumber, setTinNumber] = useState(detail.tinNumber);
+  const [nationalIdNumber, setNationalIdNumber] = useState(detail.nationalIdNumber ?? "");
+  const [tradeLicenseNumber, setTradeLicenseNumber] = useState(detail.tradeLicenseNumber ?? "");
+  const [tinNumber, setTinNumber] = useState(detail.tinNumber ?? "");
   const [phoneNumber, setPhoneNumber] = useState(detail.phoneNumber);
   const [merchantAccountNumber, setMerchantAccountNumber] = useState(detail.merchantAccountNumber);
   const [selectedAssetIds, setSelectedAssetIds] = useState<string[]>(
@@ -554,9 +556,9 @@ function MerchantEditForm({
 
   useEffect(() => {
     setOwnerName(detail.ownerName);
-    setNationalIdNumber(detail.nationalIdNumber);
-    setTradeLicenseNumber(detail.tradeLicenseNumber);
-    setTinNumber(detail.tinNumber);
+    setNationalIdNumber(detail.nationalIdNumber ?? "");
+    setTradeLicenseNumber(detail.tradeLicenseNumber ?? "");
+    setTinNumber(detail.tinNumber ?? "");
     setPhoneNumber(detail.phoneNumber);
     setMerchantAccountNumber(detail.merchantAccountNumber);
     setSelectedAssetIds(detail.deploymentAssets?.map((a) => a.id) ?? []);
@@ -566,9 +568,9 @@ function MerchantEditForm({
     e.preventDefault();
     onSave({
       ownerName,
-      nationalIdNumber,
-      tradeLicenseNumber,
-      tinNumber,
+      nationalIdNumber: nationalIdNumber || undefined,
+      tradeLicenseNumber: tradeLicenseNumber || undefined,
+      tinNumber: tinNumber || undefined,
       phoneNumber,
       merchantAccountNumber,
       deploymentAssetIds: selectedAssetIds,
@@ -605,16 +607,16 @@ function MerchantEditForm({
           <Input value={ownerName} onChange={(e) => setOwnerName(e.target.value)} required className="font-mono" />
         </label>
         <label className="grid gap-1">
-          <span className="text-muted-foreground">National ID</span>
-          <Input value={nationalIdNumber} onChange={(e) => setNationalIdNumber(e.target.value)} required className="font-mono" />
+          <span className="text-muted-foreground">National ID (optional)</span>
+          <Input value={nationalIdNumber} onChange={(e) => setNationalIdNumber(e.target.value)} className="font-mono" />
         </label>
         <label className="grid gap-1">
-          <span className="text-muted-foreground">Trade license</span>
-          <Input value={tradeLicenseNumber} onChange={(e) => setTradeLicenseNumber(e.target.value)} required className="font-mono" />
+          <span className="text-muted-foreground">Trade license (optional)</span>
+          <Input value={tradeLicenseNumber} onChange={(e) => setTradeLicenseNumber(e.target.value)} className="font-mono" />
         </label>
         <label className="grid gap-1">
-          <span className="text-muted-foreground">TIN</span>
-          <Input value={tinNumber} onChange={(e) => setTinNumber(e.target.value)} required className="font-mono" />
+          <span className="text-muted-foreground">TIN (optional)</span>
+          <Input value={tinNumber} onChange={(e) => setTinNumber(e.target.value)} className="font-mono" />
         </label>
         <label className="grid gap-1">
           <span className="text-muted-foreground">Phone</span>
