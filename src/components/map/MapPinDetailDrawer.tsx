@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -11,6 +12,53 @@ import { PortalLoadingInline } from "@/components/ui/portal-loading";
 import { X } from "lucide-react";
 import type { MapPinScouted } from "@/app/actions/map-pins";
 import type { MerchantDetail } from "@/app/actions/merchants";
+import { MerchantDetailView } from "@/components/merchant-detail/MerchantDetailView";
+
+function ImageFullscreen({
+  src,
+  alt,
+  caption,
+  onClose,
+}: {
+  src: string;
+  alt: string;
+  caption?: string;
+  onClose: () => void;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/95 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label={caption ?? "Image fullscreen"}
+    >
+      <Button
+        variant="ghost"
+        size="icon"
+        className="absolute right-2 top-2 z-10 rounded-full bg-white/10 text-white hover:bg-white/20"
+        onClick={onClose}
+        aria-label="Close"
+      >
+        <X className="size-5" />
+      </Button>
+      <button
+        type="button"
+        className="flex max-h-full max-w-full flex-col items-center justify-center focus:outline-none"
+        onClick={onClose}
+      >
+        <img
+          src={src}
+          alt={alt}
+          className="max-h-[85vh] max-w-full object-contain"
+          onClick={(e) => e.stopPropagation()}
+        />
+        {caption && (
+          <span className="mt-2 text-sm text-white/80">{caption}</span>
+        )}
+      </button>
+    </div>
+  );
+}
 
 export function MapPinDetailDrawer({
   selectedPin,
@@ -23,6 +71,7 @@ export function MapPinDetailDrawer({
   loading: boolean;
   onClose: () => void;
 }) {
+  const [photoFullscreen, setPhotoFullscreen] = useState(false);
   return (
     <div className="flex flex-col gap-4 p-4">
       <DrawerHeader className="flex flex-row items-center justify-between gap-4 p-0 text-left">
@@ -40,29 +89,55 @@ export function MapPinDetailDrawer({
           <CardContent className="pt-4">
             {selectedPin.data.photoUrl && (
               <div className="mb-4">
-                <img
-                  src={selectedPin.data.photoUrl}
-                  alt={selectedPin.data.businessName}
-                  className="h-32 w-full rounded-lg border border-border object-cover"
-                />
+                {photoFullscreen && (
+                  <ImageFullscreen
+                    src={selectedPin.data.photoUrl}
+                    alt={selectedPin.data.businessName}
+                    caption={selectedPin.data.businessName}
+                    onClose={() => setPhotoFullscreen(false)}
+                  />
+                )}
+                <button
+                  type="button"
+                  onClick={() => setPhotoFullscreen(true)}
+                  className="cursor-zoom-in w-full rounded-lg border border-border transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <img
+                    src={selectedPin.data.photoUrl}
+                    alt={selectedPin.data.businessName}
+                    className="h-32 w-full rounded-lg object-cover"
+                  />
+                </button>
               </div>
             )}
-            <dl className="grid grid-cols-[minmax(6rem,auto)_1fr] gap-x-3 gap-y-1 font-mono text-sm">
-              <dt className="text-muted-foreground">Business</dt>
-              <dd className="font-medium">{selectedPin.data.businessName}</dd>
-              <dt className="text-muted-foreground">Category</dt>
-              <dd className="font-medium">{selectedPin.data.category}</dd>
-              <dt className="text-muted-foreground">Volume</dt>
-              <dd className="font-medium">{selectedPin.data.estimatedVolume}</dd>
-              <dt className="text-muted-foreground">Location</dt>
-              <dd className="font-medium">
-                {selectedPin.data.locationLat.toFixed(5)}, {selectedPin.data.locationLng.toFixed(5)}
-              </dd>
-              <dt className="text-muted-foreground">Scouted by</dt>
-              <dd className="font-medium">{selectedPin.data.scoutedBy.name}</dd>
-              <dt className="text-muted-foreground">Date</dt>
-              <dd className="font-medium">{new Date(selectedPin.data.createdAt).toLocaleString()}</dd>
-            </dl>
+            <div className="space-y-0">
+              <div className="flex flex-col gap-0.5 py-2">
+                <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Business</span>
+                <span className="text-sm font-medium text-foreground">{selectedPin.data.businessName}</span>
+              </div>
+              <div className="flex flex-col gap-0.5 py-2">
+                <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Category</span>
+                <span className="text-sm font-medium text-foreground">{selectedPin.data.category}</span>
+              </div>
+              <div className="flex flex-col gap-0.5 py-2">
+                <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Volume</span>
+                <span className="text-sm font-medium text-foreground">{selectedPin.data.estimatedVolume}</span>
+              </div>
+              <div className="flex flex-col gap-0.5 py-2">
+                <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Location</span>
+                <span className="text-sm font-medium text-foreground">
+                  {selectedPin.data.locationLat.toFixed(5)}, {selectedPin.data.locationLng.toFixed(5)}
+                </span>
+              </div>
+              <div className="flex flex-col gap-0.5 py-2">
+                <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Scouted by</span>
+                <span className="text-sm font-medium text-foreground">{selectedPin.data.scoutedBy.name}</span>
+              </div>
+              <div className="flex flex-col gap-0.5 py-2">
+                <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Date</span>
+                <span className="text-sm font-medium text-foreground">{new Date(selectedPin.data.createdAt).toLocaleString()}</span>
+              </div>
+            </div>
           </CardContent>
         </Card>
       )}
@@ -73,66 +148,7 @@ export function MapPinDetailDrawer({
               <PortalLoadingInline className="min-h-[120px]" />
             </div>
           ) : merchantDetail ? (
-            <Card className="border-border bg-card">
-              <CardContent className="pt-4">
-                {(merchantDetail.lead?.photoUrl || merchantDetail.oathSignatureUrl) && (
-                  <div className="mb-4 flex flex-wrap gap-4">
-                    {merchantDetail.lead?.photoUrl && (
-                      <div>
-                        <p className="font-mono text-xs text-muted-foreground">Business photo</p>
-                        <img
-                          src={merchantDetail.lead.photoUrl}
-                          alt=""
-                          className="h-32 w-32 rounded-lg border border-border object-cover"
-                        />
-                      </div>
-                    )}
-                    {merchantDetail.oathSignatureUrl && (
-                      <div>
-                        <p className="font-mono text-xs text-muted-foreground">Signature</p>
-                        <img
-                          src={merchantDetail.oathSignatureUrl}
-                          alt=""
-                          className="h-24 w-40 rounded border border-border object-contain"
-                        />
-                      </div>
-                    )}
-                  </div>
-                )}
-                <dl className="grid grid-cols-[minmax(6rem,auto)_1fr] gap-x-3 gap-y-1 font-mono text-sm">
-                  <dt className="text-muted-foreground">Owner</dt>
-                  <dd className="font-medium">{merchantDetail.ownerName}</dd>
-                  <dt className="text-muted-foreground">Citizen #</dt>
-                  <dd className="font-medium">{merchantDetail.citizenNumber}</dd>
-                  <dt className="text-muted-foreground">Phone</dt>
-                  <dd className="font-medium">{merchantDetail.phoneNumber}</dd>
-                  <dt className="text-muted-foreground">Deployment assets</dt>
-                  <dd className="font-medium">
-                    {merchantDetail.deploymentAssets?.length
-                      ? merchantDetail.deploymentAssets.map((a) => a.displayName).join(", ")
-                      : "None"}
-                  </dd>
-                  <dt className="text-muted-foreground">Inducted by</dt>
-                  <dd className="font-medium">{merchantDetail.inductedBy.name}</dd>
-                  <dt className="text-muted-foreground">Onboarded</dt>
-                  <dd className="font-medium">{new Date(merchantDetail.onboardingDate).toLocaleDateString()}</dd>
-                  {merchantDetail.lead && (
-                    <>
-                      <dt className="col-span-2 mt-2 border-t border-border pt-2 text-muted-foreground">Lead</dt>
-                      <dd className="col-span-2" />
-                      <dt className="text-muted-foreground">Business</dt>
-                      <dd className="font-medium">{merchantDetail.lead.businessName}</dd>
-                      <dt className="text-muted-foreground">Category</dt>
-                      <dd className="font-medium">{merchantDetail.lead.category}</dd>
-                      <dt className="text-muted-foreground">Location</dt>
-                      <dd className="font-medium">
-                        {merchantDetail.lead.locationLat.toFixed(5)}, {merchantDetail.lead.locationLng.toFixed(5)}
-                      </dd>
-                    </>
-                  )}
-                </dl>
-              </CardContent>
-            </Card>
+            <MerchantDetailView detail={merchantDetail} fullDeploymentAssets />
           ) : (
             <p className="font-mono text-sm text-muted-foreground">Merchant not found.</p>
           )}

@@ -120,8 +120,9 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html,
   body {
-    @apply bg-background text-foreground;
+    @apply w-full min-w-0 max-w-full bg-background text-foreground;
   }
 }
 
@@ -158,7 +159,21 @@
   animation: hero-line 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-/* Portal loading - CIA/KGB aesthetic */
+/* Login typing cursor */
+@keyframes typing-cursor-blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  51%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.typing-cursor {
+  animation: typing-cursor-blink 1s step-end infinite;
+}
 @keyframes portal-line {
   from {
     opacity: 0;

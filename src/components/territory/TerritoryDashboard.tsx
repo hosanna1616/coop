@@ -155,11 +155,11 @@ export function TerritoryDashboard({
         <h1 className="font-mono text-xl font-bold text-foreground">
           {greeting}, <span className="text-primary">{userName}</span>
         </h1>
-        <p className="mt-1 font-mono text-sm text-muted-foreground">
+        {/* <p className="mt-1 font-mono text-sm text-muted-foreground">
           You have{" "}
           <span className="font-semibold text-green-500">{activeMissions}</span> active missions and{" "}
           <span className="font-semibold text-secondary">{zonesAtRisk}</span> zones at risk. Secure your territory. Advance the Nation.
-        </p>
+        </p> */}
       </section>
 
       {/* Stat cards */}

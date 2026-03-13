@@ -61,7 +61,7 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
   }, [pathname]);
 
   return (
-    <div className="flex min-h-dvh bg-background">
+    <div className="flex min-h-dvh w-full bg-background">
       {/* Desktop sidebar: visible from md up */}
       <aside
         className="fixed inset-y-0 left-0 z-30 hidden w-[240px] flex-col border-r border-border bg-background md:flex"
@@ -124,8 +124,8 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Main content */}
-      <main className="min-h-0 min-w-0 flex-1 pt-14 md:pl-[240px] md:pt-0">
-        <div className="min-h-dvh p-4 md:p-6">{children}</div>
+      <main className="min-h-0 min-w-0 flex-1 w-full pt-14 md:pl-[240px] md:pt-0">
+        <div className="min-h-dvh w-full max-w-full p-4 md:p-6">{children}</div>
       </main>
     </div>
   );

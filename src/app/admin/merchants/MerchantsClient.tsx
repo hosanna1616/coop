@@ -22,6 +22,7 @@ import {
 import { getLeadsByBranch } from "@/app/actions/leads-list";
 import { getMerchantsByBranch, getMerchantDetail } from "@/app/actions/merchants";
 import type { MerchantDetail } from "@/app/actions/merchants";
+import { MerchantDetailView } from "@/components/merchant-detail/MerchantDetailView";
 import { getBranchesFromDb } from "@/app/actions/branches";
 import { PortalLoadingInline } from "@/components/ui/portal-loading";
 
@@ -190,7 +191,7 @@ export function MerchantsClient({
                     Close
                   </Button>
                 </div>
-                <AdminMerchantDetailView detail={merchantDetail} />
+                <MerchantDetailView detail={merchantDetail} fullDeploymentAssets={false} />
               </>
             ) : (
               <p className="font-mono text-sm text-muted-foreground">Merchant not found.</p>
@@ -472,78 +473,3 @@ function RegisteredMerchantsSection({
   );
 }
 
-function AdminMerchantDetailView({ detail }: { detail: MerchantDetail }) {
-  const hasLeadPhoto = detail.lead?.photoUrl && detail.lead.photoUrl.length > 0;
-  const hasSignature = detail.oathSignatureUrl && detail.oathSignatureUrl.length > 0;
-
-  return (
-    <div className="space-y-6">
-      {(hasLeadPhoto || hasSignature) && (
-        <div className="flex flex-wrap gap-6">
-          {hasLeadPhoto && (
-            <div className="space-y-1">
-              <p className="font-mono text-xs font-medium text-muted-foreground">Lead / business photo</p>
-              <div className="relative h-40 w-40 overflow-hidden rounded-lg border border-border bg-muted">
-                <img
-                  src={detail.lead!.photoUrl!}
-                  alt="Lead"
-                  className="h-full w-full object-cover"
-                />
-              </div>
-            </div>
-          )}
-          {hasSignature && (
-            <div className="space-y-1">
-              <p className="font-mono text-xs font-medium text-muted-foreground">Oath signature</p>
-              <div className="relative h-24 w-48 overflow-hidden rounded-lg border border-border bg-muted">
-                <img
-                  src={detail.oathSignatureUrl!}
-                  alt="Signature"
-                  className="h-full w-full object-contain"
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      <dl className="grid grid-cols-[minmax(8rem,auto)_1fr] gap-x-4 gap-y-1 font-mono text-sm">
-        <AdminDetailRow label="Owner name" value={detail.ownerName} />
-        <AdminDetailRow label="Citizen number" value={detail.citizenNumber} />
-        <AdminDetailRow label="National ID" value={detail.nationalIdNumber ?? "—"} />
-        <AdminDetailRow label="Trade license" value={detail.tradeLicenseNumber ?? "—"} />
-        <AdminDetailRow label="TIN" value={detail.tinNumber ?? "—"} />
-        <AdminDetailRow label="Phone" value={detail.phoneNumber} />
-        <AdminDetailRow label="Merchant account" value={detail.merchantAccountNumber || "—"} />
-        <dt className="text-muted-foreground">Deployment assets</dt>
-        <dd className="font-medium">
-          {detail.deploymentAssets?.length
-            ? detail.deploymentAssets.map((a) => a.displayName).join(", ")
-            : "None"}
-        </dd>
-        <AdminDetailRow label="Onboarded" value={new Date(detail.onboardingDate).toLocaleDateString()} />
-        <AdminDetailRow label="Inducted by" value={detail.inductedBy.name} />
-        {detail.lead && (
-          <>
-            <dt className="col-span-2 mt-2 border-t border-border pt-2 font-medium text-muted-foreground">Lead / business</dt>
-            <dd className="col-span-2" />
-            <AdminDetailRow label="Business name" value={detail.lead.businessName} />
-            <AdminDetailRow label="Category" value={detail.lead.category} />
-            <AdminDetailRow label="Estimated volume" value={detail.lead.estimatedVolume} />
-            <AdminDetailRow label="Location" value={`${detail.lead.locationLat.toFixed(5)}, ${detail.lead.locationLng.toFixed(5)}`} />
-            <AdminDetailRow label="Scouted / created" value={new Date(detail.lead.createdAt).toLocaleString()} />
-          </>
-        )}
-      </dl>
-    </div>
-  );
-}
-
-function AdminDetailRow({ label, value }: { label: string; value: string }) {
-  return (
-    <>
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="font-medium">{value}</dd>
-    </>
-  );
-}

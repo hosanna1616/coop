@@ -324,7 +324,16 @@ export type MerchantDetail = {
   onboardingDate: Date;
   oathSignatureUrl: string;
   inductedBy: { id: string; name: string };
-  deploymentAssets: { id: string; name: string; displayName: string }[];
+  deploymentAssets: {
+    id: string;
+    name: string;
+    displayName: string;
+    description: string;
+    briefSteps: string | null;
+    link: string | null;
+    iconUrl: string | null;
+    onboardedAt: Date | null;
+  }[];
   lead: {
     id: string;
     businessName: string;
@@ -356,7 +365,19 @@ export async function getMerchantDetail(merchantId: string): Promise<MerchantDet
     include: {
       inductedBy: { select: { id: true, name: true, branchId: true } },
       deploymentAssets: {
-        include: { deploymentAsset: { select: { id: true, name: true, displayName: true } } },
+        include: {
+          deploymentAsset: {
+            select: {
+              id: true,
+              name: true,
+              displayName: true,
+              description: true,
+              briefSteps: true,
+              link: true,
+              iconUrl: true,
+            },
+          },
+        },
       },
       lead: {
         select: {
@@ -404,6 +425,11 @@ export async function getMerchantDetail(merchantId: string): Promise<MerchantDet
       id: ma.deploymentAsset.id,
       name: ma.deploymentAsset.name,
       displayName: ma.deploymentAsset.displayName,
+      description: ma.deploymentAsset.description,
+      briefSteps: ma.deploymentAsset.briefSteps,
+      link: ma.deploymentAsset.link,
+      iconUrl: ma.deploymentAsset.iconUrl,
+      onboardedAt: ma.onboardedAt,
     })),
     lead: merchant.lead
       ? {
@@ -459,13 +485,22 @@ export async function updateMerchantDetails(
       },
     });
 
-    await prisma.merchantDeploymentAsset.deleteMany({ where: { merchantId } });
-    if (data.deploymentAssetIds.length > 0) {
+    // Update deployment assets: remove only those no longer in the list; add new ones. Preserve onboardedAt on existing links.
+    const existing = await prisma.merchantDeploymentAsset.findMany({
+      where: { merchantId },
+      select: { deploymentAssetId: true },
+    });
+    const existingIds = new Set(existing.map((e) => e.deploymentAssetId));
+    const toRemove = existing.filter((e) => !data.deploymentAssetIds.includes(e.deploymentAssetId));
+    const toAdd = data.deploymentAssetIds.filter((id) => !existingIds.has(id));
+    if (toRemove.length > 0) {
+      await prisma.merchantDeploymentAsset.deleteMany({
+        where: { merchantId, deploymentAssetId: { in: toRemove.map((r) => r.deploymentAssetId) } },
+      });
+    }
+    if (toAdd.length > 0) {
       await prisma.merchantDeploymentAsset.createMany({
-        data: data.deploymentAssetIds.map((deploymentAssetId) => ({
-          merchantId,
-          deploymentAssetId,
-        })),
+        data: toAdd.map((deploymentAssetId) => ({ merchantId, deploymentAssetId })),
         skipDuplicates: true,
       });
     }
@@ -492,6 +527,46 @@ export async function updateMerchantDetails(
     return {
       ok: false,
       error: e instanceof Error ? e.message : "Failed to update merchant",
+    };
+  }
+}
+
+/** Set deployment asset onboarded state for a merchant. BRANCH_MANAGER (same branch), ADMIN, or PLAYER only if they inducted this merchant. */
+export async function setDeploymentAssetOnboarded(
+  merchantId: string,
+  deploymentAssetId: string,
+  onboarded: boolean
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const session = await authorize(["ADMIN", "BRANCH_MANAGER", "PLAYER"], "setDeploymentAssetOnboarded");
+    const detail = await getMerchantDetail(merchantId);
+    if (!detail) return { ok: false, error: "Merchant not found or access denied" };
+
+    if (session.role === "PLAYER") {
+      if (detail.inductedBy.id !== session.id) {
+        return { ok: false, error: "You can only update merchants you inducted." };
+      }
+    }
+
+    const linkExists = detail.deploymentAssets.some((a) => a.id === deploymentAssetId);
+    if (!linkExists) {
+      return { ok: false, error: "This deployment asset is not assigned to this merchant." };
+    }
+
+    await prisma.merchantDeploymentAsset.update({
+      where: {
+        merchantId_deploymentAssetId: { merchantId, deploymentAssetId },
+      },
+      data: { onboardedAt: onboarded ? new Date() : null },
+    });
+
+    revalidatePath("/merchants");
+    return { ok: true };
+  } catch (e) {
+    console.error("setDeploymentAssetOnboarded error", e);
+    return {
+      ok: false,
+      error: e instanceof Error ? e.message : "Failed to update onboarded status",
     };
   }
 }
