@@ -26,6 +26,8 @@ import {
   type UpdateMerchantDetailsInput,
 } from "@/app/actions/merchants";
 import { getDeploymentAssets } from "@/app/actions/deployment-assets";
+import type { DeploymentAssetRow } from "@/app/actions/deployment-assets";
+import { MerchantDetailView } from "@/components/merchant-detail/MerchantDetailView";
 import { cn } from "@/lib/utils";
 import { PortalLoadingInline } from "@/components/ui/portal-loading";
 
@@ -433,7 +435,13 @@ export function StaffMerchantsClient({ branchId, userRole, currentUserId }: { br
                       </Button>
                     )}
                   </div>
-                  <MerchantDetailView detail={merchantDetail} />
+                  <MerchantDetailView
+                    detail={merchantDetail}
+                    fullDeploymentAssets
+                    canEditMerchant={canEditMerchant}
+                    merchantId={selectedMerchantId}
+                    onAssetOnboardedChange={loadDetail}
+                  />
                 </>
               )
             ) : (
@@ -443,82 +451,6 @@ export function StaffMerchantsClient({ branchId, userRole, currentUserId }: { br
         </DrawerContent>
       </Drawer>
     </div>
-  );
-}
-
-function MerchantDetailView({ detail }: { detail: MerchantDetail }) {
-  const hasLeadPhoto = detail.lead?.photoUrl && detail.lead.photoUrl.length > 0;
-  const hasSignature = detail.oathSignatureUrl && detail.oathSignatureUrl.length > 0;
-
-  return (
-    <div className="space-y-6">
-      {(hasLeadPhoto || hasSignature) && (
-        <div className="flex flex-wrap gap-6">
-          {hasLeadPhoto && (
-            <div className="space-y-1">
-              <p className="font-mono text-xs font-medium text-muted-foreground">Lead / business photo</p>
-              <div className="relative h-40 w-40 overflow-hidden rounded-lg border border-border bg-muted">
-                <img
-                  src={detail.lead!.photoUrl!}
-                  alt="Lead"
-                  className="h-full w-full object-cover"
-                />
-              </div>
-            </div>
-          )}
-          {hasSignature && (
-            <div className="space-y-1">
-              <p className="font-mono text-xs font-medium text-muted-foreground">Oath signature</p>
-              <div className="relative h-24 w-48 overflow-hidden rounded-lg border border-border bg-muted">
-                <img
-                  src={detail.oathSignatureUrl!}
-                  alt="Signature"
-                  className="h-full w-full object-contain"
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      <dl className="grid grid-cols-[minmax(8rem,auto)_1fr] gap-x-4 gap-y-1 font-mono text-sm">
-      <DetailRow label="Owner name" value={detail.ownerName} />
-      <DetailRow label="Citizen number" value={detail.citizenNumber} />
-      <DetailRow label="National ID" value={detail.nationalIdNumber ?? "—"} />
-      <DetailRow label="Trade license" value={detail.tradeLicenseNumber ?? "—"} />
-      <DetailRow label="TIN" value={detail.tinNumber ?? "—"} />
-      <DetailRow label="Phone" value={detail.phoneNumber} />
-      <DetailRow label="Merchant account" value={detail.merchantAccountNumber || "—"} />
-      <dt className="text-muted-foreground">Deployment assets</dt>
-      <dd className="font-medium">
-        {detail.deploymentAssets?.length
-          ? detail.deploymentAssets.map((a) => a.displayName).join(", ")
-          : "None"}
-      </dd>
-      <DetailRow label="Onboarded" value={new Date(detail.onboardingDate).toLocaleDateString()} />
-      <DetailRow label="Inducted by" value={detail.inductedBy.name} />
-      {detail.lead && (
-        <>
-          <dt className="col-span-2 mt-2 border-t border-border pt-2 font-medium text-muted-foreground">Lead / business</dt>
-          <dd className="col-span-2" />
-          <DetailRow label="Business name" value={detail.lead.businessName} />
-          <DetailRow label="Category" value={detail.lead.category} />
-          <DetailRow label="Estimated volume" value={detail.lead.estimatedVolume} />
-          <DetailRow label="Location" value={`${detail.lead.locationLat.toFixed(5)}, ${detail.lead.locationLng.toFixed(5)}`} />
-          <DetailRow label="Scouted / created" value={new Date(detail.lead.createdAt).toLocaleString()} />
-        </>
-      )}
-    </dl>
-    </div>
-  );
-}
-
-function DetailRow({ label, value }: { label: string; value: string }) {
-  return (
-    <>
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="font-medium">{value}</dd>
-    </>
   );
 }
 
@@ -546,12 +478,10 @@ function MerchantEditForm({
   const [selectedAssetIds, setSelectedAssetIds] = useState<string[]>(
     () => detail.deploymentAssets?.map((a) => a.id) ?? []
   );
-  const [availableAssets, setAvailableAssets] = useState<{ id: string; displayName: string }[]>([]);
+  const [availableAssets, setAvailableAssets] = useState<DeploymentAssetRow[]>([]);
 
   useEffect(() => {
-    getDeploymentAssets().then((list) =>
-      setAvailableAssets(list.map((a) => ({ id: a.id, displayName: a.displayName })))
-    );
+    getDeploymentAssets().then((list) => setAvailableAssets(list));
   }, []);
 
   useEffect(() => {
@@ -639,18 +569,41 @@ function MerchantEditForm({
         {availableAssets.length > 0 && (
           <div className="space-y-2">
             <span className="text-muted-foreground">Deployment assets (introduced to)</span>
-            <div className="flex flex-wrap gap-3 rounded-lg border border-border bg-card px-4 py-3">
-              {availableAssets.map((a) => (
-                <label key={a.id} className="flex cursor-pointer items-center gap-2 font-mono text-sm">
-                  <input
-                    type="checkbox"
-                    checked={selectedAssetIds.includes(a.id)}
-                    onChange={() => toggleAsset(a.id)}
-                    className="h-4 w-4 rounded border-border"
-                  />
-                  {a.displayName}
-                </label>
-              ))}
+            <div className="space-y-2 rounded-lg border border-border bg-card px-4 py-3">
+              {availableAssets.map((a) => {
+                const hasLink = a.link && a.link.trim().length > 0;
+                const safeLink = hasLink && /^https?:\/\//i.test(a.link!.trim()) ? a.link!.trim() : null;
+                return (
+                  <label
+                    key={a.id}
+                    className="flex cursor-pointer items-start gap-2 rounded border border-transparent p-2 font-mono text-sm hover:bg-muted/50"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedAssetIds.includes(a.id)}
+                      onChange={() => toggleAsset(a.id)}
+                      className="mt-1 h-4 w-4 shrink-0 rounded border-border"
+                    />
+                    <span className="flex-1">
+                      <span className="font-medium">{a.displayName}</span>
+                      {a.description && (
+                        <p className="text-muted-foreground text-xs mt-0.5 line-clamp-2">{a.description}</p>
+                      )}
+                      {safeLink && (
+                        <a
+                          href={safeLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary text-xs underline hover:no-underline"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          View documentation
+                        </a>
+                      )}
+                    </span>
+                  </label>
+                );
+              })}
             </div>
           </div>
         )}

@@ -5,7 +5,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { MapPin, Users, Target, CheckSquare, Sparkles, Medal, Crown } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { MapPin, Users, Target, CheckSquare, Sparkles, Medal, Crown, LogOut, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { logout, changePassword } from "@/app/actions/auth";
 
@@ -64,6 +72,7 @@ export function ProfileClient({
   const [changePwSubmitting, setChangePwSubmitting] = useState(false);
   const [changePwError, setChangePwError] = useState<string | null>(null);
   const [changePwSuccess, setChangePwSuccess] = useState(false);
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
 
   const isAdmin = user.role === "ADMIN";
   const rankLine = user.teamName
@@ -82,11 +91,75 @@ export function ProfileClient({
           variant="outline"
           size="sm"
           className="font-mono"
-          onClick={() => logout()}
+          onClick={() => setLogoutDialogOpen(true)}
         >
           Log out
         </Button>
       </header>
+
+      {/* Logout confirmation — command-post style */}
+      <Dialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
+        <DialogContent
+          className="overflow-hidden border-2 border-primary/30 bg-card sm:max-w-md"
+          showCloseButton={false}
+        >
+          <div
+            className="pointer-events-none absolute inset-0 opacity-[0.03]"
+            style={{
+              backgroundImage: `
+                linear-gradient(var(--primary) 1px, transparent 1px),
+                linear-gradient(90deg, var(--primary) 1px, transparent 1px)
+              `,
+              backgroundSize: "16px 16px",
+            }}
+          />
+          <div className="pointer-events-none absolute left-3 top-3 h-5 w-5 border-l-2 border-t-2 border-primary/40" />
+          <div className="pointer-events-none absolute right-3 top-3 h-5 w-5 border-r-2 border-t-2 border-primary/40" />
+          <div className="pointer-events-none absolute bottom-3 left-3 h-5 w-5 border-b-2 border-l-2 border-primary/40" />
+          <div className="pointer-events-none absolute bottom-3 right-3 h-5 w-5 border-b-2 border-r-2 border-primary/40" />
+
+          <DialogHeader className="relative border-b border-primary/20 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="flex size-12 shrink-0 items-center justify-center rounded-lg border-2 border-primary/50 bg-primary/10">
+                <LogOut className="size-6 text-primary" aria-hidden />
+              </div>
+              <div>
+                <DialogTitle className="font-mono text-lg tracking-tight text-foreground">
+                  Stand down?
+                </DialogTitle>
+                <DialogDescription className="mt-0.5 font-mono text-xs text-muted-foreground">
+                  You are about to leave the command post.
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+          <div className="relative flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2.5">
+            <Shield className="size-4 shrink-0 text-primary/80 mt-0.5" aria-hidden />
+            <p className="font-mono text-xs text-muted-foreground">
+              Your session will end. You can sign back in anytime to resume operations.
+            </p>
+          </div>
+          <DialogFooter className="relative flex gap-2 sm:justify-end">
+            <Button
+              variant="outline"
+              className="font-mono"
+              onClick={() => setLogoutDialogOpen(false)}
+            >
+              Stay
+            </Button>
+            <Button
+              className="font-mono"
+              onClick={() => {
+                setLogoutDialogOpen(false);
+                logout();
+              }}
+            >
+              <LogOut className="size-4 mr-2" aria-hidden />
+              Log out
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="flex flex-1 flex-col gap-6 p-4">
         {isAdmin ? (

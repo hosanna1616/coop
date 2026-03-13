@@ -91,7 +91,7 @@ export function getGridSizeForBounds(
  * Polygon vertices are in order (e.g. clockwise or counter-clockwise).
  * Skips horizontal edges to avoid division by zero.
  */
-function pointInPolygon(
+export function pointInPolygon(
   lat: number,
   lng: number,
   polygon: TerritoryCellPoint[]

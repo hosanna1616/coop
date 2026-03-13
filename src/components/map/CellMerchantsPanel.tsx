@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getLeadsAndMerchantsByZoneCode } from "@/app/actions/leads-list";
+import {
+  getLeadsAndMerchantsByZoneCode,
+  getLeadsAndMerchantsByCell,
+} from "@/app/actions/leads-list";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { PortalLoadingInline } from "@/components/ui/portal-loading";
@@ -26,18 +29,36 @@ type MerchantRow = {
 
 type Filter = "all" | "scouted" | "registered";
 
-export function CellMerchantsPanel({ zoneCode }: { zoneCode: string }) {
+export function CellMerchantsPanel({
+  zoneCode,
+  branchId,
+  cellCoordinates,
+}: {
+  zoneCode: string;
+  /** When viewing a territory cell, pass its branchId so we can load by geography. */
+  branchId?: string | null;
+  /** When set, load leads/merchants whose location is inside this polygon (correct after territory reshape). */
+  cellCoordinates?: { lat: number; lng: number }[] | null;
+}) {
   const [data, setData] = useState<{ leads: LeadRow[]; merchants: MerchantRow[] } | null>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<Filter>("all");
 
   useEffect(() => {
     setLoading(true);
-    getLeadsAndMerchantsByZoneCode(zoneCode)
-      .then(setData)
-      .catch(() => setData({ leads: [], merchants: [] }))
-      .finally(() => setLoading(false));
-  }, [zoneCode]);
+    const coords = cellCoordinates && cellCoordinates.length >= 3 ? cellCoordinates : null;
+    if (branchId && coords) {
+      getLeadsAndMerchantsByCell(branchId, coords)
+        .then(setData)
+        .catch(() => setData({ leads: [], merchants: [] }))
+        .finally(() => setLoading(false));
+    } else {
+      getLeadsAndMerchantsByZoneCode(zoneCode)
+        .then(setData)
+        .catch(() => setData({ leads: [], merchants: [] }))
+        .finally(() => setLoading(false));
+    }
+  }, [zoneCode, branchId, cellCoordinates]);
 
   if (loading) {
     return (

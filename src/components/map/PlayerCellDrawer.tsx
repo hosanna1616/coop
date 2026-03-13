@@ -28,6 +28,7 @@ export function PlayerCellDrawer({
   cell,
   zoneId,
   cellStatus,
+  branchId: branchIdProp,
   onClose,
   onScout,
   onInduct,
@@ -35,6 +36,8 @@ export function PlayerCellDrawer({
   cell: TerritoryCellWithCoords | TerritoryCellWithBranchName;
   zoneId: string | null;
   cellStatus: MapZoneStatus;
+  /** Branch that owns this cell (from map context when cell has no branchId). */
+  branchId?: string | null;
   onClose: () => void;
   onScout: () => void;
   onInduct?: () => void;
@@ -91,7 +94,11 @@ export function PlayerCellDrawer({
             Scout this zone first to add leads; then you can induct merchants.
           </p>
         )}
-        <CellMerchantsPanel zoneCode={cell.code} />
+        <CellMerchantsPanel
+          zoneCode={cell.code}
+          branchId={("branchId" in cell ? cell.branchId : branchIdProp) ?? undefined}
+          cellCoordinates={cell.coordinates}
+        />
       </div>
     </>
   );

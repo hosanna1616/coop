@@ -125,7 +125,11 @@ export function TerritoryCellDrawer({ cell, onClose, onSave, branchName, branchI
           <p className="text-foreground">
             <span className="text-muted-foreground">Label:</span> {cell.label ?? "—"}
           </p>
-          <CellMerchantsPanel zoneCode={cell.code} />
+          <CellMerchantsPanel
+            zoneCode={cell.code}
+            branchId={branchId ?? undefined}
+            cellCoordinates={cell.coordinates}
+          />
         </div>
       </>
     );
@@ -263,7 +267,11 @@ export function TerritoryCellDrawer({ cell, onClose, onSave, branchName, branchI
           />
         )}
 
-        <CellMerchantsPanel zoneCode={cell.code} />
+        <CellMerchantsPanel
+          zoneCode={cell.code}
+          branchId={branchId ?? undefined}
+          cellCoordinates={cell.coordinates}
+        />
       </div>
     </>
   );

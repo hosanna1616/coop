@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { authorize, getServerAuthSession } from "@/lib/auth";
 import { getCurrentUser } from "@/app/actions/users";
+import { pointInPolygon } from "@/lib/territoryGrid";
 
 export async function getLeadsForMissions() {
   return prisma.lead.findMany({
@@ -95,6 +96,112 @@ export async function getLeadsByBranch(filters: LeadsByBranchFilters): Promise<{
       branchName: l.scoutedBy.branch?.name ?? l.zone?.branch?.name ?? null,
     })),
     total,
+  };
+}
+
+/** Leads and merchants whose location falls inside a cell polygon. Use this when the cell is a territory cell
+ * whose polygon may change when territory is reshaped—so we match by geography, not zone code. */
+export async function getLeadsAndMerchantsByCell(
+  branchId: string,
+  cellCoordinates: { lat: number; lng: number }[]
+): Promise<{
+  leads: {
+    id: string;
+    businessName: string;
+    category: string;
+    estimatedVolume: string;
+    scoutedBy: { id: string; name: string };
+    createdAt: Date;
+  }[];
+  merchants: {
+    id: string;
+    ownerName: string;
+    phoneNumber: string;
+    lead: { businessName: string; category: string } | null;
+    inductedBy: { id: string; name: string };
+    onboardingDate: Date;
+  }[];
+}> {
+  const session = await getServerAuthSession();
+  if (!session) return { leads: [], merchants: [] };
+
+  if (session.role === "BRANCH_MANAGER" || session.role === "PLAYER") {
+    const user = await getCurrentUser(session.id);
+    const effectiveBranchId = session.branchId ?? user?.branchId ?? user?.team?.branchId ?? null;
+    if (effectiveBranchId !== branchId) return { leads: [], merchants: [] };
+  } else if (session.role === "ADMIN") {
+    // admin can pass any branchId
+  } else {
+    return { leads: [], merchants: [] };
+  }
+
+  if (!cellCoordinates || cellCoordinates.length < 3) return { leads: [], merchants: [] };
+
+  const branchWhere = {
+    OR: [{ scoutedBy: { branchId } }, { zone: { branchId } }],
+  };
+
+  const [allLeads, allMerchants] = await Promise.all([
+    prisma.lead.findMany({
+      where: branchWhere,
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        businessName: true,
+        category: true,
+        estimatedVolume: true,
+        createdAt: true,
+        locationLat: true,
+        locationLng: true,
+        scoutedBy: { select: { id: true, name: true } },
+      },
+    }),
+    prisma.merchant.findMany({
+      where: {
+        lead: branchWhere,
+      },
+      orderBy: { onboardingDate: "desc" },
+      select: {
+        id: true,
+        ownerName: true,
+        phoneNumber: true,
+        onboardingDate: true,
+        inductedBy: { select: { id: true, name: true } },
+        lead: {
+          select: {
+            businessName: true,
+            category: true,
+            locationLat: true,
+            locationLng: true,
+          },
+        },
+      },
+    }),
+  ]);
+
+  const polygon = cellCoordinates;
+  const leads = allLeads.filter((l) => pointInPolygon(l.locationLat, l.locationLng, polygon));
+  const merchants = allMerchants.filter(
+    (m) => m.lead && pointInPolygon(m.lead.locationLat, m.lead.locationLng, polygon)
+  );
+
+  return {
+    leads: leads.map((l) => ({
+      id: l.id,
+      businessName: l.businessName,
+      category: l.category,
+      estimatedVolume: l.estimatedVolume,
+      createdAt: l.createdAt,
+      scoutedBy: l.scoutedBy,
+    })),
+    merchants: merchants.map((m) => ({
+      id: m.id,
+      ownerName: m.ownerName,
+      phoneNumber: m.phoneNumber,
+      onboardingDate: m.onboardingDate,
+      inductedBy: m.inductedBy,
+      lead: m.lead ? { businessName: m.lead.businessName, category: m.lead.category } : null,
+    })),
   };
 }
 

@@ -245,6 +245,7 @@ model MerchantDeploymentAsset {
   merchantId        String
   deploymentAssetId String
   introducedAt      DateTime        @default(now())
+  onboardedAt       DateTime?      // when branch staff mark this asset as onboarded for the merchant
   merchant          Merchant        @relation(fields: [merchantId], references: [id], onDelete: Cascade)
   deploymentAsset   DeploymentAsset @relation(fields: [deploymentAssetId], references: [id], onDelete: Cascade)
   @@id([merchantId, deploymentAssetId])

@@ -781,6 +781,7 @@ export function GoogleMapViewClient({
               cell={selectedTerritoryCell}
               zoneId={zoneIdForSelectedCell}
               cellStatus={selectedTerritoryCell.status as MapZoneStatus}
+              branchId={"branchId" in selectedTerritoryCell ? selectedTerritoryCell.branchId : branchId}
               onClose={closeDrawer}
               onScout={openScoutFormFromCell}
               onInduct={zoneIdForSelectedCell ? () => router.push(`/induct/zone/${zoneIdForSelectedCell}`) : undefined}
