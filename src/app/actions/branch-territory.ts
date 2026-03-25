@@ -132,7 +132,7 @@ export async function saveBranchTerritory(
   await prisma.$transaction(async (tx) => {
     await tx.branch.update({
       where: { id: branchId },
-      data: { territoryBounds: normalizedPoints },
+      data: { territoryBounds: normalizedPoints as unknown as Prisma.InputJsonValue },
     });
 
     await tx.territoryCell.deleteMany({ where: { branchId } });
@@ -145,7 +145,7 @@ export async function saveBranchTerritory(
         data: {
           branchId,
           code: c.code,
-          coordinates: c.coordinates,
+          coordinates: c.coordinates as unknown as Prisma.InputJsonValue,
           row: c.row,
           col: c.col,
           status: preserved?.status ?? "UNSEEN",

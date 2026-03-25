@@ -52,7 +52,8 @@ const scoutReportSchema = z
     category: z.string().min(1, "Select a category"),
     categoryOther: z.string().optional(),
     estimatedVolume: z.enum(VOLUME_OPTIONS),
-    externalBankIds: z.array(z.string()).default([]),
+    // Keep this required in the schema so `zodResolver` and `useForm` agree on `externalBankIds: string[]`.
+    externalBankIds: z.array(z.string()),
     photoUrl: z.string().nullable().optional(),
   })
   .refine(

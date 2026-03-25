@@ -294,7 +294,7 @@ export function GoogleMapViewClient({
   }, [inEditBoundaryMode, branchTerritory]);
 
   useEffect(() => {
-    onTerritoryEditModeChange?.(inDefineMode || inEditBoundaryMode);
+    onTerritoryEditModeChange?.(Boolean(inDefineMode || inEditBoundaryMode));
   }, [inDefineMode, inEditBoundaryMode, onTerritoryEditModeChange]);
 
   const apiKey = typeof window !== "undefined" ? process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY : undefined;
@@ -444,6 +444,8 @@ export function GoogleMapViewClient({
       : null;
   const openScoutFormFromCell = useCallback(() => setView("scout-form"), []);
 
+  const selectedPinId = selectedPin?.type === "inducted" ? selectedPin.id : null;
+
   useEffect(() => {
     if (selectedPin?.type === "inducted" && selectedPin.id) {
       setPinDetailLoading(true);
@@ -454,7 +456,7 @@ export function GoogleMapViewClient({
     } else {
       setMerchantDetailForPin(null);
     }
-  }, [selectedPin?.type, selectedPin?.id]);
+  }, [selectedPin?.type, selectedPinId]);
 
   const handleUpdateCell = useCallback(
     async (data: { status: MapZoneStatus; label: string | null }) => {
@@ -626,7 +628,7 @@ export function GoogleMapViewClient({
                     : []
               }
               onCellClick={handleTerritoryCellClick}
-              isEditMode={inEditBoundaryMode}
+              isEditMode={!!inEditBoundaryMode}
               onBoundaryPathChange={inEditBoundaryMode ? setBoundaryPoints : undefined}
             />
           )}

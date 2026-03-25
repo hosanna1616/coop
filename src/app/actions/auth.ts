@@ -2,55 +2,26 @@
 
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { prisma } from "@/lib/prisma";
-import {
-  createToken,
-  verifyPassword,
-  hashPassword,
-  AUTH_COOKIE_NAME,
-  IDLE_TIMEOUT_SECONDS,
-  type Role,
-} from "@/lib/auth";
-import { logActivity } from "@/app/actions/activity-log";
+import { AUTH_COOKIE_NAME, IDLE_TIMEOUT_SECONDS, type AuthSession } from "@/lib/auth";
+import { changePassword as changePasswordService, loginWithPassword } from "@/backend/services/auth-service";
 
 export async function login(email: string, password: string) {
   try {
-    const user = await prisma.user.findFirst({
-      where: { email: email.trim().toLowerCase() },
-      select: { id: true, name: true, role: true, branchId: true, passwordHash: true, mustChangePassword: true },
-    });
-
-    if (!user?.passwordHash || !(await verifyPassword(password, user.passwordHash))) {
-      return { error: "Invalid email or password" };
-    }
-
-    const token = await createToken({
-      sub: user.id,
-      role: user.role as Role,
-      branchId: user.branchId,
-      mustChangePassword: user.mustChangePassword ?? false,
-    });
+    const result = await loginWithPassword(email, password);
+    if ("error" in result) return { error: result.error };
 
     const cookieStore = await cookies();
-    cookieStore.set(AUTH_COOKIE_NAME, token, {
+    cookieStore.set(AUTH_COOKIE_NAME, result.token, {
       httpOnly: true,
       path: "/",
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
       maxAge: IDLE_TIMEOUT_SECONDS,
     });
-
-    await logActivity(
-      { id: user.id, role: user.role as Role, branchId: user.branchId },
-      user.name,
-      "LOGIN",
-      { entityType: "User", entityId: user.id, branchId: user.branchId }
-    );
-
-    if (user.mustChangePassword) {
+    if (result.mustChangePassword) {
       redirect("/change-password");
     }
-    if (user.role === "PLAYER") {
+    if (result.role === "PLAYER") {
       redirect("/");
     }
     redirect("/");
@@ -77,44 +48,17 @@ export async function changePassword(
   const { getServerAuthSession } = await import("@/lib/auth");
   const session = await getServerAuthSession();
   if (!session) return { ok: false, error: "Not authenticated" };
+  const result = await changePasswordService(session as AuthSession, { currentPassword, newPassword });
+  if (!result.ok) return { ok: false, error: result.error };
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.id },
-    select: { id: true, name: true, passwordHash: true, role: true, branchId: true },
-  });
-  if (!user?.passwordHash) return { ok: false, error: "Cannot change password" };
-  if (!(await verifyPassword(currentPassword, user.passwordHash))) {
-    return { ok: false, error: "Current password is incorrect" };
-  }
-  if (newPassword.length < 6) return { ok: false, error: "New password must be at least 6 characters" };
-
-  const passwordHash = await hashPassword(newPassword);
-  await prisma.user.update({
-    where: { id: session.id },
-    data: { passwordHash, mustChangePassword: false },
-  });
-
-  const token = await createToken({
-    sub: user.id,
-    role: user.role as Role,
-    branchId: user.branchId,
-    mustChangePassword: false,
-  });
   const cookieStore = await cookies();
-  cookieStore.set(AUTH_COOKIE_NAME, token, {
+  cookieStore.set(AUTH_COOKIE_NAME, result.token, {
     httpOnly: true,
     path: "/",
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     maxAge: IDLE_TIMEOUT_SECONDS,
   });
-
-  await logActivity(
-    { id: user.id, role: user.role as Role, branchId: user.branchId },
-    user.name,
-    "PASSWORD_CHANGE",
-    { entityType: "User", entityId: user.id, branchId: user.branchId }
-  );
 
   return { ok: true };
 }
