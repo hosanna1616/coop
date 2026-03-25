@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import type { TerritoryCellWithCoords, AdminBranchTerritory } from "@/app/actions/branch-territory";
+import type { MapZoneStatus } from "@/lib/zoneStatusColors";
 
 import { PortalLoadingInline } from "@/components/ui/portal-loading";
 
@@ -46,7 +47,7 @@ export function MapScreen({
   territoryCells?: TerritoryCellWithCoords[];
   isBranchManager?: boolean;
   onSaveTerritory?: (points: { lat: number; lng: number }[]) => Promise<void>;
-  onUpdateCell?: (cellId: string, data: { status?: string; label?: string | null }) => Promise<void>;
+  onUpdateCell?: (cellId: string, data: { status?: MapZoneStatus; label?: string | null }) => Promise<void>;
   adminTerritories?: AdminBranchTerritory[];
   onTerritoryEditModeChange?: (active: boolean) => void;
 }) {
