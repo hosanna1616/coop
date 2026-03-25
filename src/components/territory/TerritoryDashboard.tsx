@@ -10,6 +10,7 @@ import { CommandLeaderboard, type LeaderboardEntry } from "./CommandLeaderboard"
 import { OfficerProfile } from "./OfficerProfile";
 import { saveBranchTerritory, updateTerritoryCell } from "@/app/actions/branch-territory";
 import type { TerritoryCellWithCoords, AdminBranchTerritory } from "@/app/actions/branch-territory";
+import type { MapZoneStatus } from "@/lib/zoneStatusColors";
 
 function getGreeting(): string {
   const h = new Date().getHours();
@@ -99,7 +100,7 @@ export function TerritoryDashboard({
 
   const handleUpdateCell = async (
     cellId: string,
-    data: { status?: string; label?: string | null }
+    data: { status?: MapZoneStatus; label?: string | null }
   ) => {
     await updateTerritoryCell(cellId, data);
     router.refresh();

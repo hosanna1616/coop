@@ -293,7 +293,7 @@ export function MapViewClient({
   territoryCells?: TerritoryCellWithCoords[];
   isBranchManager?: boolean;
   onSaveTerritory?: (points: { lat: number; lng: number }[]) => Promise<void>;
-  onUpdateCell?: (cellId: string, data: { status?: string; label?: string | null }) => Promise<void>;
+  onUpdateCell?: (cellId: string, data: { status?: MapZoneStatus; label?: string | null }) => Promise<void>;
   adminTerritories?: AdminBranchTerritory[];
   onTerritoryEditModeChange?: (active: boolean) => void;
 } = {}) {
