@@ -309,13 +309,13 @@ export function OperationalSummaryClient({
                           innerRadius={40}
                           outerRadius={65}
                           paddingAngle={2}
-                          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                          label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
                         >
                           {aggregateByStatus(data.tasksByBranchAndStatus, "status").map((_, i) => (
                             <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                           ))}
                         </Pie>
-                        <Tooltip formatter={(v: number) => [v, "Tasks"]} />
+                        <Tooltip formatter={(v: number | undefined) => [v ?? 0, "Tasks"]} />
                         <Legend />
                       </PieChart>
                     </ResponsiveContainer>
@@ -345,13 +345,13 @@ export function OperationalSummaryClient({
                             innerRadius={40}
                             outerRadius={65}
                             paddingAngle={2}
-                            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                            label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
                           >
                             {conversion.map((_, i) => (
                               <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                             ))}
                           </Pie>
-                          <Tooltip formatter={(v: number) => [v, "Leads"]} />
+                          <Tooltip formatter={(v: number | undefined) => [v ?? 0, "Leads"]} />
                           <Legend />
                         </PieChart>
                       </ResponsiveContainer>
@@ -382,13 +382,13 @@ export function OperationalSummaryClient({
                             innerRadius={40}
                             outerRadius={65}
                             paddingAngle={2}
-                            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                            label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
                           >
                             {byCategory.map((_, i) => (
                               <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                             ))}
                           </Pie>
-                          <Tooltip formatter={(v: number) => [v, "Leads"]} />
+                          <Tooltip formatter={(v: number | undefined) => [v ?? 0, "Leads"]} />
                           <Legend />
                         </PieChart>
                       </ResponsiveContainer>
@@ -518,13 +518,13 @@ export function OperationalSummaryClient({
                           innerRadius={50}
                           outerRadius={80}
                           paddingAngle={2}
-                          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                          label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
                         >
                           {aggregateTopBanks(data.externalBankUsageByBranch, 8).map((_, i) => (
                             <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                           ))}
                         </Pie>
-                        <Tooltip formatter={(v: number) => [v, "Leads"]} />
+                        <Tooltip formatter={(v: number | undefined) => [v ?? 0, "Leads"]} />
                         <Legend />
                       </PieChart>
                     </ResponsiveContainer>
@@ -554,13 +554,13 @@ export function OperationalSummaryClient({
                           innerRadius={50}
                           outerRadius={80}
                           paddingAngle={2}
-                          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                          label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
                         >
                           {aggregateByStatus(data.territoryHealthByBranch, "status").map((_, i) => (
                             <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                           ))}
                         </Pie>
-                        <Tooltip formatter={(v: number) => [v, "Cells"]} />
+                        <Tooltip formatter={(v: number | undefined) => [v ?? 0, "Cells"]} />
                         <Legend />
                       </PieChart>
                     </ResponsiveContainer>

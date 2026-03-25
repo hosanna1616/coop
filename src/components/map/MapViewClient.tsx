@@ -341,7 +341,7 @@ export function MapViewClient({
   }, [inEditBoundaryMode, branchTerritory]);
 
   useEffect(() => {
-    onTerritoryEditModeChange?.(inDefineMode || inEditBoundaryMode);
+    onTerritoryEditModeChange?.(Boolean(inDefineMode || inEditBoundaryMode));
   }, [inDefineMode, inEditBoundaryMode, onTerritoryEditModeChange]);
 
   useEffect(() => {
@@ -379,6 +379,8 @@ export function MapViewClient({
     [mapPins]
   );
 
+  const selectedPinId = selectedPin?.type === "inducted" ? selectedPin.id : null;
+
   useEffect(() => {
     if (selectedPin?.type === "inducted" && selectedPin.id) {
       setPinDetailLoading(true);
@@ -387,7 +389,7 @@ export function MapViewClient({
     } else {
       setMerchantDetailForPin(null);
     }
-  }, [selectedPin?.type, selectedPin?.id]);
+  }, [selectedPin?.type, selectedPinId]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -618,7 +620,7 @@ export function MapViewClient({
                     : []
               }
               onCellClick={handleTerritoryCellClick}
-              isEditMode={inEditBoundaryMode}
+              isEditMode={!!inEditBoundaryMode}
               onVertexDrag={inEditBoundaryMode ? handleVertexDrag : undefined}
             />
           )}

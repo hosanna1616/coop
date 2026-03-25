@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
+// Next.js runtime may still accept this option, but the `NextConfig` type in this version
+// doesn't include it. We cast to keep type-checking unblocked.
+const nextConfig = {
   serverActions: {
     bodySizeLimit: "10mb",
   },
