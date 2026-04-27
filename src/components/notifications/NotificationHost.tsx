@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import {
+  ensureHourlyProgressFocusNotification,
   getMyUnseenNotificationCount,
   getMyNotifications,
   markAllNotificationsSeen,
@@ -19,9 +20,10 @@ import { Bell } from "lucide-react";
 import type { NotificationRow } from "@/app/actions/notifications";
 
 const POLL_INTERVAL_MS = 12_000;
+const HOURLY_CHECK_MS = 60 * 60 * 1000;
 
 export function NotificationHost() {
-  const { userId } = useUserRole();
+  const { userId, role } = useUserRole();
   const [unseenCount, setUnseenCount] = useState(0);
   const [popupOpen, setPopupOpen] = useState(false);
   const [unseenItems, setUnseenItems] = useState<NotificationRow[]>([]);
@@ -29,6 +31,8 @@ export function NotificationHost() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const prevCountRef = useRef(0);
+  const prevTopIdRef = useRef<string | null>(null);
+  const hourlyTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const poll = useCallback(async () => {
     if (!userId) return;
@@ -44,7 +48,10 @@ export function NotificationHost() {
           offset: 0,
         });
         setUnseenItems(list);
-        if (prev === 0 && count > 0) setPopupOpen(true);
+        const currentTopId = list[0]?.id ?? null;
+        const shouldOpen = prev === 0 || (currentTopId && currentTopId !== prevTopIdRef.current);
+        prevTopIdRef.current = currentTopId;
+        if (shouldOpen) setPopupOpen(true);
       }
     } catch {
       // ignore
@@ -66,6 +73,29 @@ export function NotificationHost() {
       }
     };
   }, [userId, poll]);
+
+  useEffect(() => {
+    if (!userId || role !== "PLAYER") return;
+
+    const runHourly = async () => {
+      if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
+      try {
+        await ensureHourlyProgressFocusNotification();
+        await poll();
+      } catch {
+        // ignore
+      }
+    };
+
+    runHourly();
+    hourlyTimerRef.current = setInterval(runHourly, HOURLY_CHECK_MS);
+    return () => {
+      if (hourlyTimerRef.current) {
+        clearInterval(hourlyTimerRef.current);
+        hourlyTimerRef.current = null;
+      }
+    };
+  }, [userId, role, poll]);
 
   useEffect(() => {
     if (unseenCount === 0 || muted) {

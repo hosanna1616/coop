@@ -17,6 +17,25 @@ export interface AchievementDefinition {
   check: (userId: string) => Promise<boolean>;
 }
 
+const MERCHANT_BADGE_MILESTONES = [5, 10, 15, 20, 25, 30, 40, 50] as const;
+
+function createMerchantBadgeAchievements(): AchievementDefinition[] {
+  return MERCHANT_BADGE_MILESTONES.map((target, index) => ({
+    code: `MERCHANT_BADGE_${target}`,
+    type: "VOLUME" as const,
+    title: `Merchant Badge ${index + 1}`,
+    description: `Registered ${target} merchants!`,
+    icon: "🛡️",
+    xpReward: 80 + index * 20,
+    check: async (userId: string) => {
+      const count = await prisma.merchant.count({
+        where: { inductedById: userId },
+      });
+      return count >= target;
+    },
+  }));
+}
+
 const ACHIEVEMENTS: AchievementDefinition[] = [
   {
     code: "FIRST_LEAD",
@@ -44,6 +63,7 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
       return count >= 1;
     },
   },
+  ...createMerchantBadgeAchievements(),
   {
     code: "LEAD_HUNTER_10",
     type: "VOLUME",

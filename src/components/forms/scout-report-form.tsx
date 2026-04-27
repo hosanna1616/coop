@@ -38,6 +38,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { createLead, type ScoutZoneInput } from "@/app/actions/leads";
 import { getScoutCategories } from "@/app/actions/scout-categories";
@@ -120,6 +128,8 @@ export function ScoutReportForm({
   const [externalBanks, setExternalBanks] = useState<Awaited<ReturnType<typeof getExternalBanks>>>([]);
   const [externalBanksLoading, setExternalBanksLoading] = useState(true);
   const [banksDropdownOpen, setBanksDropdownOpen] = useState(false);
+  const [unlockedBadges, setUnlockedBadges] = useState<string[]>([]);
+  const [showBadgePopup, setShowBadgePopup] = useState(false);
 
   const mapCenter =
     centerLat != null && centerLng != null
@@ -130,6 +140,14 @@ export function ScoutReportForm({
             lng: coordinates.reduce((s, p) => s + p.lng, 0) / coordinates.length,
           }
         : null;
+
+  useEffect(() => {
+    // Default to map-selected location so players can submit without extra taps.
+    if (mapCenter && locationChoice === null && geo == null) {
+      setLocationChoice("map");
+      setGeo(mapCenter);
+    }
+  }, [mapCenter, locationChoice, geo]);
 
   useEffect(() => {
     getScoutCategories()
@@ -227,11 +245,23 @@ export function ScoutReportForm({
     setSubmitting(false);
 
     if (result.ok) {
-      onSuccess?.();
+      const unlocked = result.unlockedBadges ?? [];
+      if (unlocked.length > 0) {
+        setUnlockedBadges(unlocked);
+        setShowBadgePopup(true);
+      } else {
+        onSuccess?.();
+      }
     } else {
       setSubmitError(result.error ?? "Failed to save lead");
     }
   }
+
+  const badgeLabel = (code: string) => {
+    if (code === "STREAK_7") return "Scout Cadet unlocked";
+    if (code === "STREAK_14") return "Scout Officer unlocked";
+    return `${code} unlocked`;
+  };
 
   const hasLocation =
     locationChoice === "map" && mapCenter
@@ -601,7 +631,39 @@ export function ScoutReportForm({
   );
 
   if (embedded) {
-    return <div className="flex flex-col gap-4">{content}</div>;
+    return (
+      <div className="flex flex-col gap-4">
+        {content}
+        <Dialog open={showBadgePopup} onOpenChange={setShowBadgePopup}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="font-mono">Badge Unlocked</DialogTitle>
+              <DialogDescription>
+                Great scout report. You unlocked new badge rewards.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2">
+              {unlockedBadges.map((code) => (
+                <div key={code} className="rounded-md border border-green-500/30 bg-green-500/10 px-3 py-2 font-mono text-sm text-green-300">
+                  {badgeLabel(code)}
+                </div>
+              ))}
+            </div>
+            <DialogFooter>
+              <Button
+                className="font-mono"
+                onClick={() => {
+                  setShowBadgePopup(false);
+                  onSuccess?.();
+                }}
+              >
+                Awesome
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
   }
 
   return (
@@ -614,6 +676,34 @@ export function ScoutReportForm({
         </header>
       )}
       {content}
+      <Dialog open={showBadgePopup} onOpenChange={setShowBadgePopup}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-mono">Badge Unlocked</DialogTitle>
+            <DialogDescription>
+              Great scout report. You unlocked new badge rewards.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            {unlockedBadges.map((code) => (
+              <div key={code} className="rounded-md border border-green-500/30 bg-green-500/10 px-3 py-2 font-mono text-sm text-green-300">
+                {badgeLabel(code)}
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button
+              className="font-mono"
+              onClick={() => {
+                setShowBadgePopup(false);
+                onSuccess?.();
+              }}
+            >
+              Awesome
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <div
         className="fixed left-0 right-0 z-40 border-t border-border bg-background p-4"
         style={{ bottom: "max(env(safe-area-inset-bottom, 0px), 5rem)" }}

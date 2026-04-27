@@ -7,6 +7,9 @@ import { authorize } from "@/lib/auth";
 import { getCurrentUser } from "@/app/actions/users";
 import { getRanks } from "@/app/actions/ranks";
 import { logActivity } from "@/app/actions/activity-log";
+import { updateUserStreak } from "@/backend/services/streak-service";
+import { checkAndUnlockAchievements } from "@/backend/services/achievement-service";
+import { routeNotification } from "@/backend/services/notification-router-service";
 
 const SCOUT_XP = 20;
 
@@ -50,11 +53,11 @@ export type ScoutZoneInput = {
 };
 
 /** Alias for scoutZone - creates a lead from map/scout form. */
-export async function createLead(input: ScoutZoneInput): Promise<{ ok: boolean; error?: string }> {
+export async function createLead(input: ScoutZoneInput): Promise<{ ok: boolean; error?: string; unlockedBadges?: string[] }> {
   return scoutZone(input);
 }
 
-export async function scoutZone(input: ScoutZoneInput): Promise<{ ok: boolean; error?: string }> {
+export async function scoutZone(input: ScoutZoneInput): Promise<{ ok: boolean; error?: string; unlockedBadges?: string[] }> {
   try {
     const session = await authorize(["BRANCH_MANAGER", "PLAYER"], "scoutZone");
     const userId = session.id;
@@ -105,9 +108,22 @@ export async function scoutZone(input: ScoutZoneInput): Promise<{ ok: boolean; e
       },
     });
 
+    // Count streak as soon as a scout is persisted, even if later
+    // non-critical enrichment (rank/notifications) fails.
+    await updateUserStreak(userId);
+
     await prisma.zone.update({
       where: { id: zoneId },
       data: { status: "SCOUTED", ownerId: userId },
+    });
+
+    // Keep territory dashboard in sync with scouting activity.
+    await prisma.territoryCell.updateMany({
+      where: {
+        code: input.zoneCode,
+        ...(resolvedBranchId ? { branchId: resolvedBranchId } : {}),
+      },
+      data: { status: "SCOUTED" },
     });
 
     const dbUser = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
@@ -117,6 +133,22 @@ export async function scoutZone(input: ScoutZoneInput): Promise<{ ok: boolean; e
     await prisma.user.update({
       where: { id: userId },
       data: { xp: newXp, rank: newRank },
+    });
+
+    // Unlock streak badges (7-day, 14-day, etc.) and other eligible achievements.
+    const unlockedBadges = await checkAndUnlockAchievements(userId);
+    await routeNotification({
+      userId,
+      type: "SCOUT_SUBMITTED",
+      title: "✅ Scout submitted",
+      message: `${input.businessName} added successfully. Your streak and heatmap are updated.`,
+      priority: "NORMAL",
+      actionUrl: "/profile",
+      metadata: {
+        zoneCode: input.zoneCode,
+        businessName: input.businessName,
+        unlockedBadges,
+      },
     });
 
     if (session) {
@@ -137,7 +169,8 @@ export async function scoutZone(input: ScoutZoneInput): Promise<{ ok: boolean; e
     }
 
     revalidatePath("/");
-    return { ok: true };
+    revalidatePath("/profile");
+    return { ok: true, unlockedBadges };
   } catch (e) {
     console.error("scoutZone error", e);
     return { ok: false, error: e instanceof Error ? e.message : "Scout failed" };
@@ -236,6 +269,9 @@ export async function createLeadForTaskReport(
       },
     });
 
+    // Task-report scouting is still a scout action and should advance/restart streak.
+    await updateUserStreak(session.id);
+
     const actor = await prisma.user.findUnique({
       where: { id: session.id },
       select: { name: true },
@@ -249,6 +285,7 @@ export async function createLeadForTaskReport(
 
     revalidatePath("/missions");
     revalidatePath(`/missions/task/${data.missionTaskId}`);
+    revalidatePath("/profile");
     return { ok: true, leadId: lead.id };
   } catch (e) {
     console.error("createLeadForTaskReport error", e);

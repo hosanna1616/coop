@@ -5,6 +5,10 @@ export type Role = "PLAYER" | "BRANCH_MANAGER" | "ADMIN";
 /** Session expires 5 minutes after last activity (must match auth.ts). */
 const IDLE_TIMEOUT_SECONDS = 5 * 60;
 
+function resolveAuthSecret(): string | null {
+  return process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || null;
+}
+
 export type JWTPayload = {
   id: string;
   role: Role;
@@ -15,7 +19,7 @@ export type JWTPayload = {
 /** Use in middleware (Edge). Does not depend on Node-only modules. */
 export async function verifyTokenForEdge(token: string): Promise<JWTPayload | null> {
   try {
-    const secret = process.env.JWT_SECRET;
+    const secret = resolveAuthSecret();
     if (!secret) return null;
     const encoded = new TextEncoder().encode(secret);
     const { payload } = await jwtVerify(token, encoded);
@@ -41,8 +45,8 @@ export async function verifyTokenForEdge(token: string): Promise<JWTPayload | nu
 
 /** Create a new token with current time as lastActivity (for sliding session in middleware). */
 export async function createTokenForEdge(payload: JWTPayload): Promise<string> {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) throw new Error("JWT_SECRET is not set");
+  const secret = resolveAuthSecret();
+  if (!secret) throw new Error("JWT_SECRET is not set (or NEXTAUTH_SECRET fallback)");
   const encoded = new TextEncoder().encode(secret);
   const now = Math.floor(Date.now() / 1000);
   return new SignJWT({

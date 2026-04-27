@@ -3,6 +3,7 @@
 import {
   createMissionAssignedNotifications as createMissionAssignedNotificationsService,
   createTaskAssignedNotification as createTaskAssignedNotificationService,
+  ensureHourlyProgressFocusNotification as ensureHourlyProgressFocusNotificationService,
   getMyNotifications as getMyNotificationsService,
   getMyUnseenNotificationCount as getMyUnseenNotificationCountService,
   markAllNotificationsSeen as markAllNotificationsSeenService,
@@ -57,4 +58,11 @@ export async function createTaskAssignedNotification(
   branchId?: string | null
 ): Promise<void> {
   return createTaskAssignedNotificationService(taskId, assigneeId, missionName, taskTitle, branchId);
+}
+
+export async function ensureHourlyProgressFocusNotification(): Promise<{
+  ok: boolean;
+  created: boolean;
+}> {
+  return ensureHourlyProgressFocusNotificationService();
 }

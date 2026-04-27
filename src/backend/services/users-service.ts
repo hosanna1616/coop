@@ -111,10 +111,10 @@ export async function getLeaderboard(limit = 20, branchId?: string | null) {
   try {
     const where = branchId
       ? {
-          role: { not: "ADMIN" as Role },
+          role: "PLAYER" as Role,
           OR: [{ branchId }, { team: { branchId } }],
         }
-      : { role: { not: "ADMIN" as Role } };
+      : { role: "PLAYER" as Role };
 
     const rows = await prisma.user.findMany({
       where,
@@ -125,11 +125,58 @@ export async function getLeaderboard(limit = 20, branchId?: string | null) {
         name: true,
         rank: true,
         xp: true,
-        _count: { select: { ownedZones: true } },
+        branchId: true,
+        team: { select: { branchId: true } },
+        scoutedLeads: {
+          orderBy: { createdAt: "desc" },
+          take: 1,
+          select: { zone: { select: { code: true } } },
+        },
+        _count: { select: { ownedZones: true, scoutedLeads: true } },
       },
     });
 
-    return rows.map(({ _count, ...u }) => ({ ...u, zones: _count.ownedZones }));
+    const branchIds = Array.from(
+      new Set(
+        rows
+          .map((u) => u.branchId ?? u.team?.branchId ?? null)
+          .filter((id): id is string => Boolean(id)),
+      ),
+    );
+
+    const managers =
+      branchIds.length > 0
+        ? await prisma.user.findMany({
+            where: {
+              role: "BRANCH_MANAGER",
+              OR: [{ branchId: { in: branchIds } }, { team: { branchId: { in: branchIds } } }],
+            },
+            select: {
+              name: true,
+              branchId: true,
+              team: { select: { branchId: true } },
+            },
+            orderBy: { name: "asc" },
+          })
+        : [];
+
+    const managerByBranchId = new Map<string, string>();
+    for (const m of managers) {
+      const bId = m.branchId ?? m.team?.branchId ?? null;
+      if (!bId) continue;
+      if (!managerByBranchId.has(bId)) managerByBranchId.set(bId, m.name);
+    }
+
+    return rows.map(({ _count, scoutedLeads, team, branchId, ...u }) => {
+      const resolvedBranchId = branchId ?? team?.branchId ?? null;
+      return {
+        ...u,
+        zones: _count.ownedZones,
+        scouts: _count.scoutedLeads,
+        managerName: resolvedBranchId ? managerByBranchId.get(resolvedBranchId) ?? "—" : "—",
+        latestZoneCode: scoutedLeads[0]?.zone?.code ?? "—",
+      };
+    });
   } catch (e) {
     if (isPrismaConnectionError(e)) return [];
     throw e;

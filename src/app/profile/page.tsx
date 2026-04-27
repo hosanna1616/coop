@@ -1,5 +1,13 @@
-import { getCurrentUser, getLeaderboard, getProfileStats } from "@/app/actions/users";
+import {
+  getCurrentUser,
+  getLeaderboard,
+  getProfileStats,
+} from "@/app/actions/users";
 import { getRanks } from "@/app/actions/ranks";
+import {
+  getContributionActivityData,
+  getGamificationData,
+} from "@/app/actions/gamification";
 import { getServerAuthSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { xpProgress, xpToNextRank, nextRankLabel } from "@/lib/rank";
@@ -11,7 +19,7 @@ export const dynamic = "force-dynamic";
 
 function buildStagesFromRanks(ranks: RankConfig[]): RankStage[] {
   const sorted = [...ranks].sort(
-    (a, b) => a.displayOrder - b.displayOrder || a.minXp - b.minXp
+    (a, b) => a.displayOrder - b.displayOrder || a.minXp - b.minXp,
   );
   return sorted.map((r, i) => {
     const next = sorted[i + 1];
@@ -29,7 +37,7 @@ function buildStagesFromRanks(ranks: RankConfig[]): RankStage[] {
 
 function buildRankLabels(ranks: RankConfig[]): Record<string, string> {
   const sorted = [...ranks].sort(
-    (a, b) => a.displayOrder - b.displayOrder || a.minXp - b.minXp
+    (a, b) => a.displayOrder - b.displayOrder || a.minXp - b.minXp,
   );
   const map: Record<string, string> = {};
   sorted.forEach((r, i) => {
@@ -63,13 +71,18 @@ export default async function ProfilePage() {
   const xpToNext = xpToNextRank(ranks, user.xp);
   const nextLabel = nextRankLabel(ranks, user.xp);
 
-  const [userStats, leaderboard] = await Promise.all([
-    getProfileStats(user.id, {
-      branchId: branchIdForLeaderboard,
-      role: user.role,
-    }),
-    isAdmin ? Promise.resolve([]) : getLeaderboard(20, branchIdForLeaderboard),
-  ]);
+  const [userStats, leaderboard, contribution, gamificationData] =
+    await Promise.all([
+      getProfileStats(user.id, {
+        branchId: branchIdForLeaderboard,
+        role: user.role,
+      }),
+      isAdmin
+        ? Promise.resolve([])
+        : getLeaderboard(50, null),
+      getContributionActivityData(365),
+      getGamificationData(),
+    ]);
 
   return (
     <ProfileClient
@@ -94,10 +107,14 @@ export default async function ProfilePage() {
         rank: u.rank,
         xp: u.xp,
         zones: u.zones,
+        scouts: u.scouts,
+        managerName: u.managerName,
+        latestZoneCode: u.latestZoneCode,
         rankLabel: rankLabels[u.rank] ?? u.rank,
       }))}
       currentUserId={user.id}
-      isBranchLeaderboard={!!branchIdForLeaderboard}
+      contribution={contribution}
+      gamificationData={gamificationData}
     />
   );
 }
