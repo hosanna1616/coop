@@ -91,30 +91,35 @@ async function main() {
   console.log("Scout categories:", SEED_SCOUT_CATEGORIES.length);
 
   for (const u of SEED_USERS) {
-    const existing = await prisma.user.findFirst({
-      where: { name: u.name, role: u.role },
+    const branchId = u.role === "ADMIN" ? null : branch.id;
+    const teamId = u.role === "PLAYER" ? team.id : null;
+    const existingByEmail = await prisma.user.findUnique({ where: { email: u.email } });
+
+    await prisma.user.upsert({
+      where: { email: u.email },
+      create: {
+        id: crypto.randomUUID(),
+        name: u.name,
+        email: u.email,
+        passwordHash,
+        role: u.role,
+        teamId,
+        branchId,
+        mustChangePassword: false,
+      },
+      update: {
+        name: u.name,
+        passwordHash,
+        role: u.role,
+        teamId,
+        branchId,
+        mustChangePassword: false,
+      },
     });
-    if (existing) {
-      await prisma.$executeRaw`
-        UPDATE "User"
-        SET "email" = ${u.email}, "passwordHash" = ${passwordHash}
-        WHERE "id" = ${existing.id}
-      `;
+
+    if (existingByEmail) {
       console.log("Updated password for", u.email);
     } else {
-      const id = crypto.randomUUID();
-      const branchId = u.role === "ADMIN" ? null : branch.id;
-      await prisma.$executeRawUnsafe(
-        `INSERT INTO "User" ("id", "name", "email", "passwordHash", "role", "teamId", "branchId")
-         VALUES ($1, $2, $3, $4, $5::"Role", $6, $7)`,
-        id,
-        u.name,
-        u.email,
-        passwordHash,
-        u.role,
-        team.id,
-        branchId
-      );
       console.log("Created", u.email, "(" + u.role + ")");
     }
   }

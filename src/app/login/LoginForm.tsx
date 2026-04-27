@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import { ArrowRight, Mail, Lock, AlertCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { login } from "@/app/actions/auth";
 
 export function LoginForm() {
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -27,7 +29,13 @@ export function LoginForm() {
       if (result?.error) {
         setError(result.error);
         setPending(false);
+        return;
       }
+      if (result?.ok && result.redirectTo) {
+        router.push(result.redirectTo);
+        return;
+      }
+      setPending(false);
     } catch {
       setError("Something went wrong. Please try again.");
       setPending(false);

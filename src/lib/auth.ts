@@ -22,9 +22,13 @@ const AUTH_COOKIE_NAME = "mn_token";
 /** Session expires 5 minutes after last activity (idle timeout). */
 const IDLE_TIMEOUT_SECONDS = 5 * 60;
 
+function resolveAuthSecret(): string | null {
+  return process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || null;
+}
+
 function getJwtSecret(): Uint8Array {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) throw new Error("JWT_SECRET is not set");
+  const secret = resolveAuthSecret();
+  if (!secret) throw new Error("JWT_SECRET is not set (or NEXTAUTH_SECRET fallback)");
   return new TextEncoder().encode(secret);
 }
 

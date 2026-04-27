@@ -41,34 +41,39 @@ export async function listUserNotifications(params: {
   }));
 }
 
-export async function countUserUnseenNotifications(userId: string): Promise<number> {
+export async function countUserUnseenNotifications(
+  userId: string,
+): Promise<number> {
   return prisma.notification.count({
     where: { userId, seenAt: null },
   });
 }
 
-export async function getNotificationForSeenUpdate(id: string): Promise<
-  | {
-      id: string;
-      userId: string;
-      seenAt: Date | null;
-    }
-  | null
-> {
+export async function getNotificationForSeenUpdate(id: string): Promise<{
+  id: string;
+  userId: string;
+  seenAt: Date | null;
+} | null> {
   return prisma.notification.findUnique({
     where: { id },
     select: { id: true, userId: true, seenAt: true },
   });
 }
 
-export async function markNotificationSeen(id: string, seenAt: Date): Promise<void> {
+export async function markNotificationSeen(
+  id: string,
+  seenAt: Date,
+): Promise<void> {
   await prisma.notification.update({
     where: { id },
     data: { seenAt },
   });
 }
 
-export async function markAllUserNotificationsSeen(userId: string, seenAt: Date): Promise<void> {
+export async function markAllUserNotificationsSeen(
+  userId: string,
+  seenAt: Date,
+): Promise<void> {
   await prisma.notification.updateMany({
     where: { userId, seenAt: null },
     data: { seenAt },
@@ -83,7 +88,10 @@ export async function createMissionAssignedNotifications(params: {
   const recipients = await prisma.user.findMany({
     where: {
       role: { in: ["PLAYER", "BRANCH_MANAGER"] },
-      OR: [{ branchId: params.branchId }, { team: { branchId: params.branchId } }],
+      OR: [
+        { branchId: params.branchId },
+        { team: { branchId: params.branchId } },
+      ],
     },
     select: { id: true },
   });
@@ -120,3 +128,41 @@ export async function createTaskAssignedNotification(params: {
   });
 }
 
+export async function hasHourlyFocusNotificationInCurrentHour(
+  userId: string,
+  now: Date,
+): Promise<boolean> {
+  const hourStart = new Date(now);
+  hourStart.setMinutes(0, 0, 0);
+  const hourEnd = new Date(hourStart);
+  hourEnd.setHours(hourStart.getHours() + 1);
+  const count = await prisma.notification.count({
+    where: {
+      userId,
+      type: "HOURLY_PROGRESS_FOCUS",
+      createdAt: { gte: hourStart, lt: hourEnd },
+    },
+  });
+  return count > 0;
+}
+
+export async function createInAppNotification(params: {
+  userId: string;
+  type: string;
+  title: string;
+  message: string;
+  priority?: "LOW" | "NORMAL" | "HIGH" | "URGENT";
+  metadata?: Record<string, unknown>;
+}): Promise<void> {
+  await prisma.notification.create({
+    data: {
+      userId: params.userId,
+      type: params.type,
+      title: params.title,
+      message: params.message,
+      channel: "IN_APP",
+      priority: params.priority ?? "NORMAL",
+      metadata: params.metadata ?? {},
+    },
+  });
+}

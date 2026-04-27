@@ -17,11 +17,43 @@ async function reconcileStreakForToday(userId: string) {
   if (!streak) return null;
 
   const today = startOfToday();
+  const tomorrow = addDays(today, 1);
   const lastAction = new Date(streak.lastActionDate);
   lastAction.setHours(0, 0, 0, 0);
   const diffDays = Math.floor(
     (today.getTime() - lastAction.getTime()) / (1000 * 60 * 60 * 24),
   );
+
+  // Self-heal: if streak is zero but user already has activity today,
+  // recover streak to 1 so UI and notifications stay consistent.
+  if (streak.currentStreak <= 0) {
+    const [leadToday, merchantToday] = await Promise.all([
+      prisma.lead.findFirst({
+        where: {
+          scoutedById: userId,
+          createdAt: { gte: today, lt: tomorrow },
+        },
+        select: { id: true },
+      }),
+      prisma.merchant.findFirst({
+        where: {
+          inductedById: userId,
+          onboardingDate: { gte: today, lt: tomorrow },
+        },
+        select: { id: true },
+      }),
+    ]);
+    if (leadToday || merchantToday) {
+      return prisma.userStreak.update({
+        where: { userId },
+        data: {
+          currentStreak: 1,
+          longestStreak: Math.max(streak.longestStreak, 1),
+          lastActionDate: today,
+        },
+      });
+    }
+  }
 
   // 0: acted today, 1: still alive (acted yesterday), >1: missed at least one day.
   if (diffDays <= 1) return streak;
@@ -90,6 +122,25 @@ export async function updateUserStreak(userId: string): Promise<{
   );
 
   if (diffDays === 0) {
+    // Recovery path: if streak was already reset to zero earlier today,
+    // treat the current action as a fresh start instead of staying at zero.
+    if (streak.currentStreak <= 0) {
+      const updated = await prisma.userStreak.update({
+        where: { userId },
+        data: {
+          currentStreak: 1,
+          longestStreak: Math.max(streak.longestStreak, 1),
+          lastActionDate: today,
+        },
+      });
+      return {
+        currentStreak: updated.currentStreak,
+        longestStreak: updated.longestStreak,
+        streakIncreased: true,
+        milestone: false,
+      };
+    }
+
     return {
       currentStreak: streak.currentStreak,
       longestStreak: streak.longestStreak,

@@ -18,17 +18,9 @@ export async function login(email: string, password: string) {
       secure: process.env.NODE_ENV === "production",
       maxAge: IDLE_TIMEOUT_SECONDS,
     });
-    if (result.mustChangePassword) {
-      redirect("/change-password");
-    }
-    if (result.role === "PLAYER") {
-      redirect("/");
-    }
-    redirect("/");
+    const redirectTo = result.mustChangePassword ? "/change-password" : "/";
+    return { ok: true as const, redirectTo };
   } catch (e) {
-    if (e && typeof e === "object" && "digest" in e && String((e as { digest?: string }).digest).startsWith("NEXT_REDIRECT")) {
-      throw e;
-    }
     const message = e instanceof Error ? e.message : "Sign in failed";
     return { error: process.env.NODE_ENV === "development" ? message : "Sign in failed. Please try again." };
   }

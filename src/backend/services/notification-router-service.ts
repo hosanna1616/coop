@@ -23,6 +23,21 @@ export type RoutedNotificationInput = {
   missionTaskId?: string;
 };
 
+function getBaseAppUrl(): string {
+  return (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(
+    /\/+$/,
+    "",
+  );
+}
+
+function normalizeActionUrl(actionUrl?: string): string | undefined {
+  if (!actionUrl) return undefined;
+  if (/^https?:\/\//i.test(actionUrl)) return actionUrl;
+  const base = getBaseAppUrl();
+  const path = actionUrl.startsWith("/") ? actionUrl : `/${actionUrl}`;
+  return `${base}${path}`;
+}
+
 async function createDeliveryRecord(input: {
   userId: string;
   type: string;
@@ -64,6 +79,7 @@ async function createDeliveryRecord(input: {
 async function sendToChannel(
   channel: ChannelName,
   input: RoutedNotificationInput,
+  normalizedActionUrl: string | undefined,
   prefChannels: Awaited<
     ReturnType<typeof getOrCreateNotificationPreferences>
   >["channelsNormalized"],
@@ -76,14 +92,14 @@ async function sendToChannel(
         userId: input.userId,
         title: input.title,
         message: input.message,
-        actionUrl: input.actionUrl,
+        actionUrl: normalizedActionUrl,
       });
     case "TELEGRAM":
       return sendTelegramNotification({
         chatId: prefChannels.TELEGRAM.telegramChatId ?? "",
         title: input.title,
         message: input.message,
-        actionUrl: input.actionUrl,
+        actionUrl: normalizedActionUrl,
       });
     case "WHATSAPP":
       return sendWhatsAppNotification({
@@ -96,14 +112,14 @@ async function sendToChannel(
         psid: prefChannels.FACEBOOK.facebookPsid ?? "",
         title: input.title,
         message: input.message,
-        actionUrl: input.actionUrl,
+        actionUrl: normalizedActionUrl,
       });
     case "WEB_PUSH":
       return sendWebPushNotification({
         endpoint: prefChannels.WEB_PUSH.webPushEndpoint,
         title: input.title,
         message: input.message,
-        actionUrl: input.actionUrl,
+        actionUrl: normalizedActionUrl,
       });
     default:
       return { ok: false as const, error: "Unsupported channel" };
@@ -113,6 +129,8 @@ async function sendToChannel(
 export async function routeNotification(
   input: RoutedNotificationInput,
 ): Promise<void> {
+  const normalizedActionUrl = normalizeActionUrl(input.actionUrl);
+
   const priority = input.priority ?? "NORMAL";
   const urgent = priority === "URGENT";
   const prefs = await getOrCreateNotificationPreferences(input.userId);
@@ -148,7 +166,12 @@ export async function routeNotification(
     let delivered = false;
     while (attempts < 3 && !delivered) {
       attempts += 1;
-      const res = await sendToChannel(channel, input, prefs.channelsNormalized);
+      const res = await sendToChannel(
+        channel,
+        input,
+        normalizedActionUrl,
+        prefs.channelsNormalized,
+      );
       if (res.ok) {
         delivered = true;
         break;
