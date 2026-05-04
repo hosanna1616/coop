@@ -50,6 +50,10 @@ export async function updateUser(userId: string, data: UpdateUserData) {
   return users.updateUser(userId, data);
 }
 
+export async function updateMyDisplayName(name: string) {
+  return users.updateMyDisplayName(name);
+}
+
 export async function resetUserPassword(userId: string, newPassword: string) {
   return users.resetUserPassword(userId, newPassword);
 }
