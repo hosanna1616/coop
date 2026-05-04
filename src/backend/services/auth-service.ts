@@ -29,12 +29,16 @@ export async function loginWithPassword(email: string, password: string): Promis
     mustChangePassword: user.mustChangePassword ?? false,
   });
 
-  await activityLogService.logActivity(
-    { id: user.id, role: user.role, branchId: user.branchId },
-    user.name,
-    "LOGIN",
-    { entityType: "User", entityId: user.id, branchId: user.branchId }
-  );
+  try {
+    await activityLogService.logActivity(
+      { id: user.id, role: user.role, branchId: user.branchId },
+      user.name,
+      "LOGIN",
+      { entityType: "User", entityId: user.id, branchId: user.branchId },
+    );
+  } catch (logErr) {
+    console.error("[auth] LOGIN activity log failed (sign-in still succeeds):", logErr);
+  }
 
   return {
     token,
@@ -71,12 +75,16 @@ export async function changePassword(
     mustChangePassword: false,
   });
 
-  await activityLogService.logActivity(
-    { id: user.id, role: user.role, branchId: user.branchId },
-    user.name,
-    "PASSWORD_CHANGE",
-    { entityType: "User", entityId: user.id, branchId: user.branchId }
-  );
+  try {
+    await activityLogService.logActivity(
+      { id: user.id, role: user.role, branchId: user.branchId },
+      user.name,
+      "PASSWORD_CHANGE",
+      { entityType: "User", entityId: user.id, branchId: user.branchId },
+    );
+  } catch (logErr) {
+    console.error("[auth] PASSWORD_CHANGE activity log failed:", logErr);
+  }
 
   return { ok: true, token };
 }
