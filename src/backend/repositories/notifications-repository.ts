@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 export type NotificationRow = {
@@ -152,7 +153,7 @@ export async function createInAppNotification(params: {
   title: string;
   message: string;
   priority?: "LOW" | "NORMAL" | "HIGH" | "URGENT";
-  metadata?: Record<string, unknown>;
+  metadata?: Prisma.InputJsonValue;
 }): Promise<void> {
   await prisma.notification.create({
     data: {
