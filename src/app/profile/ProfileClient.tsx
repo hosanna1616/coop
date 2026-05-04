@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,10 +23,12 @@ import {
   Medal,
   Crown,
   LogOut,
+  PenLine,
   Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { logout, changePassword } from "@/app/actions/auth";
+import { updateMyDisplayName } from "@/app/actions/users";
 import { ContributionHeatmap } from "@/components/gamification/ContributionHeatmap";
 import { StreakTracker } from "@/components/gamification/StreakTracker";
 import {
@@ -105,6 +108,39 @@ export function ProfileClient({
   const [changePwError, setChangePwError] = useState<string | null>(null);
   const [changePwSuccess, setChangePwSuccess] = useState(false);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+  const [displayNameDialogOpen, setDisplayNameDialogOpen] = useState(false);
+  const [displayNameInput, setDisplayNameInput] = useState(user.name);
+  const [displayNameSaving, setDisplayNameSaving] = useState(false);
+  const [displayNameError, setDisplayNameError] = useState<string | null>(null);
+  const [displayNameSuccess, setDisplayNameSuccess] = useState(false);
+
+  const router = useRouter();
+
+  const openDisplayNameDialog = useCallback(() => {
+    setDisplayNameError(null);
+    setDisplayNameSuccess(false);
+    setDisplayNameInput(user.name);
+    setDisplayNameDialogOpen(true);
+  }, [user.name]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const clearHashFromUrl = () => {
+      window.history.replaceState(
+        null,
+        "",
+        `${window.location.pathname}${window.location.search}`,
+      );
+    };
+    const openIfHash = () => {
+      if (window.location.hash !== "#display-name") return;
+      openDisplayNameDialog();
+      clearHashFromUrl();
+    };
+    openIfHash();
+    window.addEventListener("hashchange", openIfHash);
+    return () => window.removeEventListener("hashchange", openIfHash);
+  }, [openDisplayNameDialog]);
 
   const isAdmin = user.role === "ADMIN";
   const rankLine = user.teamName
@@ -120,17 +156,29 @@ export function ProfileClient({
     <div className="flex min-h-screen flex-col bg-background pb-20">
       {/* Top Header */}
       <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border bg-background px-4">
-        <h1 className="font-mono text-lg font-semibold text-foreground">
+        <h1 className="min-w-0 truncate font-mono text-lg font-semibold text-foreground">
           {isAdmin ? "MERCHANT NATION COMMAND POST" : "OFFICER PROFILE & RANKS"}
         </h1>
-        <Button
-          variant="outline"
-          size="sm"
-          className="font-mono"
-          onClick={() => setLogoutDialogOpen(true)}
-        >
-          Log out
-        </Button>
+        <div className="flex shrink-0 items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="font-mono"
+            onClick={openDisplayNameDialog}
+            aria-label="Set display name"
+          >
+            <PenLine className="size-4 sm:mr-1" aria-hidden />
+            <span className="hidden sm:inline">Set name</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="font-mono"
+            onClick={() => setLogoutDialogOpen(true)}
+          >
+            Log out
+          </Button>
+        </div>
       </header>
 
       {/* Logout confirmation — command-post style */}
@@ -201,6 +249,77 @@ export function ProfileClient({
         </DialogContent>
       </Dialog>
 
+      <Dialog open={displayNameDialogOpen} onOpenChange={setDisplayNameDialogOpen}>
+        <DialogContent className="border-border bg-card sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-mono text-lg text-foreground">
+              Set display name
+            </DialogTitle>
+            <DialogDescription className="font-mono text-xs text-muted-foreground">
+              This name appears on your profile, missions, and leaderboards so
+              teammates can tell accounts apart.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="display-name-input" className="font-mono text-xs">
+              Display name
+            </Label>
+            <Input
+              id="display-name-input"
+              value={displayNameInput}
+              onChange={(e) => setDisplayNameInput(e.target.value)}
+              className="font-mono"
+              maxLength={120}
+              autoComplete="name"
+              disabled={displayNameSaving}
+            />
+            {displayNameError ? (
+              <p className="font-mono text-xs text-destructive">{displayNameError}</p>
+            ) : null}
+            {displayNameSuccess ? (
+              <p className="font-mono text-xs text-green-600 dark:text-green-400">
+                Display name updated.
+              </p>
+            ) : null}
+          </div>
+          <DialogFooter className="gap-2 sm:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              className="font-mono"
+              disabled={displayNameSaving}
+              onClick={() => setDisplayNameDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              className="font-mono"
+              disabled={displayNameSaving}
+              onClick={async () => {
+                setDisplayNameError(null);
+                setDisplayNameSuccess(false);
+                setDisplayNameSaving(true);
+                try {
+                  const res = await updateMyDisplayName(displayNameInput);
+                  if (!res.ok) {
+                    setDisplayNameError(res.error);
+                    return;
+                  }
+                  setDisplayNameSuccess(true);
+                  router.refresh();
+                  setTimeout(() => setDisplayNameDialogOpen(false), 600);
+                } finally {
+                  setDisplayNameSaving(false);
+                }
+              }}
+            >
+              {displayNameSaving ? "Saving…" : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <div className="flex flex-1 flex-col gap-6 p-4">
         {isAdmin ? (
           <CommandPostProfile name={user.name} />
@@ -212,6 +331,31 @@ export function ProfileClient({
             xpFormatted={xpFormatted}
           />
         )}
+
+        <Card
+          id="display-name-settings"
+          className="border-border bg-card text-card-foreground"
+        >
+          <CardContent className="pt-6">
+            <p className="font-mono text-xs uppercase tracking-wide text-muted-foreground">
+              Display name
+            </p>
+            <p className="mt-1 font-mono text-sm text-foreground">{user.name}</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Use a unique name so managers and teammates can identify you in
+              rankings and reports.
+            </p>
+            <Button
+              variant="outline"
+              className="mt-4 font-mono w-full sm:w-auto"
+              type="button"
+              onClick={openDisplayNameDialog}
+            >
+              <PenLine className="mr-2 size-4" aria-hidden />
+              Change display name
+            </Button>
+          </CardContent>
+        </Card>
 
         {!isAdmin && (
           <ScoutBadgeProgress

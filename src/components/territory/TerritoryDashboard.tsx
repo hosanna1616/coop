@@ -133,15 +133,23 @@ export function TerritoryDashboard({
             <p className="font-mono text-sm font-medium text-foreground">{userName}</p>
             <p className="font-mono text-xs text-muted-foreground">{rankLabel}</p>
           </div>
-          <Link
-            href="/profile"
-            className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/20 text-primary"
-            aria-label="Profile"
-          >
-            <span className="font-mono text-sm font-bold">
-              {userName.slice(0, 1).toUpperCase()}
-            </span>
-          </Link>
+          <div className="flex items-center gap-1.5">
+            <Link
+              href="/profile"
+              className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/20 text-primary hover:bg-primary/30"
+              aria-label="Profile"
+            >
+              <span className="font-mono text-sm font-bold">
+                {userName.slice(0, 1).toUpperCase()}
+              </span>
+            </Link>
+            <Link
+              href="/profile#display-name"
+              className="hidden font-mono text-[10px] font-medium uppercase tracking-wide text-primary underline-offset-2 hover:underline sm:inline"
+            >
+              Set name
+            </Link>
+          </div>
         </div>
       </header>
 

@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { authorize, type Role, hashPassword } from "@/lib/auth";
+import { authorize, getServerAuthSession, type Role, hashPassword } from "@/lib/auth";
 import type { AuthSession } from "@/lib/auth";
 import { logActivity } from "@/backend/services/activity-log-service";
 import * as branchesService from "@/backend/services/branches-service";
@@ -422,6 +422,62 @@ export async function updateUser(userId: string, data: UpdateUserData) {
     branchId: targetBranchId,
     metadata: { targetName: before?.name, updates: data },
   });
+}
+
+const DISPLAY_NAME_MIN_LEN = 1;
+const DISPLAY_NAME_MAX_LEN = 120;
+
+/** Any signed-in user may update only their own display name (for leaderboards and UI). */
+export async function updateMyDisplayName(
+  rawName: string
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const session = await getServerAuthSession();
+  if (!session) return { ok: false, error: "Not signed in." };
+
+  const name = rawName.trim().replace(/\s+/g, " ");
+  if (name.length < DISPLAY_NAME_MIN_LEN) {
+    return { ok: false, error: "Enter a display name (at least one character)." };
+  }
+  if (name.length > DISPLAY_NAME_MAX_LEN) {
+    return {
+      ok: false,
+      error: `Display name must be ${DISPLAY_NAME_MAX_LEN} characters or fewer.`,
+    };
+  }
+
+  try {
+    const before = await prisma.user.findUnique({
+      where: { id: session.id },
+      select: { name: true },
+    });
+    if (!before) return { ok: false, error: "Account not found." };
+    if (before.name === name) return { ok: true };
+
+    await prisma.user.update({
+      where: { id: session.id },
+      data: { name },
+    });
+
+    const actor = await prisma.user.findUnique({
+      where: { id: session.id },
+      select: { name: true },
+    });
+
+    await logActivity(session, actor?.name ?? name, "USER_PROFILE_NAME_UPDATE", {
+      entityType: "User",
+      entityId: session.id,
+      branchId: session.branchId,
+      metadata: { previousName: before.name, newName: name, selfService: true },
+    });
+
+    return { ok: true };
+  } catch (e) {
+    if (isPrismaConnectionError(e)) {
+      return { ok: false, error: "Could not reach the database. Try again shortly." };
+    }
+    console.error("[updateMyDisplayName]", e);
+    return { ok: false, error: "Something went wrong. Try again." };
+  }
 }
 
 /** Branch manager can reset password for users in their branch. */
