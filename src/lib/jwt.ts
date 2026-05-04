@@ -16,7 +16,7 @@ export type JWTPayload = {
   mustChangePassword: boolean;
 };
 
-/** Use in middleware (Edge). Does not depend on Node-only modules. */
+/** Use in Edge proxy (`src/proxy.ts`). Does not depend on Node-only modules. */
 export async function verifyTokenForEdge(token: string): Promise<JWTPayload | null> {
   try {
     const secret = resolveAuthSecret();
@@ -43,7 +43,7 @@ export async function verifyTokenForEdge(token: string): Promise<JWTPayload | nu
   }
 }
 
-/** Create a new token with current time as lastActivity (for sliding session in middleware). */
+/** Create a new token with current time as lastActivity (for sliding session in proxy). */
 export async function createTokenForEdge(payload: JWTPayload): Promise<string> {
   const secret = resolveAuthSecret();
   if (!secret) throw new Error("JWT_SECRET is not set (or NEXTAUTH_SECRET fallback)");

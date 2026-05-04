@@ -26,6 +26,11 @@ function resolveAuthSecret(): string | null {
   return process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || null;
 }
 
+/** True when session cookies can be signed (required for login on any host). */
+export function isAuthSecretConfigured(): boolean {
+  return Boolean(resolveAuthSecret());
+}
+
 function getJwtSecret(): Uint8Array {
   const secret = resolveAuthSecret();
   if (!secret) throw new Error("JWT_SECRET is not set (or NEXTAUTH_SECRET fallback)");

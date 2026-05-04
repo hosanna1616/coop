@@ -5,6 +5,9 @@ import { verifyTokenForEdge, createTokenForEdge } from "@/lib/jwt";
 const AUTH_COOKIE_NAME = "mn_token";
 const IDLE_MAX_AGE_SECONDS = 5 * 60;
 
+const secureCookie =
+  process.env.NODE_ENV === "production" || process.env.VERCEL === "1";
+
 const CORS_HEADERS = [
   { key: "Access-Control-Allow-Methods", value: "GET, POST, PUT, PATCH, DELETE, OPTIONS" },
   { key: "Access-Control-Allow-Headers", value: "Content-Type, Authorization, Next-Action, RSC" },
@@ -23,7 +26,7 @@ function getCorsOrigin(req: NextRequest): string | null {
   }
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const origin = getCorsOrigin(request);
 
   if (request.method === "OPTIONS") {
@@ -72,7 +75,7 @@ export async function middleware(request: NextRequest) {
         httpOnly: true,
         path: "/",
         sameSite: "lax",
-        secure: process.env.NODE_ENV === "production",
+        secure: secureCookie,
         maxAge: IDLE_MAX_AGE_SECONDS,
       });
     } catch {
@@ -100,7 +103,7 @@ export async function middleware(request: NextRequest) {
         httpOnly: true,
         path: "/",
         sameSite: "lax",
-        secure: process.env.NODE_ENV === "production",
+        secure: secureCookie,
         maxAge: IDLE_MAX_AGE_SECONDS,
       });
     } catch {
@@ -115,7 +118,7 @@ export async function middleware(request: NextRequest) {
       httpOnly: true,
       path: "/",
       sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
+      secure: secureCookie,
       maxAge: IDLE_MAX_AGE_SECONDS,
     });
   } catch {

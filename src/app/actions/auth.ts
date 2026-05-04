@@ -2,20 +2,33 @@
 
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { AUTH_COOKIE_NAME, IDLE_TIMEOUT_SECONDS, type AuthSession } from "@/lib/auth";
+import {
+  AUTH_COOKIE_NAME,
+  IDLE_TIMEOUT_SECONDS,
+  isAuthSecretConfigured,
+  type AuthSession,
+} from "@/lib/auth";
 import { changePassword as changePasswordService, loginWithPassword } from "@/backend/services/auth-service";
 
 export async function login(email: string, password: string) {
+  if (!isAuthSecretConfigured()) {
+    return {
+      error:
+        "Server misconfiguration: add JWT_SECRET or NEXTAUTH_SECRET in Vercel → Environment Variables, then redeploy.",
+    };
+  }
   try {
     const result = await loginWithPassword(email, password);
     if ("error" in result) return { error: result.error };
 
     const cookieStore = await cookies();
+    const secureCookie =
+      process.env.NODE_ENV === "production" || process.env.VERCEL === "1";
     cookieStore.set(AUTH_COOKIE_NAME, result.token, {
       httpOnly: true,
       path: "/",
       sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
+      secure: secureCookie,
       maxAge: IDLE_TIMEOUT_SECONDS,
     });
     const redirectTo = result.mustChangePassword ? "/change-password" : "/";
@@ -68,11 +81,13 @@ export async function changePassword(
   if (!result.ok) return { ok: false, error: result.error };
 
   const cookieStore = await cookies();
+  const secureCookie =
+    process.env.NODE_ENV === "production" || process.env.VERCEL === "1";
   cookieStore.set(AUTH_COOKIE_NAME, result.token, {
     httpOnly: true,
     path: "/",
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: secureCookie,
     maxAge: IDLE_TIMEOUT_SECONDS,
   });
 
