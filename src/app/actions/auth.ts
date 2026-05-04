@@ -21,8 +21,32 @@ export async function login(email: string, password: string) {
     const redirectTo = result.mustChangePassword ? "/change-password" : "/";
     return { ok: true as const, redirectTo };
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Sign in failed";
-    return { error: process.env.NODE_ENV === "development" ? message : "Sign in failed. Please try again." };
+    const message = e instanceof Error ? e.message : String(e);
+    console.error("[login] server action error:", e);
+    if (process.env.NODE_ENV === "development") {
+      return { error: message || "Sign in failed" };
+    }
+    if (
+      message.includes("JWT_SECRET") ||
+      message.includes("NEXTAUTH_SECRET")
+    ) {
+      return {
+        error:
+          "This deployment is missing an auth secret. In Vercel → Project → Settings → Environment Variables, add JWT_SECRET (or NEXTAUTH_SECRET), then redeploy.",
+      };
+    }
+    if (
+      message.includes("P1001") ||
+      message.includes("P1000") ||
+      message.includes("Can't reach database") ||
+      message.toLowerCase().includes("prismaclientinitialization")
+    ) {
+      return {
+        error:
+          "Cannot reach the database. Set DATABASE_URL (and DIRECT_URL if you use Prisma migrate) in Vercel and redeploy.",
+      };
+    }
+    return { error: "Sign in failed. Please try again." };
   }
 }
 
