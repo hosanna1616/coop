@@ -5,6 +5,9 @@ export type DailyReportRow = {
   id: string;
   reportDate: Date;
   content: string;
+  planNotes: string | null;
+  closeoutNotes: string | null;
+  blockers: string | null;
   user: { id: string; name: string };
   branch: { id: string; name: string };
 };
@@ -22,6 +25,9 @@ export async function upsertDailyReport(params: {
   branchId: string;
   reportDate: Date;
   content: string;
+  planNotes?: string | null;
+  closeoutNotes?: string | null;
+  blockers?: string | null;
 }): Promise<{ id: string }> {
   const report = await prisma.dailyReport.upsert({
     where: {
@@ -32,8 +38,16 @@ export async function upsertDailyReport(params: {
       branchId: params.branchId,
       reportDate: params.reportDate,
       content: params.content,
+      planNotes: params.planNotes ?? null,
+      closeoutNotes: params.closeoutNotes ?? null,
+      blockers: params.blockers ?? null,
     },
-    update: { content: params.content },
+    update: {
+      content: params.content,
+      planNotes: params.planNotes ?? null,
+      closeoutNotes: params.closeoutNotes ?? null,
+      blockers: params.blockers ?? null,
+    },
     select: { id: true },
   });
   return { id: report.id };
@@ -59,6 +73,9 @@ export async function findDailyReports(params: {
     id: r.id,
     reportDate: r.reportDate,
     content: r.content,
+    planNotes: r.planNotes,
+    closeoutNotes: r.closeoutNotes,
+    blockers: r.blockers,
     user: { id: r.user.id, name: r.user.name },
     branch: { id: r.branch.id, name: r.branch.name },
   }));

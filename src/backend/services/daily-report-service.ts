@@ -7,6 +7,9 @@ import * as activityLogService from "@/backend/services/activity-log-service";
 export type SubmitDailyReportData = {
   reportDate: string; // ISO date YYYY-MM-DD
   content: string;
+  planNotes?: string | null;
+  closeoutNotes?: string | null;
+  blockers?: string | null;
 };
 
 export async function submitDailyReport(
@@ -21,11 +24,22 @@ export async function submitDailyReport(
   if (!branchId) return { ok: false, error: "You are not assigned to a branch." };
 
   const date = new Date(data.reportDate + "T00:00:00.000Z");
+  const summaryParts = [
+    data.planNotes?.trim() ? `Plan: ${data.planNotes.trim()}` : "",
+    data.closeoutNotes?.trim() ? `Closeout: ${data.closeoutNotes.trim()}` : "",
+    data.blockers?.trim() ? `Blockers: ${data.blockers.trim()}` : "",
+    data.content.trim(),
+  ].filter(Boolean);
+  const content = summaryParts.join("\n\n") || data.content;
+
   const report = await dailyReportRepo.upsertDailyReport({
     userId: session.id,
     branchId,
     reportDate: date,
-    content: data.content,
+    content,
+    planNotes: data.planNotes ?? null,
+    closeoutNotes: data.closeoutNotes ?? null,
+    blockers: data.blockers ?? null,
   });
 
   const actor = (await getUserById(session.id))?.name;

@@ -11,7 +11,8 @@
     "postinstall": "prisma generate",
     "prisma:generate": "prisma generate",
     "telegram:poll": "node scripts/telegram-poll-dev.mjs",
-    "telegram:webhook": "node scripts/telegram-set-webhook.mjs"
+    "telegram:webhook": "node scripts/telegram-set-webhook.mjs",
+    "test:field-ops": "node scripts/test-field-operations.mjs"
   },
   "prisma": {
     "seed": "node prisma/seed.js"

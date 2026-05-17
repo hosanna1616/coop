@@ -14,6 +14,8 @@ import {
   Tag,
   Landmark,
   Medal,
+  ListChecks,
+  UsersRound,
 } from "lucide-react";
 import type { Role } from "@/lib/auth";
 
@@ -29,6 +31,7 @@ const dashboardItem: NavItem[] = [
 
 const mapBaseNavItems: NavItem[] = [
   { href: "/", label: "Map", icon: Map },
+  { href: "/work", label: "Queue", icon: ListChecks },
   { href: "/missions", label: "Missions", icon: ClipboardList },
   { href: "/report", label: "Report", icon: FileText },
   { href: "/merchants", label: "Merchants", icon: Store },
@@ -50,6 +53,8 @@ const adminNavItems: NavItem[] = [
 ];
 
 const branchManagerNavItems: NavItem[] = [
+  { href: "/admin/squad", label: "Squad", icon: UsersRound },
+  { href: "/admin/operations", label: "Operations", icon: ListChecks },
   { href: "/admin/operational-summary", label: "Operational Summary", icon: BarChart2 },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/teams", label: "Teams", icon: Users2 },
