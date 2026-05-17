@@ -234,6 +234,7 @@ export function TerritoryDashboard({
             useGoogleMaps={useGoogleMaps}
             zoneCount={totalZones}
             merchantCount={activeMerchants}
+            districtLabel={districtName}
             branchId={branchId}
             branchTerritory={branchTerritory}
             territoryCells={territoryCells}

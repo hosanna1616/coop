@@ -2,12 +2,16 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, Fragment } from "react";
 import { useRouter } from "next/navigation";
-import { MapContainer, Polygon, TileLayer, useMap, useMapEvents, Marker } from "react-leaflet";
+import { MapContainer, Polygon, Polyline, TileLayer, useMap, useMapEvents, Marker } from "react-leaflet";
 import L from "leaflet";
 import "leaflet-defaulticon-compatibility";
 import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
 import { generateZoneGrid, ADDIS_ABABA_CENTER, type GridCell } from "@/lib/zoneGrid";
-import { normalizeTerritoryPoints } from "@/lib/territoryGrid";
+import {
+  normalizeTerritoryPoints,
+  buildTerritoryPreviewCells,
+  validateTerritoryShape,
+} from "@/lib/territoryGrid";
 import { getZones, updateZoneStatus, type ZoneWithStats } from "@/app/actions/zones";
 import { ZONE_STATUS_COLORS, ZONE_STATUS_LABELS, type MapZoneStatus } from "@/lib/zoneStatusColors";
 import {
@@ -28,6 +32,13 @@ import type { TerritoryCellWithCoords, AdminBranchTerritory, TerritoryCellWithBr
 import { getMapPins, type MapPinScouted, type MapPinInducted } from "@/app/actions/map-pins";
 import { getMerchantDetail, type MerchantDetail } from "@/app/actions/merchants";
 import { MapPinDetailDrawer } from "./MapPinDetailDrawer";
+import {
+  TERRITORY_BOUNDARY,
+  getTerritoryCellStyle,
+  filterPinsInsideTerritory,
+  SCOUTED_PIN_HTML,
+  INDUCTED_PIN_HTML,
+} from "@/lib/territoryMapVisual";
 
 const PIN_CLUSTER_RADIUS_DEG = 0.00008;
 
@@ -203,7 +214,9 @@ function TerritoryContent({
   boundaryPreview,
   onCellClick,
   isEditMode = false,
+  isDefining = false,
   onVertexDrag,
+  visibleStatuses,
 }: {
   branchTerritory: { lat: number; lng: number }[] | null;
   territoryCells: TerritoryCellWithCoords[];
@@ -214,26 +227,62 @@ function TerritoryContent({
     tapPosition?: { lat: number; lng: number }
   ) => void;
   isEditMode?: boolean;
+  isDefining?: boolean;
   onVertexDrag?: (index: number, point: { lat: number; lng: number }) => void;
+  visibleStatuses: Set<MapZoneStatus>;
 }) {
-  const boundaryToShow = boundaryPreview.length >= 3 ? boundaryPreview : branchTerritory;
-  const showBoundary = boundaryToShow && boundaryToShow.length >= 3;
+  const boundaryToShow =
+    boundaryPreview.length >= 4
+      ? normalizeTerritoryPoints(boundaryPreview)
+      : boundaryPreview.length === 0
+        ? branchTerritory
+        : null;
+  const showBoundary =
+    Boolean(boundaryToShow && boundaryToShow.length >= 3) &&
+    (!isDefining || boundaryPreview.length >= 4);
+  const openPath =
+    isDefining && boundaryPreview.length >= 2 && boundaryPreview.length < 4
+      ? boundaryPreview.map((p) => [p.lat, p.lng] as [number, number])
+      : null;
 
   return (
     <>
-      {showBoundary && (
-        <Polygon
-          positions={boundaryToShow.map((p) => [p.lat, p.lng] as [number, number])}
+      {openPath && (
+        <Polyline
+          positions={openPath}
           pathOptions={{
-            color: "#6366f1",
+            color: TERRITORY_BOUNDARY.strokeColor,
             weight: 2,
-            fillColor: "#6366f1",
-            fillOpacity: 0.15,
+            dashArray: "8 10",
           }}
         />
       )}
+      {showBoundary && boundaryToShow && (
+        <Polygon
+          positions={boundaryToShow.map((p) => [p.lat, p.lng] as [number, number])}
+          pathOptions={{
+            color: TERRITORY_BOUNDARY.strokeColor,
+            weight: TERRITORY_BOUNDARY.strokeWeight,
+            fillColor: TERRITORY_BOUNDARY.fillColor,
+            fillOpacity: TERRITORY_BOUNDARY.fillOpacity,
+          }}
+        />
+      )}
+      {isDefining &&
+        boundaryPreview.map((p, i) => (
+          <Marker
+            key={`corner-${i}`}
+            position={[p.lat, p.lng]}
+            icon={L.divIcon({
+              className: "territory-corner-marker",
+              html: `<div style="width:26px;height:26px;border-radius:50%;background:#3b82f6;border:2px solid #fff;color:#fff;font:700 11px/26px sans-serif;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.35)">${i + 1}</div>`,
+              iconSize: [26, 26],
+              iconAnchor: [13, 13],
+            })}
+          />
+        ))}
       {isEditMode && boundaryToShow && boundaryToShow.length >= 3 && onVertexDrag &&
-        boundaryToShow.map((p, i) => (
+        (branchTerritory ?? boundaryPreview).map((p, i) => (
           <Marker
             key={`vertex-${i}`}
             position={[p.lat, p.lng]}
@@ -248,18 +297,14 @@ function TerritoryContent({
         ))}
       {territoryCells.map((cell) => {
         const status = (cell.status as MapZoneStatus) || "UNSEEN";
-        const fill = ZONE_STATUS_COLORS[status];
+        const pathOptions = getTerritoryCellStyle(status, visibleStatuses.has(status));
+        if (!pathOptions) return null;
         const pos = cell.coordinates.map((p) => [p.lat, p.lng] as [number, number]);
         return (
           <Polygon
             key={cell.id}
             positions={pos}
-            pathOptions={{
-              color: "#374151",
-              weight: 1,
-              fillColor: fill,
-              fillOpacity: 0.6,
-            }}
+            pathOptions={pathOptions}
             eventHandlers={{
               click: (e) =>
                 onCellClick(cell, {
@@ -287,9 +332,11 @@ export function MapViewClient({
   onUpdateCell,
   adminTerritories = [],
   onTerritoryEditModeChange,
+  districtLabel = "ADDIS ABABA",
 }: {
   zoneCount?: number;
   merchantCount?: number;
+  districtLabel?: string;
   branchId?: string | null;
   branchTerritory?: { lat: number; lng: number }[] | null;
   territoryCells?: TerritoryCellWithCoords[];
@@ -310,6 +357,7 @@ export function MapViewClient({
   const [loading, setLoading] = useState(true);
   const [boundaryPoints, setBoundaryPoints] = useState<{ lat: number; lng: number }[]>([]);
   const [isEditingBoundary, setIsEditingBoundary] = useState(false);
+  const [isRedrawingTerritory, setIsRedrawingTerritory] = useState(false);
   const [savingTerritory, setSavingTerritory] = useState(false);
   const [visibleStatuses, setVisibleStatuses] = useState<Set<MapZoneStatus>>(
     () => new Set(ZONE_STATUS_LABELS)
@@ -325,8 +373,12 @@ export function MapViewClient({
   const [merchantDetailForPin, setMerchantDetailForPin] = useState<MerchantDetail | null>(null);
   const [pinDetailLoading, setPinDetailLoading] = useState(false);
 
-  const inDefineMode = isBranchManager && !branchTerritory && !isEditingBoundary;
+  const inDefineMode =
+    isBranchManager &&
+    (!branchTerritory || isRedrawingTerritory) &&
+    !isEditingBoundary;
   const inEditBoundaryMode = isBranchManager && branchTerritory && isEditingBoundary;
+  const hideSavedTerritory = isRedrawingTerritory;
   const mapClickEnabled = inDefineMode;
   const pointsToSave = boundaryPoints;
 
@@ -374,14 +426,62 @@ export function MapViewClient({
     refetchMapPins();
   }, [showPins, branchId, refetchMapPins]);
 
-  const spreadScouted = useMemo(
-    () => (mapPins ? spreadPinPositions(mapPins.scouted) : []),
-    [mapPins]
+  const definePreviewCells = useMemo((): TerritoryCellWithCoords[] => {
+    if (!inDefineMode || boundaryPoints.length < 4) return [];
+    return buildTerritoryPreviewCells(boundaryPoints).map((c) => ({
+      id: `preview-${c.row}-${c.col}`,
+      code: c.code,
+      coordinates: c.coordinates,
+      status: "UNSEEN",
+      label: null,
+      row: c.row,
+      col: c.col,
+    }));
+  }, [inDefineMode, boundaryPoints]);
+
+  const displayTerritoryCells = inDefineMode
+    ? definePreviewCells
+    : hideSavedTerritory
+      ? []
+      : territoryCells;
+
+  const defineShapeValidation = useMemo(
+    () => (inDefineMode ? validateTerritoryShape(boundaryPoints) : null),
+    [inDefineMode, boundaryPoints],
   );
-  const spreadInducted = useMemo(
-    () => (mapPins ? spreadPinPositions(mapPins.inducted) : []),
-    [mapPins]
-  );
+
+  const territoryBoundsForPins =
+    inDefineMode && boundaryPoints.length >= 4
+      ? normalizeTerritoryPoints(boundaryPoints)
+      : hideSavedTerritory
+        ? null
+        : branchTerritory;
+
+  const inTerritoryView =
+    adminTerritories.length === 0 &&
+    ((!!branchTerritory && branchTerritory.length >= 3 && !hideSavedTerritory) ||
+      (inDefineMode && boundaryPoints.length >= 4));
+
+  const spreadScouted = useMemo(() => {
+    if (!mapPins) return [];
+    const scoped = inTerritoryView
+      ? filterPinsInsideTerritory(mapPins.scouted, territoryBoundsForPins)
+      : mapPins.scouted;
+    return spreadPinPositions(scoped);
+  }, [mapPins, inTerritoryView, territoryBoundsForPins]);
+
+  const spreadInducted = useMemo(() => {
+    if (!mapPins) return [];
+    const scoped = inTerritoryView
+      ? filterPinsInsideTerritory(mapPins.inducted, territoryBoundsForPins)
+      : mapPins.inducted;
+    return spreadPinPositions(scoped);
+  }, [mapPins, inTerritoryView, territoryBoundsForPins]);
+
+  const overlayZoneCount =
+    inTerritoryView && displayTerritoryCells.length > 0
+      ? displayTerritoryCells.length
+      : zoneCount;
 
   const selectedPinId = selectedPin?.type === "inducted" ? selectedPin.id : null;
 
@@ -411,20 +511,31 @@ export function MapViewClient({
     return { cells, zoneByCode };
   }, [zones]);
 
+  const fitBoundsPoints =
+    inDefineMode && boundaryPoints.length >= 2
+      ? boundaryPoints
+      : branchTerritory && branchTerritory.length >= 2
+        ? branchTerritory
+        : null;
+
   const mapCenter = useMemo(() => {
-    if (branchTerritory && branchTerritory.length > 0) {
-      const sum = branchTerritory.reduce(
+    const pts = fitBoundsPoints;
+    if (pts && pts.length > 0) {
+      const sum = pts.reduce(
         (acc, p) => ({ lat: acc.lat + p.lat, lng: acc.lng + p.lng }),
-        { lat: 0, lng: 0 }
+        { lat: 0, lng: 0 },
       );
-      return [sum.lat / branchTerritory.length, sum.lng / branchTerritory.length] as [number, number];
+      return [sum.lat / pts.length, sum.lng / pts.length] as [number, number];
     }
     return [ADDIS_ABABA_CENTER.lat, ADDIS_ABABA_CENTER.lng] as [number, number];
-  }, [branchTerritory]);
+  }, [fitBoundsPoints]);
 
   const handleMapClick = useCallback((lat: number, lng: number) => {
     if (inDefineMode) {
-      setBoundaryPoints((prev) => [...prev, { lat, lng }]);
+      setBoundaryPoints((prev) => {
+        if (prev.length >= 4) return prev;
+        return [...prev, { lat, lng }];
+      });
     }
   }, [inDefineMode]);
 
@@ -437,6 +548,7 @@ export function MapViewClient({
       await onSaveTerritory(normalized);
       setBoundaryPoints([]);
       setIsEditingBoundary(false);
+      setIsRedrawingTerritory(false);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Could not save territory";
       onSaveTerritoryError?.(msg);
@@ -448,6 +560,7 @@ export function MapViewClient({
   const handleCancelBoundary = useCallback(() => {
     setBoundaryPoints([]);
     setIsEditingBoundary(false);
+    setIsRedrawingTerritory(false);
   }, []);
 
   const handleZoneClick = (sel: SelectedZone) => {
@@ -572,19 +685,37 @@ export function MapViewClient({
           <div className="absolute bottom-24 left-4 right-4 z-20 flex flex-col gap-2 rounded-lg border border-border bg-card p-3 shadow-lg">
             <p className="font-mono text-sm text-foreground">
               {inDefineMode
-                ? "Click 4+ points for one continuous territory (single area only — boundary must not cross itself)."
+                ? "Click the 4 corners of your territory in order (1 → 2 → 3 → 4). A grid preview appears inside before you save."
                 : "Drag the boundary vertices to reshape the territory. Save when done."}
             </p>
             <p className="font-mono text-xs text-muted-foreground">
-              {pointsToSave.length} point{pointsToSave.length !== 1 ? "s" : ""} placed
+              Corner {Math.min(pointsToSave.length, 4)}/4 placed
+              {definePreviewCells.length > 0
+                ? ` · ${definePreviewCells.length} zones in preview`
+                : ""}
             </p>
-            <div className="flex gap-2">
+            {defineShapeValidation && !defineShapeValidation.ok && pointsToSave.length >= 4 ? (
+              <p className="font-mono text-xs text-amber-600 dark:text-amber-400">
+                {defineShapeValidation.error}
+              </p>
+            ) : null}
+            <div className="flex flex-wrap gap-2">
               <Button
                 size="sm"
-                disabled={pointsToSave.length < 4 || savingTerritory}
+                disabled={
+                  !defineShapeValidation?.ok || pointsToSave.length < 4 || savingTerritory
+                }
                 onClick={handleSaveTerritory}
               >
                 {savingTerritory ? "Saving…" : "Save Territory"}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={pointsToSave.length === 0 || savingTerritory}
+                onClick={() => setBoundaryPoints((prev) => prev.slice(0, -1))}
+              >
+                Undo corner
               </Button>
               <Button size="sm" variant="outline" onClick={handleCancelBoundary}>
                 Cancel
@@ -603,8 +734,26 @@ export function MapViewClient({
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           <MapSizeFix />
-          {adminTerritories.length === 0 && branchTerritory && branchTerritory.length >= 2 && (
-            <FitMapToTerritory points={branchTerritory} />
+          {adminTerritories.length === 0 && fitBoundsPoints && fitBoundsPoints.length >= 2 && (
+            <FitMapToTerritory points={fitBoundsPoints} />
+          )}
+          {adminTerritories.length === 0 &&
+            ((branchTerritory && !hideSavedTerritory) ||
+              inDefineMode ||
+              inEditBoundaryMode) && (
+            <TerritoryContent
+              branchTerritory={hideSavedTerritory ? null : branchTerritory}
+              territoryCells={displayTerritoryCells}
+              isBranchManager={isBranchManager}
+              boundaryPreview={
+                inDefineMode || inEditBoundaryMode ? boundaryPoints : []
+              }
+              onCellClick={handleTerritoryCellClick}
+              isEditMode={!!inEditBoundaryMode}
+              isDefining={inDefineMode}
+              onVertexDrag={inEditBoundaryMode ? handleVertexDrag : undefined}
+              visibleStatuses={visibleStatuses}
+            />
           )}
           <MapClickCapture onMapClick={handleMapClick} enabled={mapClickEnabled} />
           {adminTerritories.length > 0 && (
@@ -613,24 +762,7 @@ export function MapViewClient({
               onCellClick={handleTerritoryCellClick}
             />
           )}
-          {adminTerritories.length === 0 && branchTerritory && (
-            <TerritoryContent
-              branchTerritory={branchTerritory}
-              territoryCells={territoryCells}
-              isBranchManager={isBranchManager}
-              boundaryPreview={
-                inDefineMode
-                  ? boundaryPoints
-                  : inEditBoundaryMode
-                    ? boundaryPoints
-                    : []
-              }
-              onCellClick={handleTerritoryCellClick}
-              isEditMode={!!inEditBoundaryMode}
-              onVertexDrag={inEditBoundaryMode ? handleVertexDrag : undefined}
-            />
-          )}
-          {mapPins && (
+          {mapPins && !inDefineMode && (
             <>
               {spreadScouted.map(({ pin: lead, lat, lng }) => (
                 <Marker
@@ -645,9 +777,9 @@ export function MapViewClient({
                   }}
                   icon={L.divIcon({
                     className: "pin-icon-scouted",
-                    html: `<div style="width:16px;height:16px;border-radius:50%;background:#3b82f6;border:2px solid white;cursor:pointer"></div>`,
-                    iconSize: [20, 20],
-                    iconAnchor: [10, 10],
+                    html: SCOUTED_PIN_HTML,
+                    iconSize: [22, 22],
+                    iconAnchor: [11, 11],
                   })}
                   title={lead.businessName}
                 />
@@ -665,9 +797,9 @@ export function MapViewClient({
                   }}
                   icon={L.divIcon({
                     className: "pin-icon-inducted",
-                    html: `<div style="width:16px;height:16px;border-radius:50%;background:#22c55e;border:2px solid white;cursor:pointer"></div>`,
+                    html: INDUCTED_PIN_HTML,
                     iconSize: [20, 20],
-                    iconAnchor: [10, 10],
+                    iconAnchor: [10, 20],
                   })}
                   title={m.businessName}
                 />
@@ -676,14 +808,19 @@ export function MapViewClient({
           )}
         </MapContainer>
         <MapOverlay
-          zoneCount={zoneCount}
+          zoneCount={overlayZoneCount}
           merchantCount={merchantCount}
+          districtLabel={districtLabel}
           visibleStatuses={visibleStatuses}
           onVisibleStatusesChange={setVisibleStatuses}
           mapContainerRef={mapContainerRef}
           showEditTerritory={isBranchManager && !!branchTerritory}
-          isEditingTerritory={isEditingBoundary}
-          onEditTerritory={() => setIsEditingBoundary(true)}
+          isEditingTerritory={inDefineMode && !!branchTerritory}
+          onEditTerritory={() => {
+            setIsRedrawingTerritory(true);
+            setBoundaryPoints([]);
+            setIsEditingBoundary(false);
+          }}
           onCancelEditTerritory={handleCancelBoundary}
         />
       </div>

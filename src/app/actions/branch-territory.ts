@@ -3,13 +3,12 @@
 import { prisma } from "@/lib/prisma";
 import { authorize, type Role } from "@/lib/auth";
 import {
-  subdivideTerritory,
-  getGridSizeForBounds,
   normalizeTerritoryPoints,
-  polygonSelfIntersects,
-  territoryCellGridComponentCount,
+  validateTerritoryShape,
+  MIN_TERRITORY_CELLS,
 } from "@/lib/territoryGrid";
 import { logActivity } from "@/app/actions/activity-log";
+import { routeNotification } from "@/backend/services/notification-router-service";
 import type { ZoneStatus } from "@prisma/client";
 import { Prisma } from "@prisma/client";
 
@@ -117,14 +116,12 @@ export async function saveBranchTerritory(
   if (!points || points.length < 4) throw new Error("At least 4 points are required");
   if (!points.every(validatePoint)) throw new Error("Invalid coordinates");
 
-  const normalizedPoints = normalizeTerritoryPoints(points);
-  if (normalizedPoints.length < 4) throw new Error("At least 4 distinct points are required");
-
-  if (polygonSelfIntersects(normalizedPoints)) {
-    throw new Error(
-      "Territory boundary crosses itself. Draw a single continuous outline — no figure-eight or overlapping edges.",
-    );
+  const shape = validateTerritoryShape(points);
+  if (!shape.ok) {
+    throw new Error(shape.error ?? "Invalid territory shape");
   }
+  const normalizedPoints = normalizeTerritoryPoints(points);
+  const previewCells = shape.cells;
 
   const branch = await prisma.branch.findUnique({
     where: { id: branchId },
@@ -132,16 +129,9 @@ export async function saveBranchTerritory(
   });
   if (!branch) throw new Error("Branch not found");
 
-  const { rows, cols } = getGridSizeForBounds(normalizedPoints);
-  const previewCells = subdivideTerritory(normalizedPoints, rows, cols);
-  if (previewCells.length === 0) {
+  if (previewCells.length < MIN_TERRITORY_CELLS) {
     throw new Error(
-      "Territory covers almost no mappable area. Enlarge the shape or adjust the boundary.",
-    );
-  }
-  if (territoryCellGridComponentCount(previewCells) > 1) {
-    throw new Error(
-      "Territory must be one connected area. This outline would create separate regions — use a single closed boundary only.",
+      "Territory is too small. Click four corners that form a wider box.",
     );
   }
 
@@ -185,9 +175,29 @@ export async function saveBranchTerritory(
   await logActivity(session, actor?.name ?? "User", "BRANCH_TERRITORY_SAVE", {
     entityType: "Branch",
     entityId: branchId,
-    branchId,
     metadata: { pointCount: normalizedPoints.length },
   });
+
+  const players = await prisma.user.findMany({
+    where: {
+      role: "PLAYER",
+      OR: [{ branchId }, { team: { branchId } }],
+    },
+    select: { id: true },
+  });
+  await Promise.all(
+    players.map((p) =>
+      routeNotification({
+        userId: p.id,
+        type: "TERRITORY_ASSIGNED",
+        title: "Your field territory is ready",
+        message: `${branch.name}: your branch manager assigned your operating area. Open Territory Command on the map to start scouting.`,
+        priority: "HIGH",
+        actionUrl: "/",
+        branchId,
+      }),
+    ),
+  );
 }
 
 export type TerritoryCellWithCoords = {

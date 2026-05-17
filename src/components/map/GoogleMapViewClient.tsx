@@ -6,12 +6,17 @@ import {
   GoogleMap,
   useJsApiLoader,
   Polygon,
+  Polyline,
   Marker,
   useGoogleMap,
 } from "@react-google-maps/api";
 import { MapPin } from "lucide-react";
 import { generateZoneGrid, ADDIS_ABABA_CENTER, type GridCell } from "@/lib/zoneGrid";
-import { normalizeTerritoryPoints } from "@/lib/territoryGrid";
+import {
+  normalizeTerritoryPoints,
+  buildTerritoryPreviewCells,
+  validateTerritoryShape,
+} from "@/lib/territoryGrid";
 import { getZones, updateZoneStatus, type ZoneWithStats } from "@/app/actions/zones";
 import { ZONE_STATUS_COLORS, ZONE_STATUS_LABELS, type MapZoneStatus } from "@/lib/zoneStatusColors";
 import {
@@ -32,6 +37,11 @@ import { PortalLoadingInline } from "@/components/ui/portal-loading";
 import { getMapPins, type MapPinScouted, type MapPinInducted } from "@/app/actions/map-pins";
 import { getMerchantDetail, type MerchantDetail } from "@/app/actions/merchants";
 import { MapPinDetailDrawer } from "./MapPinDetailDrawer";
+import {
+  TERRITORY_BOUNDARY,
+  getTerritoryCellStyle,
+  filterPinsInsideTerritory,
+} from "@/lib/territoryMapVisual";
 
 const PIN_CLUSTER_RADIUS_DEG = 0.00008;
 
@@ -152,6 +162,8 @@ function TerritoryContentGoogle({
   onCellClick,
   isEditMode = false,
   onBoundaryPathChange,
+  visibleStatuses,
+  isDefining = false,
 }: {
   branchTerritory: { lat: number; lng: number }[] | null;
   territoryCells: TerritoryCellWithCoords[];
@@ -163,9 +175,22 @@ function TerritoryContentGoogle({
   ) => void;
   isEditMode?: boolean;
   onBoundaryPathChange?: (path: { lat: number; lng: number }[]) => void;
+  visibleStatuses: Set<MapZoneStatus>;
+  isDefining?: boolean;
 }) {
-  const boundaryToShow = boundaryPreview.length >= 3 ? boundaryPreview : branchTerritory;
-  const showBoundary = boundaryToShow && boundaryToShow.length >= 3;
+  const boundaryToShow =
+    boundaryPreview.length >= 4
+      ? normalizeTerritoryPoints(boundaryPreview)
+      : boundaryPreview.length === 0
+        ? branchTerritory
+        : null;
+  const showBoundary =
+    Boolean(boundaryToShow && boundaryToShow.length >= 3) &&
+    (!isDefining || boundaryPreview.length >= 4);
+  const openPath =
+    isDefining && boundaryPreview.length >= 2 && boundaryPreview.length < 4
+      ? boundaryPreview.map((p) => ({ lat: p.lat, lng: p.lng }))
+      : null;
 
   const handlePolygonLoad = useCallback(
     (polygon: google.maps.Polygon) => {
@@ -188,14 +213,31 @@ function TerritoryContentGoogle({
 
   return (
     <>
-      {showBoundary && (
+      {openPath && (
+        <Polyline
+          path={openPath}
+          options={{
+            strokeColor: TERRITORY_BOUNDARY.strokeColor,
+            strokeWeight: 2,
+            strokeOpacity: 1,
+            icons: [
+              {
+                icon: { path: "M 0,-1 0,1", strokeOpacity: 1, scale: 3 },
+                offset: "0",
+                repeat: "12px",
+              },
+            ],
+          }}
+        />
+      )}
+      {showBoundary && boundaryToShow && (
         <Polygon
           paths={boundaryToShow.map((p) => ({ lat: p.lat, lng: p.lng }))}
           options={{
-            strokeColor: "#6366f1",
-            strokeWeight: 2,
-            fillColor: "#6366f1",
-            fillOpacity: 0.15,
+            strokeColor: TERRITORY_BOUNDARY.strokeColor,
+            strokeWeight: TERRITORY_BOUNDARY.strokeWeight,
+            fillColor: TERRITORY_BOUNDARY.fillColor,
+            fillOpacity: TERRITORY_BOUNDARY.fillOpacity,
             clickable: false,
             editable: isEditMode,
             draggable: isEditMode,
@@ -203,19 +245,41 @@ function TerritoryContentGoogle({
           onLoad={isEditMode ? handlePolygonLoad : undefined}
         />
       )}
+      {isDefining &&
+        boundaryPreview.map((p, i) => (
+          <Marker
+            key={`corner-${i}`}
+            position={{ lat: p.lat, lng: p.lng }}
+            label={{
+              text: String(i + 1),
+              color: "#ffffff",
+              fontSize: "11px",
+              fontWeight: "700",
+            }}
+            icon={{
+              path: google.maps.SymbolPath.CIRCLE,
+              fillColor: "#3b82f6",
+              fillOpacity: 1,
+              strokeColor: "#ffffff",
+              strokeWeight: 2,
+              scale: 13,
+            }}
+          />
+        ))}
       {territoryCells.map((cell) => {
         const status = (cell.status as MapZoneStatus) || "UNSEEN";
-        const fill = ZONE_STATUS_COLORS[status];
+        const style = getTerritoryCellStyle(status, visibleStatuses.has(status));
+        if (!style) return null;
         const path = cell.coordinates.map((p) => ({ lat: p.lat, lng: p.lng }));
         return (
           <Polygon
             key={cell.id}
             paths={path}
             options={{
-              strokeColor: "#374151",
-              strokeWeight: 1,
-              fillColor: fill,
-              fillOpacity: 0.6,
+              strokeColor: style.color,
+              strokeWeight: style.weight,
+              fillColor: style.fillColor,
+              fillOpacity: style.fillOpacity,
               clickable: true,
             }}
             onClick={(e) =>
@@ -246,9 +310,11 @@ export function GoogleMapViewClient({
   onUpdateCell,
   adminTerritories = [],
   onTerritoryEditModeChange,
+  districtLabel = "ADDIS ABABA",
 }: {
   zoneCount?: number;
   merchantCount?: number;
+  districtLabel?: string;
   branchId?: string | null;
   branchTerritory?: { lat: number; lng: number }[] | null;
   territoryCells?: TerritoryCellWithCoords[];
@@ -271,6 +337,7 @@ export function GoogleMapViewClient({
   const [mapType, setMapType] = useState<"roadmap" | "satellite">("roadmap");
   const [boundaryPoints, setBoundaryPoints] = useState<{ lat: number; lng: number }[]>([]);
   const [isEditingBoundary, setIsEditingBoundary] = useState(false);
+  const [isRedrawingTerritory, setIsRedrawingTerritory] = useState(false);
   const [savingTerritory, setSavingTerritory] = useState(false);
   const [visibleStatuses, setVisibleStatuses] = useState<Set<MapZoneStatus>>(
     () => new Set(ZONE_STATUS_LABELS)
@@ -286,8 +353,12 @@ export function GoogleMapViewClient({
   const [merchantDetailForPin, setMerchantDetailForPin] = useState<MerchantDetail | null>(null);
   const [pinDetailLoading, setPinDetailLoading] = useState(false);
 
-  const inDefineMode = isBranchManager && !branchTerritory && !isEditingBoundary;
+  const inDefineMode =
+    isBranchManager &&
+    (!branchTerritory || isRedrawingTerritory) &&
+    !isEditingBoundary;
   const inEditBoundaryMode = isBranchManager && branchTerritory && isEditingBoundary;
+  const hideSavedTerritory = isRedrawingTerritory;
   const mapClickEnabled = inDefineMode;
   const pointsToSave = boundaryPoints;
 
@@ -333,14 +404,69 @@ export function GoogleMapViewClient({
     refetchMapPins();
   }, [showPins, branchId, refetchMapPins]);
 
-  const spreadScouted = useMemo(
-    () => (mapPins ? spreadPinPositions(mapPins.scouted) : []),
-    [mapPins]
+  const definePreviewCells = useMemo((): TerritoryCellWithCoords[] => {
+    if (!inDefineMode || boundaryPoints.length < 4) return [];
+    return buildTerritoryPreviewCells(boundaryPoints).map((c) => ({
+      id: `preview-${c.row}-${c.col}`,
+      code: c.code,
+      coordinates: c.coordinates,
+      status: "UNSEEN",
+      label: null,
+      row: c.row,
+      col: c.col,
+    }));
+  }, [inDefineMode, boundaryPoints]);
+
+  const displayTerritoryCells = inDefineMode
+    ? definePreviewCells
+    : hideSavedTerritory
+      ? []
+      : territoryCells;
+
+  const defineShapeValidation = useMemo(
+    () => (inDefineMode ? validateTerritoryShape(boundaryPoints) : null),
+    [inDefineMode, boundaryPoints],
   );
-  const spreadInducted = useMemo(
-    () => (mapPins ? spreadPinPositions(mapPins.inducted) : []),
-    [mapPins]
-  );
+
+  const fitBoundsPoints =
+    inDefineMode && boundaryPoints.length >= 2
+      ? boundaryPoints
+      : branchTerritory && branchTerritory.length >= 2
+        ? branchTerritory
+        : null;
+
+  const inTerritoryView =
+    adminTerritories.length === 0 &&
+    ((!!branchTerritory && branchTerritory.length >= 3 && !hideSavedTerritory) ||
+      (inDefineMode && boundaryPoints.length >= 4));
+
+  const territoryBoundsForPins =
+    inDefineMode && boundaryPoints.length >= 4
+      ? normalizeTerritoryPoints(boundaryPoints)
+      : hideSavedTerritory
+        ? null
+        : branchTerritory;
+
+  const spreadScouted = useMemo(() => {
+    if (!mapPins) return [];
+    const scoped = inTerritoryView
+      ? filterPinsInsideTerritory(mapPins.scouted, territoryBoundsForPins)
+      : mapPins.scouted;
+    return spreadPinPositions(scoped);
+  }, [mapPins, inTerritoryView, territoryBoundsForPins]);
+
+  const spreadInducted = useMemo(() => {
+    if (!mapPins) return [];
+    const scoped = inTerritoryView
+      ? filterPinsInsideTerritory(mapPins.inducted, territoryBoundsForPins)
+      : mapPins.inducted;
+    return spreadPinPositions(scoped);
+  }, [mapPins, inTerritoryView, territoryBoundsForPins]);
+
+  const overlayZoneCount =
+    inTerritoryView && displayTerritoryCells.length > 0
+      ? displayTerritoryCells.length
+      : zoneCount;
 
   const { cells, zoneByCode } = useMemo(() => {
     const cells = generateZoneGrid(
@@ -354,18 +480,19 @@ export function GoogleMapViewClient({
   }, [zones]);
 
   const mapCenter = useMemo(() => {
-    if (branchTerritory && branchTerritory.length > 0) {
-      const sum = branchTerritory.reduce(
+    const pts = fitBoundsPoints;
+    if (pts && pts.length > 0) {
+      const sum = pts.reduce(
         (acc, p) => ({ lat: acc.lat + p.lat, lng: acc.lng + p.lng }),
-        { lat: 0, lng: 0 }
+        { lat: 0, lng: 0 },
       );
       return {
-        lat: sum.lat / branchTerritory.length,
-        lng: sum.lng / branchTerritory.length,
+        lat: sum.lat / pts.length,
+        lng: sum.lng / pts.length,
       };
     }
     return ADDIS_ABABA_CENTER;
-  }, [branchTerritory]);
+  }, [fitBoundsPoints]);
 
   const handleMapClick = useCallback(
     (e: google.maps.MapMouseEvent) => {
@@ -373,7 +500,10 @@ export function GoogleMapViewClient({
       const lat = e.latLng.lat();
       const lng = e.latLng.lng();
       if (inDefineMode) {
-        setBoundaryPoints((prev) => [...prev, { lat, lng }]);
+        setBoundaryPoints((prev) => {
+          if (prev.length >= 4) return prev;
+          return [...prev, { lat, lng }];
+        });
       }
     },
     [mapClickEnabled, inDefineMode]
@@ -388,6 +518,7 @@ export function GoogleMapViewClient({
       await onSaveTerritory(normalized);
       setBoundaryPoints([]);
       setIsEditingBoundary(false);
+      setIsRedrawingTerritory(false);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Could not save territory";
       onSaveTerritoryError?.(msg);
@@ -399,6 +530,7 @@ export function GoogleMapViewClient({
   const handleCancelBoundary = useCallback(() => {
     setBoundaryPoints([]);
     setIsEditingBoundary(false);
+    setIsRedrawingTerritory(false);
   }, []);
 
   const handleZoneClick = useCallback((sel: SelectedZone) => {
@@ -585,19 +717,37 @@ export function GoogleMapViewClient({
           <div className="absolute bottom-24 left-4 right-4 z-20 flex flex-col gap-2 rounded-lg border border-border bg-card p-3 shadow-lg">
             <p className="font-mono text-sm text-foreground">
               {inDefineMode
-                ? "Click 4+ points for one continuous territory (single area only — boundary must not cross itself)."
+                ? "Click the 4 corners of your territory in order (1 → 2 → 3 → 4). A grid preview appears inside before you save."
                 : "Drag the boundary vertices to reshape the territory. Save when done."}
             </p>
             <p className="font-mono text-xs text-muted-foreground">
-              {pointsToSave.length} point{pointsToSave.length !== 1 ? "s" : ""} placed
+              Corner {Math.min(pointsToSave.length, 4)}/4 placed
+              {definePreviewCells.length > 0
+                ? ` · ${definePreviewCells.length} zones in preview`
+                : ""}
             </p>
-            <div className="flex gap-2">
+            {defineShapeValidation && !defineShapeValidation.ok && pointsToSave.length >= 4 ? (
+              <p className="font-mono text-xs text-amber-600 dark:text-amber-400">
+                {defineShapeValidation.error}
+              </p>
+            ) : null}
+            <div className="flex flex-wrap gap-2">
               <Button
                 size="sm"
-                disabled={pointsToSave.length < 4 || savingTerritory}
+                disabled={
+                  !defineShapeValidation?.ok || pointsToSave.length < 4 || savingTerritory
+                }
                 onClick={handleSaveTerritory}
               >
                 {savingTerritory ? "Saving…" : "Save Territory"}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={pointsToSave.length === 0 || savingTerritory}
+                onClick={() => setBoundaryPoints((prev) => prev.slice(0, -1))}
+              >
+                Undo corner
               </Button>
               <Button size="sm" variant="outline" onClick={handleCancelBoundary}>
                 Cancel
@@ -621,27 +771,26 @@ export function GoogleMapViewClient({
               onCellClick={handleTerritoryCellClick}
             />
           )}
-          {adminTerritories.length === 0 && branchTerritory && (
+          {adminTerritories.length === 0 && fitBoundsPoints && fitBoundsPoints.length >= 2 && (
+            <FitMapToTerritoryGoogle points={fitBoundsPoints} />
+          )}
+          {adminTerritories.length === 0 &&
+            ((branchTerritory && !hideSavedTerritory) ||
+              inDefineMode ||
+              inEditBoundaryMode) && (
             <TerritoryContentGoogle
-              branchTerritory={branchTerritory}
-              territoryCells={territoryCells}
+              branchTerritory={hideSavedTerritory ? null : branchTerritory}
+              territoryCells={displayTerritoryCells}
               isBranchManager={isBranchManager}
-              boundaryPreview={
-                inDefineMode
-                  ? boundaryPoints
-                  : inEditBoundaryMode
-                    ? boundaryPoints
-                    : []
-              }
+              boundaryPreview={inDefineMode || inEditBoundaryMode ? boundaryPoints : []}
               onCellClick={handleTerritoryCellClick}
               isEditMode={!!inEditBoundaryMode}
+              isDefining={inDefineMode}
               onBoundaryPathChange={inEditBoundaryMode ? setBoundaryPoints : undefined}
+              visibleStatuses={visibleStatuses}
             />
           )}
-          {adminTerritories.length === 0 && branchTerritory && branchTerritory.length >= 2 && (
-            <FitMapToTerritoryGoogle points={branchTerritory} />
-          )}
-          {mapPins && (
+          {mapPins && !inDefineMode && (
             <>
               {spreadScouted.map(({ pin: lead, lat, lng }) => (
                 <Marker
@@ -654,11 +803,17 @@ export function GoogleMapViewClient({
                   }}
                   icon={{
                     path: google.maps.SymbolPath.CIRCLE,
-                    fillColor: "#3b82f6",
+                    fillColor: "#ef4444",
                     fillOpacity: 1,
                     strokeColor: "#fff",
-                    strokeWeight: 2,
-                    scale: 10,
+                    strokeWeight: 2.5,
+                    scale: 11,
+                  }}
+                  label={{
+                    text: "+",
+                    color: "#ffffff",
+                    fontSize: "12px",
+                    fontWeight: "700",
                   }}
                   title={lead.businessName}
                 />
@@ -673,12 +828,13 @@ export function GoogleMapViewClient({
                     setSelectedPin({ type: "inducted", id: m.id });
                   }}
                   icon={{
-                    path: google.maps.SymbolPath.CIRCLE,
-                    fillColor: "#22c55e",
+                    path: "M12 2L4 20h16L12 2z",
+                    fillColor: "#92400e",
                     fillOpacity: 1,
-                    strokeColor: "#fff",
-                    strokeWeight: 2,
-                    scale: 10,
+                    strokeColor: "#451a03",
+                    strokeWeight: 1,
+                    scale: 1.1,
+                    anchor: new google.maps.Point(12, 20),
                   }}
                   title={m.businessName}
                 />
@@ -689,16 +845,21 @@ export function GoogleMapViewClient({
         </GoogleMap>
 
         <MapOverlay
-          zoneCount={zoneCount}
+          zoneCount={overlayZoneCount}
           merchantCount={merchantCount}
+          districtLabel={districtLabel}
           visibleStatuses={visibleStatuses}
           onVisibleStatusesChange={setVisibleStatuses}
           mapContainerRef={mapContainerRef}
           mapType={mapType}
           onMapTypeChange={setMapType}
           showEditTerritory={isBranchManager && !!branchTerritory}
-          isEditingTerritory={isEditingBoundary}
-          onEditTerritory={() => setIsEditingBoundary(true)}
+          isEditingTerritory={inDefineMode && !!branchTerritory}
+          onEditTerritory={() => {
+            setIsRedrawingTerritory(true);
+            setBoundaryPoints([]);
+            setIsEditingBoundary(false);
+          }}
           onCancelEditTerritory={handleCancelBoundary}
         />
         <MyLocationButton onCenter={centerOnUser} />

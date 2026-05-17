@@ -53,6 +53,11 @@ export function normalizeTerritoryPoints(
   return out;
 }
 
+/** Minimum polygon area (deg²) — rejects thin lines masquerading as territories. */
+const MIN_TERRITORY_AREA_SQ_DEG = 0.000012;
+/** Minimum grid cells inside a valid territory. */
+export const MIN_TERRITORY_CELLS = 6;
+
 /** Target cell size in degrees (~0.003 deg ≈ 350 m at Addis Ababa). Smaller = more cells. */
 const TARGET_CELL_DEG = 0.003;
 const MIN_ROWS = 3;
@@ -221,6 +226,88 @@ export function territoryCellGridComponentCount(cells: { row: number; col: numbe
  * @param cols - Number of columns in the grid
  * @returns Array of cells with code, coordinates (4 corners), row, col
  */
+/** Shoelace area in degree-space (good enough for validation at city scale). */
+export function polygonAreaApprox(polygon: TerritoryCellPoint[]): number {
+  const pts = normalizeTerritoryPoints(polygon);
+  if (pts.length < 3) return 0;
+  const ring =
+    pts[0].lat === pts[pts.length - 1].lat && pts[0].lng === pts[pts.length - 1].lng
+      ? pts.slice(0, -1)
+      : pts;
+  if (ring.length < 3) return 0;
+  let sum = 0;
+  for (let i = 0; i < ring.length; i++) {
+    const j = (i + 1) % ring.length;
+    sum += ring[i].lng * ring[j].lat - ring[j].lng * ring[i].lat;
+  }
+  return Math.abs(sum) / 2;
+}
+
+export function buildTerritoryPreviewCells(
+  points: TerritoryCellPoint[],
+): TerritoryCellResult[] {
+  if (!points || points.length < 3) return [];
+  const normalized = normalizeTerritoryPoints(points);
+  if (normalized.length < 3) return [];
+  const { rows, cols } = getGridSizeForBounds(normalized);
+  return subdivideTerritory(normalized, rows, cols);
+}
+
+export function validateTerritoryShape(points: TerritoryCellPoint[]): {
+  ok: boolean;
+  error?: string;
+  cells: TerritoryCellResult[];
+} {
+  if (!points || points.length < 4) {
+    return {
+      ok: false,
+      error: "Click 4 corners around your area (in order), then save.",
+      cells: [],
+    };
+  }
+  const normalized = normalizeTerritoryPoints(points);
+  if (normalized.length < 4) {
+    return {
+      ok: false,
+      error: "Need 4 distinct corner points.",
+      cells: [],
+    };
+  }
+  if (polygonSelfIntersects(normalized)) {
+    return {
+      ok: false,
+      error: "Boundary crosses itself. Click four corners without overlapping edges.",
+      cells: [],
+    };
+  }
+  const area = polygonAreaApprox(normalized);
+  if (area < MIN_TERRITORY_AREA_SQ_DEG) {
+    return {
+      ok: false,
+      error:
+        "Territory is too narrow. Place four corners farther apart so they form a box, not a line.",
+      cells: [],
+    };
+  }
+  const cells = buildTerritoryPreviewCells(points);
+  if (cells.length < MIN_TERRITORY_CELLS) {
+    return {
+      ok: false,
+      error:
+        "Territory is too small. Spread the four corners wider to cover a proper block.",
+      cells: [],
+    };
+  }
+  if (territoryCellGridComponentCount(cells) > 1) {
+    return {
+      ok: false,
+      error: "Territory must be one connected area.",
+      cells: [],
+    };
+  }
+  return { ok: true, cells };
+}
+
 export function subdivideTerritory(
   bounds: TerritoryCellPoint[],
   rows: number,
