@@ -282,6 +282,8 @@ export function MapViewClient({
   territoryCells = [],
   isBranchManager = false,
   onSaveTerritory,
+  onSaveTerritoryError,
+  onClearTerritorySaveError,
   onUpdateCell,
   adminTerritories = [],
   onTerritoryEditModeChange,
@@ -293,6 +295,8 @@ export function MapViewClient({
   territoryCells?: TerritoryCellWithCoords[];
   isBranchManager?: boolean;
   onSaveTerritory?: (points: { lat: number; lng: number }[]) => Promise<void>;
+  onSaveTerritoryError?: (message: string) => void;
+  onClearTerritorySaveError?: () => void;
   onUpdateCell?: (cellId: string, data: { status?: MapZoneStatus; label?: string | null }) => Promise<void>;
   adminTerritories?: AdminBranchTerritory[];
   onTerritoryEditModeChange?: (active: boolean) => void;
@@ -421,23 +425,25 @@ export function MapViewClient({
   const handleMapClick = useCallback((lat: number, lng: number) => {
     if (inDefineMode) {
       setBoundaryPoints((prev) => [...prev, { lat, lng }]);
-    } else if (inEditBoundaryMode) {
-      setBoundaryPoints((prev) => [...prev, { lat, lng }]);
     }
-  }, [inDefineMode, inEditBoundaryMode]);
+  }, [inDefineMode]);
 
   const handleSaveTerritory = useCallback(async () => {
     if (!onSaveTerritory || pointsToSave.length < 4) return;
     setSavingTerritory(true);
+    onClearTerritorySaveError?.();
     try {
       const normalized = normalizeTerritoryPoints(pointsToSave);
       await onSaveTerritory(normalized);
       setBoundaryPoints([]);
       setIsEditingBoundary(false);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Could not save territory";
+      onSaveTerritoryError?.(msg);
     } finally {
       setSavingTerritory(false);
     }
-  }, [onSaveTerritory, pointsToSave]);
+  }, [onClearTerritorySaveError, onSaveTerritory, onSaveTerritoryError, pointsToSave]);
 
   const handleCancelBoundary = useCallback(() => {
     setBoundaryPoints([]);
@@ -566,7 +572,7 @@ export function MapViewClient({
           <div className="absolute bottom-24 left-4 right-4 z-20 flex flex-col gap-2 rounded-lg border border-border bg-card p-3 shadow-lg">
             <p className="font-mono text-sm text-foreground">
               {inDefineMode
-                ? "Click 4+ points on the map to define your territory"
+                ? "Click 4+ points for one continuous territory (single area only — boundary must not cross itself)."
                 : "Drag the boundary vertices to reshape the territory. Save when done."}
             </p>
             <p className="font-mono text-xs text-muted-foreground">

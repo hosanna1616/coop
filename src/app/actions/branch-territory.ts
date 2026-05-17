@@ -2,7 +2,13 @@
 
 import { prisma } from "@/lib/prisma";
 import { authorize, type Role } from "@/lib/auth";
-import { subdivideTerritory, getGridSizeForBounds, normalizeTerritoryPoints } from "@/lib/territoryGrid";
+import {
+  subdivideTerritory,
+  getGridSizeForBounds,
+  normalizeTerritoryPoints,
+  polygonSelfIntersects,
+  territoryCellGridComponentCount,
+} from "@/lib/territoryGrid";
 import { logActivity } from "@/app/actions/activity-log";
 import type { ZoneStatus } from "@prisma/client";
 import { Prisma } from "@prisma/client";
@@ -114,6 +120,12 @@ export async function saveBranchTerritory(
   const normalizedPoints = normalizeTerritoryPoints(points);
   if (normalizedPoints.length < 4) throw new Error("At least 4 distinct points are required");
 
+  if (polygonSelfIntersects(normalizedPoints)) {
+    throw new Error(
+      "Territory boundary crosses itself. Draw a single continuous outline — no figure-eight or overlapping edges.",
+    );
+  }
+
   const branch = await prisma.branch.findUnique({
     where: { id: branchId },
     select: { id: true, name: true },
@@ -121,6 +133,18 @@ export async function saveBranchTerritory(
   if (!branch) throw new Error("Branch not found");
 
   const { rows, cols } = getGridSizeForBounds(normalizedPoints);
+  const previewCells = subdivideTerritory(normalizedPoints, rows, cols);
+  if (previewCells.length === 0) {
+    throw new Error(
+      "Territory covers almost no mappable area. Enlarge the shape or adjust the boundary.",
+    );
+  }
+  if (territoryCellGridComponentCount(previewCells) > 1) {
+    throw new Error(
+      "Territory must be one connected area. This outline would create separate regions — use a single closed boundary only.",
+    );
+  }
+
   const existingCells = await prisma.territoryCell.findMany({
     where: { branchId },
     select: { row: true, col: true, status: true, label: true },
@@ -137,8 +161,7 @@ export async function saveBranchTerritory(
 
     await tx.territoryCell.deleteMany({ where: { branchId } });
 
-    const cells = subdivideTerritory(normalizedPoints, rows, cols);
-    for (const c of cells) {
+    for (const c of previewCells) {
       const key = `${c.row}_${c.col}`;
       const preserved = statusByKey.get(key);
       await tx.territoryCell.create({

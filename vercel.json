@@ -1,0 +1,24 @@
+{
+  "crons": [
+    {
+      "path": "/api/notifications/scheduled?job=hourly-work-reminder",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/notifications/scheduled?job=daily-8am",
+      "schedule": "0 5 * * *"
+    },
+    {
+      "path": "/api/notifications/scheduled?job=daily-2pm",
+      "schedule": "0 11 * * *"
+    },
+    {
+      "path": "/api/notifications/scheduled?job=daily-5pm-urgent",
+      "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/notifications/scheduled?job=weekly-sunday-7pm",
+      "schedule": "0 16 * * 0"
+    }
+  ]
+}

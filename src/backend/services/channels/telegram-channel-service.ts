@@ -1,3 +1,5 @@
+import { getTelegramLinkBaseUrl } from "@/lib/telegram-links";
+
 type TelegramPayload = {
   chatId: string;
   title: string;
@@ -24,8 +26,30 @@ export async function sendTelegramBotMessage(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  if (!res.ok) return { ok: false, error: `Telegram API ${res.status}` };
+  if (!res.ok) {
+    const errBody = (await res.json().catch(() => null)) as {
+      description?: string;
+    } | null;
+    return {
+      ok: false,
+      error: errBody?.description ?? `Telegram API ${res.status}`,
+    };
+  }
   return { ok: true };
+}
+
+function buildAppKeyboard(actionUrl?: string) {
+  const base = getTelegramLinkBaseUrl();
+  const scoutUrl =
+    actionUrl && /^https?:\/\//i.test(actionUrl)
+      ? actionUrl
+      : `${base}${actionUrl?.startsWith("/") ? actionUrl : "/report"}`;
+  return {
+    inline_keyboard: [
+      [{ text: "🎯 Scout now", url: scoutUrl }],
+      [{ text: "📱 Open Merchant Nation", url: base }],
+    ],
+  };
 }
 
 function escapeHtml(input: string): string {
@@ -45,11 +69,7 @@ export async function sendTelegramNotification(
     parse_mode: "HTML",
     disable_web_page_preview: true,
   };
-  if (payload.actionUrl) {
-    body.reply_markup = {
-      inline_keyboard: [[{ text: "Open Scout Section", url: payload.actionUrl }]],
-    };
-  }
+  body.reply_markup = buildAppKeyboard(payload.actionUrl);
   return sendTelegramBotMessage(body);
 }
 

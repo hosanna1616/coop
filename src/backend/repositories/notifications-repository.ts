@@ -132,6 +132,7 @@ export async function createTaskAssignedNotification(params: {
 export async function hasHourlyFocusNotificationInCurrentHour(
   userId: string,
   now: Date,
+  channel?: string,
 ): Promise<boolean> {
   const hourStart = new Date(now);
   hourStart.setMinutes(0, 0, 0);
@@ -142,6 +143,7 @@ export async function hasHourlyFocusNotificationInCurrentHour(
       userId,
       type: "HOURLY_PROGRESS_FOCUS",
       createdAt: { gte: hourStart, lt: hourEnd },
+      ...(channel ? { channel } : {}),
     },
   });
   return count > 0;

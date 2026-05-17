@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Bell, MapPin, Users, Wallet, AlertTriangle } from "lucide-react";
 import { MapScreen } from "@/components/map/MapScreen";
 import { Card, CardContent } from "@/components/ui/card";
@@ -89,12 +89,19 @@ export function TerritoryDashboard({
 }) {
   const router = useRouter();
   const [territoryEditModeActive, setTerritoryEditModeActive] = useState(false);
+  const [territorySaveError, setTerritorySaveError] = useState<string | null>(null);
   const greeting = getGreeting();
   const dateStr = formatDate();
+
+  const handleTerritoryEditModeChange = useCallback((active: boolean) => {
+    setTerritoryEditModeActive(active);
+    if (active) setTerritorySaveError(null);
+  }, []);
 
   const handleSaveTerritory = async (points: { lat: number; lng: number }[]) => {
     if (!branchId) return;
     await saveBranchTerritory(branchId, points);
+    setTerritorySaveError(null);
     router.refresh();
   };
 
@@ -218,6 +225,11 @@ export function TerritoryDashboard({
           className="flex-1 min-h-0 w-full"
           style={{ minHeight: territoryEditModeActive ? "85vh" : "50vh" }}
         >
+          {territorySaveError ? (
+            <div className="border-b border-destructive/40 bg-destructive/10 px-4 py-2 font-mono text-xs text-destructive">
+              {territorySaveError}
+            </div>
+          ) : null}
           <MapScreen
             useGoogleMaps={useGoogleMaps}
             zoneCount={totalZones}
@@ -228,8 +240,14 @@ export function TerritoryDashboard({
             isBranchManager={isBranchManager}
             adminTerritories={adminTerritories}
             onSaveTerritory={!adminTerritories?.length && isBranchManager && branchId ? handleSaveTerritory : undefined}
+            onSaveTerritoryError={
+              !adminTerritories?.length && isBranchManager ? setTerritorySaveError : undefined
+            }
+            onClearTerritorySaveError={
+              !adminTerritories?.length && isBranchManager ? () => setTerritorySaveError(null) : undefined
+            }
             onUpdateCell={!adminTerritories?.length && isBranchManager ? handleUpdateCell : undefined}
-            onTerritoryEditModeChange={setTerritoryEditModeActive}
+            onTerritoryEditModeChange={handleTerritoryEditModeChange}
           />
         </div>
       </section>

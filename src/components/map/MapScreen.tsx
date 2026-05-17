@@ -35,6 +35,8 @@ export function MapScreen({
   territoryCells = [],
   isBranchManager = false,
   onSaveTerritory,
+  onSaveTerritoryError,
+  onClearTerritorySaveError,
   onUpdateCell,
   adminTerritories,
   onTerritoryEditModeChange: onTerritoryEditModeChangeFromParent,
@@ -47,6 +49,8 @@ export function MapScreen({
   territoryCells?: TerritoryCellWithCoords[];
   isBranchManager?: boolean;
   onSaveTerritory?: (points: { lat: number; lng: number }[]) => Promise<void>;
+  onSaveTerritoryError?: (message: string) => void;
+  onClearTerritorySaveError?: () => void;
   onUpdateCell?: (cellId: string, data: { status?: MapZoneStatus; label?: string | null }) => Promise<void>;
   adminTerritories?: AdminBranchTerritory[];
   onTerritoryEditModeChange?: (active: boolean) => void;
@@ -61,6 +65,8 @@ export function MapScreen({
     territoryCells,
     isBranchManager,
     onSaveTerritory,
+    onSaveTerritoryError,
+    onClearTerritorySaveError,
     onUpdateCell,
     adminTerritories,
     onTerritoryEditModeChange,

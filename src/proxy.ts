@@ -38,6 +38,16 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
+  const publicApiPaths = [
+    "/api/notifications/telegram/webhook",
+    "/api/notifications/telegram/setup",
+    "/api/notifications/facebook/webhook",
+    "/api/notifications/scheduled",
+  ];
+  if (publicApiPaths.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
+    return addCors(NextResponse.next(), origin);
+  }
+
   if (pathname === "/api-docs" || pathname === "/openapi.yaml") {
     return addCors(NextResponse.next(), origin);
   }
@@ -135,6 +145,10 @@ function addCors(res: NextResponse, origin: string | null) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    /*
+     * Skip auth proxy for Telegram/Facebook webhooks and notification cron —
+     * Telegram cannot send cookies; these routes must be public.
+     */
+    "/((?!_next/static|_next/image|favicon.ico|api/notifications/telegram/webhook|api/notifications/telegram/setup|api/notifications/facebook/webhook|api/notifications/scheduled|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
