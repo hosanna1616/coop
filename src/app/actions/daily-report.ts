@@ -8,6 +8,9 @@ import {
 export type SubmitDailyReportData = {
   reportDate: string; // ISO date YYYY-MM-DD
   content: string;
+  planNotes?: string | null;
+  closeoutNotes?: string | null;
+  blockers?: string | null;
 };
 
 export type DailyReportFilters = {
