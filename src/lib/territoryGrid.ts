@@ -112,6 +112,106 @@ export function pointInPolygon(
   return inside;
 }
 
+const SEGMENT_ORIENT_EPS = 1e-10;
+
+function cross2(o: TerritoryCellPoint, a: TerritoryCellPoint, b: TerritoryCellPoint): number {
+  return (a.lng - o.lng) * (b.lat - o.lat) - (a.lat - o.lat) * (b.lng - o.lng);
+}
+
+function onSegment(p: TerritoryCellPoint, q: TerritoryCellPoint, r: TerritoryCellPoint): boolean {
+  return (
+    q.lng <= Math.max(p.lng, r.lng) + SEGMENT_ORIENT_EPS &&
+    q.lng + SEGMENT_ORIENT_EPS >= Math.min(p.lng, r.lng) &&
+    q.lat <= Math.max(p.lat, r.lat) + SEGMENT_ORIENT_EPS &&
+    q.lat + SEGMENT_ORIENT_EPS >= Math.min(p.lat, r.lat)
+  );
+}
+
+/** True if closed-segment AB intersects CD (excluding shared-endpoint touches as non-intersections). */
+function segmentsIntersect(
+  a: TerritoryCellPoint,
+  b: TerritoryCellPoint,
+  c: TerritoryCellPoint,
+  d: TerritoryCellPoint,
+): boolean {
+  const o1 = cross2(a, b, c);
+  const o2 = cross2(a, b, d);
+  const o3 = cross2(c, d, a);
+  const o4 = cross2(c, d, b);
+
+  if (o1 > SEGMENT_ORIENT_EPS && o2 < -SEGMENT_ORIENT_EPS && o3 > SEGMENT_ORIENT_EPS && o4 < -SEGMENT_ORIENT_EPS)
+    return true;
+  if (o1 < -SEGMENT_ORIENT_EPS && o2 > SEGMENT_ORIENT_EPS && o3 < -SEGMENT_ORIENT_EPS && o4 > SEGMENT_ORIENT_EPS)
+    return true;
+
+  if (Math.abs(o1) < SEGMENT_ORIENT_EPS && onSegment(a, c, b)) return true;
+  if (Math.abs(o2) < SEGMENT_ORIENT_EPS && onSegment(a, d, b)) return true;
+  if (Math.abs(o3) < SEGMENT_ORIENT_EPS && onSegment(c, a, d)) return true;
+  if (Math.abs(o4) < SEGMENT_ORIENT_EPS && onSegment(c, b, d)) return true;
+
+  return false;
+}
+
+/**
+ * True if the polygon boundary crosses itself (e.g. figure-eight). Branch territory must be one simple region.
+ */
+export function polygonSelfIntersects(polygon: TerritoryCellPoint[]): boolean {
+  if (!polygon || polygon.length < 4) return false;
+  let ring = [...polygon];
+  const first = ring[0];
+  const last = ring[ring.length - 1];
+  if (
+    first &&
+    last &&
+    Math.abs(first.lat - last.lat) < COORD_EPS &&
+    Math.abs(first.lng - last.lng) < COORD_EPS
+  ) {
+    ring = ring.slice(0, -1);
+  }
+  const m = ring.length;
+  if (m < 3) return false;
+
+  for (let i = 0; i < m; i++) {
+    const p1 = ring[i];
+    const p2 = ring[(i + 1) % m];
+    for (let j = i + 2; j < m; j++) {
+      if (i === 0 && j === m - 1) continue;
+      const p3 = ring[j];
+      const p4 = ring[(j + 1) % m];
+      if (segmentsIntersect(p1, p2, p3, p4)) return true;
+    }
+  }
+  return false;
+}
+
+/** Number of 4-connected components among grid cells (must be 1 for a single contiguous territory). */
+export function territoryCellGridComponentCount(cells: { row: number; col: number }[]): number {
+  if (cells.length === 0) return 0;
+  const key = (r: number, c: number) => `${r},${c}`;
+  const inSet = new Set(cells.map((c) => key(c.row, c.col)));
+  const visited = new Set<string>();
+  let components = 0;
+  for (const cell of cells) {
+    const start = key(cell.row, cell.col);
+    if (visited.has(start)) continue;
+    components += 1;
+    const stack: { row: number; col: number }[] = [{ row: cell.row, col: cell.col }];
+    while (stack.length > 0) {
+      const cur = stack.pop()!;
+      const k = key(cur.row, cur.col);
+      if (!inSet.has(k) || visited.has(k)) continue;
+      visited.add(k);
+      stack.push(
+        { row: cur.row - 1, col: cur.col },
+        { row: cur.row + 1, col: cur.col },
+        { row: cur.row, col: cur.col - 1 },
+        { row: cur.row, col: cur.col + 1 },
+      );
+    }
+  }
+  return components;
+}
+
 /**
  * Subdivides the territory polygon into a grid of rectangular cells.
  * Only cells whose center lies inside the polygon are included.

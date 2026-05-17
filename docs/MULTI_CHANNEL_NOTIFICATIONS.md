@@ -64,13 +64,25 @@ See `.env.example` additions:
 Call:
 
 - `POST /api/notifications/scheduled` with header `x-scheduler-secret`
-- Body one of:
-  - `{ "job": "daily-8am" }`
-  - `{ "job": "daily-2pm" }`
-  - `{ "job": "daily-5pm-urgent" }`
-  - `{ "job": "weekly-sunday-7pm" }`
+- Body or query `job` one of:
+  - `hourly-work-reminder` (Telegram hourly focus for linked players)
+  - `daily-8am`
+  - `daily-2pm`
+  - `daily-5pm-urgent`
+  - `weekly-sunday-7pm`
 
-You can connect this endpoint to cron, Vercel Cron, GitHub Actions, or any scheduler.
+Auth headers (any one):
+
+- `x-scheduler-secret: <NOTIFICATION_SCHEDULER_SECRET>`
+- `Authorization: Bearer <NOTIFICATION_SCHEDULER_SECRET>` (Vercel Cron uses `CRON_SECRET` — set it to the same value)
+
+`vercel.json` includes cron entries. After deploy, register the Telegram webhook:
+
+```bash
+npm run telegram:webhook
+```
+
+Requires `TELEGRAM_BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET_TOKEN`, and `NEXT_PUBLIC_APP_URL=https://coop-h2jv.vercel.app` in your shell or `.env`.
 
 ## User/channel linking flow
 

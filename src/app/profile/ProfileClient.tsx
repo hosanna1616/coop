@@ -907,7 +907,10 @@ function ConnectPhoneNotificationsCard({ userId }: { userId: string }) {
               </Button>
               {telegramChatId ? (
                 <p className="mt-2 font-mono text-xs text-muted-foreground">
-                  Linked chat ID: <span className="text-foreground">{telegramChatId}</span>
+                  Linked chat ID:{" "}
+                  <span className="text-foreground">{telegramChatId}</span>
+                  {" · "}
+                  Hourly focus reminders with buttons to return to the app.
                 </p>
               ) : telegramEnabled ? (
                 <p className="mt-2 font-mono text-xs text-muted-foreground">

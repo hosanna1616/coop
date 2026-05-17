@@ -94,26 +94,35 @@ async function sendToChannel(
         message: input.message,
         actionUrl: normalizedActionUrl,
       });
-    case "TELEGRAM":
+    case "TELEGRAM": {
+      const chatId = prefChannels.TELEGRAM.telegramChatId?.trim();
+      if (!chatId) return { ok: false as const, error: "Telegram not linked" };
       return sendTelegramNotification({
-        chatId: prefChannels.TELEGRAM.telegramChatId ?? "",
+        chatId,
         title: input.title,
         message: input.message,
         actionUrl: normalizedActionUrl,
       });
-    case "WHATSAPP":
+    }
+    case "WHATSAPP": {
+      const phone = prefChannels.WHATSAPP.whatsappPhone?.trim();
+      if (!phone) return { ok: false as const, error: "WhatsApp not linked" };
       return sendWhatsAppNotification({
-        phone: prefChannels.WHATSAPP.whatsappPhone ?? "",
+        phone,
         title: input.title,
         message: input.message,
       });
-    case "FACEBOOK":
+    }
+    case "FACEBOOK": {
+      const psid = prefChannels.FACEBOOK.facebookPsid?.trim();
+      if (!psid) return { ok: false as const, error: "Facebook not linked" };
       return sendFacebookNotification({
-        psid: prefChannels.FACEBOOK.facebookPsid ?? "",
+        psid,
         title: input.title,
         message: input.message,
         actionUrl: normalizedActionUrl,
       });
+    }
     case "WEB_PUSH":
       return sendWebPushNotification({
         endpoint: prefChannels.WEB_PUSH.webPushEndpoint,
@@ -153,6 +162,21 @@ export async function routeNotification(
 
   const allowedChannels = (Object.keys(prefs.channelsNormalized) as ChannelName[])
     .filter((ch) => prefs.channelsNormalized[ch].enabled)
+    .filter((ch) => {
+      if (ch === "TELEGRAM" && !prefs.channelsNormalized.TELEGRAM.telegramChatId?.trim()) {
+        return false;
+      }
+      if (ch === "WHATSAPP" && !prefs.channelsNormalized.WHATSAPP.whatsappPhone?.trim()) {
+        return false;
+      }
+      if (ch === "FACEBOOK" && !prefs.channelsNormalized.FACEBOOK.facebookPsid?.trim()) {
+        return false;
+      }
+      if (ch === "WEB_PUSH" && !prefs.channelsNormalized.WEB_PUSH.webPushEndpoint?.trim()) {
+        return false;
+      }
+      return true;
+    })
     .filter((ch) => ch === "IN_APP" || !inQuiet || urgent)
     .filter(() => !overLimit || urgent);
 

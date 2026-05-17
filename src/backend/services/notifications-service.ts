@@ -1,6 +1,7 @@
 import { authorize } from "@/lib/auth";
 import * as notificationsRepo from "@/backend/repositories/notifications-repository";
-import { prisma } from "@/lib/prisma";
+import { buildHourlyFocusPayload } from "@/backend/services/hourly-focus-message-service";
+import { routeNotification } from "@/backend/services/notification-router-service";
 
 export type NotificationRow = notificationsRepo.NotificationRow;
 
@@ -100,61 +101,23 @@ export async function ensureHourlyProgressFocusNotification(): Promise<{
     await notificationsRepo.hasHourlyFocusNotificationInCurrentHour(
       session.id,
       now,
+      "IN_APP",
     );
   if (alreadyCreated) return { ok: true, created: false };
 
-  const todayStart = new Date(now);
-  todayStart.setHours(0, 0, 0, 0);
-  const tomorrowStart = new Date(todayStart);
-  tomorrowStart.setDate(todayStart.getDate() + 1);
+  const { title, message, metadata } = await buildHourlyFocusPayload(
+    session.id,
+    now,
+  );
 
-  const [todayScouts, currentStreak, totalScouts] = await Promise.all([
-    prisma.lead.count({
-      where: {
-        scoutedById: session.id,
-        createdAt: { gte: todayStart, lt: tomorrowStart },
-      },
-    }),
-    prisma.userStreak
-      .findUnique({
-        where: { userId: session.id },
-        select: { currentStreak: true },
-      })
-      .then((s) => s?.currentStreak ?? 0),
-    prisma.lead.count({
-      where: { scoutedById: session.id },
-    }),
-  ]);
-
-  const dailyScoutTarget = 3;
-  const remainingToday = Math.max(0, dailyScoutTarget - todayScouts);
-  const cadetRemaining = Math.max(0, 7 - totalScouts);
-  const officerRemaining = Math.max(0, 14 - totalScouts);
-
-  const title =
-    remainingToday > 0 ? "⏰ Hourly Focus Check" : "✅ Great Momentum";
-  const message =
-    remainingToday > 0
-      ? `You scouted ${todayScouts}/${dailyScoutTarget} today. ${remainingToday} more to hit today’s focus target. Streak: ${currentStreak}.`
-      : `You already hit today’s scout focus (${todayScouts}/${dailyScoutTarget}). Keep building your streak (${currentStreak}) and badges (Cadet in ${cadetRemaining}, Officer in ${officerRemaining}).`;
-
-  await notificationsRepo.createInAppNotification({
+  await routeNotification({
     userId: session.id,
     type: "HOURLY_PROGRESS_FOCUS",
     title,
     message,
     priority: "HIGH",
-    metadata: {
-      todayScouts,
-      dailyScoutTarget,
-      remainingToday,
-      currentStreak,
-      totalScouts,
-      cadetRemaining,
-      officerRemaining,
-      generatedAtHour: now.toISOString().slice(0, 13),
-      showPopup: true,
-    },
+    metadata,
+    actionUrl: "/report",
   });
   return { ok: true, created: true };
 }

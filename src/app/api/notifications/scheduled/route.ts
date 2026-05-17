@@ -1,15 +1,90 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { routeNotification } from "@/backend/services/notification-router-service";
+import { buildHourlyFocusPayload } from "@/backend/services/hourly-focus-message-service";
+import * as notificationsRepo from "@/backend/repositories/notifications-repository";
 
 type ScheduledJob =
+  | "hourly-work-reminder"
   | "daily-8am"
   | "daily-2pm"
   | "daily-5pm-urgent"
   | "weekly-sunday-7pm";
 
 function getBaseUrl() {
-  return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  return (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(
+    /\/+$/,
+    "",
+  );
+}
+
+function isSchedulerAuthorized(req: NextRequest): boolean {
+  const secret = process.env.NOTIFICATION_SCHEDULER_SECRET;
+  const cronSecret = process.env.CRON_SECRET;
+  if (!secret && !cronSecret) return false;
+
+  const headerSecret = req.headers.get("x-scheduler-secret");
+  if (secret && headerSecret === secret) return true;
+
+  const auth = req.headers.get("authorization") ?? "";
+  const bearer = auth.startsWith("Bearer ") ? auth.slice(7) : "";
+  if (secret && bearer === secret) return true;
+  if (cronSecret && bearer === cronSecret) return true;
+
+  return false;
+}
+
+function parseJob(req: NextRequest): ScheduledJob | null {
+  const fromQuery = req.nextUrl.searchParams.get("job");
+  if (fromQuery) return fromQuery as ScheduledJob;
+  return null;
+}
+
+function getTelegramChatId(channels: unknown): string | null {
+  if (!channels || typeof channels !== "object") return null;
+  const tg = (channels as Record<string, unknown>).TELEGRAM;
+  if (!tg || typeof tg !== "object") return null;
+  const chatId = (tg as Record<string, unknown>).telegramChatId;
+  return typeof chatId === "string" && chatId.length > 0 ? chatId : null;
+}
+
+async function listTelegramLinkedPlayerIds(): Promise<string[]> {
+  const rows = await prisma.userNotificationPreference.findMany({
+    where: { user: { role: "PLAYER" } },
+    select: { userId: true, channels: true },
+  });
+  return rows
+    .filter((row) => getTelegramChatId(row.channels))
+    .map((row) => row.userId);
+}
+
+async function runHourlyWorkReminder() {
+  const now = new Date();
+  const userIds = await listTelegramLinkedPlayerIds();
+  let processed = 0;
+
+  for (const userId of userIds) {
+    const alreadySent = await notificationsRepo.hasHourlyFocusNotificationInCurrentHour(
+      userId,
+      now,
+      "TELEGRAM",
+    );
+    if (alreadySent) continue;
+
+    const { title, message, metadata } = await buildHourlyFocusPayload(userId, now);
+    await routeNotification({
+      userId,
+      type: "HOURLY_PROGRESS_FOCUS",
+      title,
+      message,
+      priority: "HIGH",
+      metadata,
+      actionUrl: "/report",
+    });
+    processed += 1;
+  }
+
+  return { processed, eligible: userIds.length };
 }
 
 async function runDailyMorning() {
@@ -100,22 +175,41 @@ async function runWeeklyReport() {
   return users.length;
 }
 
-export async function POST(req: NextRequest) {
-  const secret = req.headers.get("x-scheduler-secret");
-  if (!process.env.NOTIFICATION_SCHEDULER_SECRET || secret !== process.env.NOTIFICATION_SCHEDULER_SECRET) {
+async function runJob(job: ScheduledJob) {
+  if (job === "hourly-work-reminder") return runHourlyWorkReminder();
+  if (job === "daily-8am") return { processed: await runDailyMorning() };
+  if (job === "daily-2pm") return { processed: await runDailyInactiveReminder() };
+  if (job === "daily-5pm-urgent") return { processed: await runDailyUrgent() };
+  if (job === "weekly-sunday-7pm") return { processed: await runWeeklyReport() };
+  return null;
+}
+
+async function handleScheduler(req: NextRequest) {
+  if (!isSchedulerAuthorized(req)) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = (await req.json().catch(() => ({}))) as { job?: ScheduledJob };
-  const job = body.job;
-  if (!job) return NextResponse.json({ ok: false, error: "Missing job" }, { status: 400 });
+  let job = parseJob(req);
+  if (!job && req.method === "POST") {
+    const body = (await req.json().catch(() => ({}))) as { job?: ScheduledJob };
+    job = body.job ?? null;
+  }
+  if (!job) {
+    return NextResponse.json({ ok: false, error: "Missing job" }, { status: 400 });
+  }
 
-  let processed = 0;
-  if (job === "daily-8am") processed = await runDailyMorning();
-  if (job === "daily-2pm") processed = await runDailyInactiveReminder();
-  if (job === "daily-5pm-urgent") processed = await runDailyUrgent();
-  if (job === "weekly-sunday-7pm") processed = await runWeeklyReport();
+  const result = await runJob(job);
+  if (!result) {
+    return NextResponse.json({ ok: false, error: "Unknown job" }, { status: 400 });
+  }
 
-  return NextResponse.json({ ok: true, job, processed });
+  return NextResponse.json({ ok: true, job, ...result });
 }
 
+export async function GET(req: NextRequest) {
+  return handleScheduler(req);
+}
+
+export async function POST(req: NextRequest) {
+  return handleScheduler(req);
+}
