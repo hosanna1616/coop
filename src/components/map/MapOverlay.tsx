@@ -12,6 +12,8 @@ import {
 export interface MapOverlayProps {
   zoneCount: number;
   merchantCount: number;
+  /** Shown in header, e.g. branch or district name */
+  districtLabel?: string;
   /** Which statuses are visible on the map. Default all true. */
   visibleStatuses: Set<MapZoneStatus>;
   onVisibleStatusesChange: (next: Set<MapZoneStatus>) => void;
@@ -33,6 +35,7 @@ export interface MapOverlayProps {
 export function MapOverlay({
   zoneCount,
   merchantCount,
+  districtLabel = "ADDIS ABABA",
   visibleStatuses,
   onVisibleStatusesChange,
   mapContainerRef,
@@ -75,7 +78,8 @@ export function MapOverlay({
             Territory Command
           </h2>
           <p className="font-mono text-xs text-muted-foreground">
-            ADDIS ABABA • {zoneCount} ZONES • {merchantCount.toLocaleString()} MERCHANTS
+            {districtLabel.toUpperCase()} • {zoneCount} ZONES •{" "}
+            {merchantCount.toLocaleString()} MERCHANTS
           </p>
         </div>
         <div className="flex items-center gap-1">
@@ -88,7 +92,7 @@ export function MapOverlay({
                 onClick={onCancelEditTerritory}
               >
                 <Pencil className="size-3.5" />
-                Cancel Edit
+                Cancel Redraw
               </Button>
             ) : (
               <Button
@@ -98,7 +102,7 @@ export function MapOverlay({
                 onClick={onEditTerritory}
               >
                 <Pencil className="size-3.5" />
-                Edit Territory
+                Redraw Territory
               </Button>
             )
           )}

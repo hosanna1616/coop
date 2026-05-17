@@ -40,10 +40,12 @@ export function MapScreen({
   onUpdateCell,
   adminTerritories,
   onTerritoryEditModeChange: onTerritoryEditModeChangeFromParent,
+  districtLabel,
 }: {
   useGoogleMaps?: boolean;
   zoneCount?: number;
   merchantCount?: number;
+  districtLabel?: string;
   branchId?: string | null;
   branchTerritory?: { lat: number; lng: number }[] | null;
   territoryCells?: TerritoryCellWithCoords[];
@@ -70,6 +72,7 @@ export function MapScreen({
     onUpdateCell,
     adminTerritories,
     onTerritoryEditModeChange,
+    districtLabel,
   };
   const mapMinHeight = onTerritoryEditModeChangeFromParent
     ? "100%"
