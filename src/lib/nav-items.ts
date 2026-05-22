@@ -40,6 +40,8 @@ const mapBaseNavItems: NavItem[] = [
 const profileItem: NavItem = { href: "/profile", label: "Profile", icon: User };
 
 const adminNavItems: NavItem[] = [
+  { href: "/admin/squad", label: "Squad", icon: UsersRound },
+  { href: "/admin/operations", label: "Operations", icon: ListChecks },
   { href: "/admin/operational-summary", label: "Operational Summary", icon: BarChart2 },
   { href: "/admin/reports", label: "Reports", icon: FileText },
   { href: "/admin/merchants", label: "Merchants", icon: Store },
@@ -71,6 +73,7 @@ export function getNavItems(role: Role | null): NavItem[] {
   if (role === "ADMIN") {
     return [
       ...dashboardItem,
+      { href: "/work", label: "Queue", icon: ListChecks },
       { href: "/missions", label: "Missions", icon: ClipboardList },
       ...adminNavItems,
       profileItem,
